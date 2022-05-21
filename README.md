@@ -1,10 +1,10 @@
 # Noisy Stocks
 
-Generates spurious stock correlations based on current movers & shakers.
+Generates spurious stock correlations based on current movers & shakers. Published online on noisystocks.com via Strapi Headless CMS & Gatsby.
 
 ## General information
 
-This was a project-based learning experience. My main goals for the project:
+This is a project-based learning experience. My main goals for the project:
 
 * Create automated data pipelines (ETL + Analysis + Publish)
 
@@ -33,3 +33,4 @@ Found in pyproject.toml
 https://black.readthedocs.io/en/stable/
 - Linting using Flake8
 - Imports sorted using isort
+- Type checking using Pydantic & MyPy
