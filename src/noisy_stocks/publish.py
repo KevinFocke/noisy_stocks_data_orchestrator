@@ -7,11 +7,12 @@ def create_visualization():
     return
 
 
-@flow(task_runner=SequentialTaskRunner)
+@flow(task_runner=SequentialTaskRunner())
 def publish(historical_stock_data, best_fit):
     # Create visualization
-    
+
     # Upload to Strapi as draft
 
+    create_visualization()
     create_visualization()
     return

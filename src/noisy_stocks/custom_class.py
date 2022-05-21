@@ -1,16 +1,20 @@
 from datetime import datetime
+from typing import Optional
 
-from typing_extensions import NotRequired, TypedDict
+from pydantic import BaseModel
 
 # Mark optional parameters by NotRequired
 
-
-class StockInfo(TypedDict):
-    timestamp_fetch_stock: NotRequired[datetime]  # optional
-    market_cap_millions: NotRequired[int]
-    point_change: NotRequired[int]
+# Classes shoudl be PascalCase
 
 
-class Stocks(TypedDict):
-    ticker: Stock_Info
+class StockInfo(BaseModel):
+    timestamp_fetch_stock: Optional[datetime] = None
+    #
+    market_cap_millions: Optional[int]
+    point_change: Optional[int]
+
+
+class Stocks(BaseModel):
+    ticker: StockInfo
     timestamp_fetched_stocks: datetime
