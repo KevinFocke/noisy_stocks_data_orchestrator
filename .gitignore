@@ -132,3 +132,6 @@ dmypy.json
 
 # Dask
 dask-worker-space
+
+# Datasets
+datasets

@@ -38,7 +38,3 @@ def daily_stock_flow():
 
     # Publish results of analysis
     publish(historical_stock_data, best_fit)
-
-
-if __name__ == "__main__":
-    main_flow()
