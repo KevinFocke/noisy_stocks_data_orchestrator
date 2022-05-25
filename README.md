@@ -1,6 +1,6 @@
 # Noisy Stocks
 
-Generates spurious stock correlations based on current movers & shakers. Published online on noisystocks.com via Strapi Headless CMS & Gatsby.
+Generates spurious stock correlations based on current movers & shakers. Published online on noisystocks.com via Strapi Headless CMS & Nuxt.js.
 
 ## General information
 

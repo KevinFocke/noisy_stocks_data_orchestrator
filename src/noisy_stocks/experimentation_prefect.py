@@ -12,17 +12,17 @@ def test_parallellization_helper_1(number):
 
 
 @task()
-def test_parallellization_helper_2():
+def test_parallellization_helper_2(test_list):
     time.sleep(random.randint(0, 1))
-    return
+    return test_list
 
 
 @flow(task_runner=DaskTaskRunner())  # The subflow runs tasks in parallel
 def test_parallellization():
     test_list = [test_parallellization_helper_1(number) for number in range(20)]
     test_parallellization_helper_2(
-        wait_for=[test_list]
-    )  # Explictly denote test_list as dependency
+        test_list
+    )  # Use wait_for=[test_list] to explicitly denote dependency
     return test_list
 
 

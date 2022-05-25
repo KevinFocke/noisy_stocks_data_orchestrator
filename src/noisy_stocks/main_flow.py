@@ -1,15 +1,18 @@
 from prefect import flow
 from prefect.task_runners import SequentialTaskRunner
 
-from fin_analyze import find_best_fit_regression, select_interesting_stock
-from fin_api import find_movers_and_shakers, get_historical_stock_data
+from fin_analyze import (
+    find_highest_correlation,
+    find_movers_and_shakers,
+    select_interesting_stock,
+)
 from publish import publish
-
-# Prefect collection for GreatExpectations?
-# https://prefecthq.github.io/prefect-great-expectations/
 
 # Convert dates to datetime
 # https://pandas.pydata.org/docs/reference/api/pandas.to_datetime.html
+
+
+# Worfklows contain tasks but no logic. Tasks do the work.
 
 
 def sanity_check():
@@ -22,17 +25,16 @@ def sanity_check():
 
 
 @flow(task_runner=SequentialTaskRunner())
-def main_flow():
+def daily_stock_flow():
     # Preanalysis
-    stocks = find_movers_and_shakers()
+    stocks = find_movers_and_shakers(date)
 
-    # TODO: Fix provided class
     interesting_stock = select_interesting_stock(stocks)
     # Get historical stock data
 
     historical_stock_data = get_historical_stock_data(interesting_stock)
     # Regression analysis
-    best_fit = find_best_fit_regression(historical_stock_data)
+    best_fit = find_highest_correlation(historical_stock_data)
 
     # Publish results of analysis
     publish(historical_stock_data, best_fit)
