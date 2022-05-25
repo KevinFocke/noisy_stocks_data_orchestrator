@@ -1,9 +1,9 @@
-from main_flow import daily_stock_flow
+from main_flow import stock_correlation_flow
 
 
 def main():
     """Run main flow"""
-    daily_stock_flow()
+    stock_correlation_flow()
 
 
 if __name__ == "__main__":

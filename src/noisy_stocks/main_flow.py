@@ -25,7 +25,7 @@ def sanity_check():
 
 
 @flow(task_runner=SequentialTaskRunner())
-def daily_stock_flow():
+def stock_correlation_flow():
     # Preanalysis
     stocks = find_movers_and_shakers(date)
 
