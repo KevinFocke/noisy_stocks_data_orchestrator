@@ -2,12 +2,11 @@ import pandas as pd
 import pandera as pa
 from pandera.dtypes import Timestamp
 from pandera.errors import SchemaError
-from pandera.typing import DataFrame
 from pydantic import BaseModel
 
-# Purpose of primary datastructures:
-# Pandas DataFrame for analysis
-# JSON for moving information
+# Stock class composed of:
+# 1. Pandas DataFrame for analysis
+# 2. JSON for moving information
 
 
 # Typical data order analysis:
@@ -24,55 +23,84 @@ from pydantic import BaseModel
 
 df = pd.DataFrame(
     {
-        "dates": ["1996-10-04", "1980-02-05", "1970-02-05", "1950-02-07", "1800-02-05"],
+        "timestamp": [
+            "1996-10-04",
+            "1980-02-05",
+            "1970-02-05",
+            "1950-02-07",
+            pd.NaT,
+        ],
         "close_price": [1.3, 1.4, 0, 1, 5],
     }
 )
 
-# test for dates in the future
-
-# Convert into validated DataFrame
-
-
+# TODO: Test for data in future
 # define stock schema
 
+
+# Timestamp is naive
 stock_schema = pa.DataFrameSchema(
     {
-        "dates": pa.Column(Timestamp, coerce=True),
+        "timestamp": pa.Column(Timestamp, coerce=True),
         "close_price": pa.Column(float, checks=pa.Check.greater_than_or_equal_to(0)),
     },
     strict=True,
 )
 
-
-def validate_df(df: pd.DataFrame):
-    """Validate the dataframe values
-
-    Args:
-        df (pd.DataFrame): Unvalidated Pandas DataFrame
-
-    Returns:
-        df (pd.DataFrame): Validated Pandas DataFrame
-    """
-
-    try:
-        validated_df = stock_schema(df)
-        return validated_df
-    except SchemaError as e:
-        print(f"{e}")  # TODO: Log error & pass this stock
-
-
+# TODO: Make tests
 # Test, all arrays are same length
 # Test, ValidationError
 # Test if the units are consistent
 # Test except SchemaError
 
-# TODO: Check if there are duplicates dates; remove them; duplicate
+# TODO: Check if there are duplicates dates in dataframe; remove them; duplicate
 
 
 class Stock(BaseModel):
     symbol: str  # Stock symbol is unique identifier
-    time_series_data: DataFrame
+    time_series_df: pd.DataFrame  # Check if type is DataFrame
+
+    class Config:  # Pydantic configuration
+        arbitrary_types_allowed = True
 
     def stock_to_JSON(self):
         return self.json()
+
+    def __data_clean_df(self):
+        self.time_series_df.dropna(inplace=True)  # Remove missing rows
+        self.__validate_ts_and_set_df()  # Validate time series & set
+        df.sort_values(
+            "timestamp", ascending=True, inplace=True
+        )  # Sort by date (ascending)
+        self.time_series_df = df.reset_index(drop=True)  # Reset index to newly sorted
+
+    def __validate_ts_and_set_df(self):
+        """Validate time series dataframe and set
+
+        Args:
+            df (pd.DataFrame): Unvalidated Pandas DataFrame
+
+        Returns:
+            int: Did the process succeed?
+        """
+        # TODO: Refactor for seperation of concerns?
+        # TODO: Add explicit inplace parameter to replace df?
+        try:
+            self.time_series_df = stock_schema(self.time_series_df)
+        except SchemaError as e:
+            print(f"{e}")  # TODO: Log error & pass this stock
+            return 1  # TODO: Return an error?
+
+    def __init__(self, symbol: str, time_series_df: pd.DataFrame):
+
+        # Initialize all variables #TODO: Rewrite using *args and **kwargs
+
+        # Initialize object; inherit init from superclass
+        super().__init__(symbol=symbol, time_series_df=time_series_df)
+        # Dataclean upon initialization
+        self.__data_clean_df()
+
+
+mystock = Stock(symbol="AAPL", time_series_df=df)
+print(mystock.time_series_df)
+print(type(mystock.time_series_df))
