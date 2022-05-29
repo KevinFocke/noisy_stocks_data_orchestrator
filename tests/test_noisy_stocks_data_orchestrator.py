@@ -1,4 +1,4 @@
-from noisy_stocks import __version__, main_flow
+from noisy_stocks_data_orchestrator import __version__, main_flow
 
 
 def test_version():
