@@ -21,31 +21,13 @@ from pydantic import BaseModel
 
 # Load unvalidated DataFrame
 
-df = pd.DataFrame(
-    {
-        "timestamp": [
-            "1996-10-04",
-            "1980-02-05",
-            "1970-02-05",
-            "1950-02-07",
-            pd.NaT,
-        ],
-        "close_price": [1.3, 1.4, 0, 1, 5],
-    }
-)
 
 # TODO: Test for data in future
 # define stock schema
 
 
 # Timestamp is naive
-stock_schema = pa.DataFrameSchema(
-    {
-        "timestamp": pa.Column(Timestamp, coerce=True),
-        "close_price": pa.Column(float, checks=pa.Check.greater_than_or_equal_to(0)),
-    },
-    strict=True,
-)
+
 
 # TODO: Make tests
 # Test, all arrays are same length
@@ -69,10 +51,10 @@ class Stock(BaseModel):
     def __data_clean_df(self):
         self.time_series_df.dropna(inplace=True)  # Remove missing rows
         self.__validate_ts_and_set_df()  # Validate time series & set
-        df.sort_values(
+        self.time_series_df.sort_values(
             "timestamp", ascending=True, inplace=True
         )  # Sort by date (ascending)
-        self.time_series_df = df.reset_index(drop=True)  # Reset index to newly sorted
+        self.time_series_df.reset_index(drop=True)  # Reset index to newly sorted
 
     def __validate_ts_and_set_df(self):
         """Validate time series dataframe and set
@@ -85,6 +67,14 @@ class Stock(BaseModel):
         """
         # TODO: Refactor for seperation of concerns?
         # TODO: Add explicit inplace parameter to replace df?
+        stock_schema = pa.DataFrameSchema(
+            {
+                "timestamp": pa.Column(Timestamp, coerce=True),
+                "close_price": pa.Column(
+                    float, checks=pa.Check.greater_than_or_equal_to(0)
+                ),
+            },
+        )
         try:
             self.time_series_df = stock_schema(self.time_series_df)
         except SchemaError as e:
@@ -99,8 +89,3 @@ class Stock(BaseModel):
         super().__init__(symbol=symbol, time_series_df=time_series_df)
         # Dataclean upon initialization
         self.__data_clean_df()
-
-
-mystock = Stock(symbol="AAPL", time_series_df=df)
-print(mystock.time_series_df)
-print(type(mystock.time_series_df))

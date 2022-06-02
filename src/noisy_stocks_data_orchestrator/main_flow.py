@@ -1,12 +1,12 @@
 from prefect import flow
 from prefect.task_runners import SequentialTaskRunner
 
+from egress import publish
 from fin_analyze import (
     find_highest_correlation,
     find_movers_and_shakers,
     select_interesting_stock,
 )
-from publish import publish
 
 # Convert dates to datetime
 # https://pandas.pydata.org/docs/reference/api/pandas.to_datetime.html
@@ -26,15 +26,19 @@ def sanity_check():
 
 @flow(task_runner=SequentialTaskRunner())
 def stock_correlation_flow():
-    # Preanalysis
-    stocks = find_movers_and_shakers(date)
 
-    interesting_stock = select_interesting_stock(stocks)
+    # TODO: Add date for running the flow; default to today roughly 8 years ago*
+    # * 365 * years. Take into account leap days!
+    # TODO: Update functions and arguments
+    # Preanalysis
+
+    # stocks = find_movers_and_shakers()
+
+    interesting_stock = select_interesting_stock()
     # Get historical stock data
 
-    historical_stock_data = get_historical_stock_data(interesting_stock)
     # Regression analysis
-    best_fit = find_highest_correlation(historical_stock_data)
+    best_fit = find_highest_correlation()
 
     # Publish results of analysis
-    publish(historical_stock_data, best_fit)
+    publish()

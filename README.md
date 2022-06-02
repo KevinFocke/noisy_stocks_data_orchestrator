@@ -8,7 +8,7 @@ This is a project-based learning experience. My main goals for the project:
 
 * Create automated data pipelines (ETL + Analysis + Publish)
 
-* Setup real-time API
+* REST API communication
 
 * Integrate back-end & front-end securely (Jamstack)
 
@@ -33,4 +33,4 @@ Found in pyproject.toml
 https://black.readthedocs.io/en/stable/
 - Linting using Flake8
 - Imports sorted using isort
-- Type checking using Pydantic & MyPy
+- Type checking using Pydantic & Pandera

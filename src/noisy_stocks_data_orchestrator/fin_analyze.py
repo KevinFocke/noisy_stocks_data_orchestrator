@@ -1,8 +1,6 @@
-from datetime import datetime
-
 from prefect import flow, task
 
-import data_structures
+import customdatastructures
 
 # TODO: Rewrite program to use data structures
 
@@ -18,9 +16,16 @@ def select_interesting_stock(stocks, criteria=""):
 
 
 @flow()
-def find_movers_and_shakers(date: int):
+def find_movers_and_shakers():
+    """On date, check the biggest percentage gain and loss of the col
 
-    # Create a dict of dicts. Key is stock ticker aka symbol
+    Args:
+        date (Timestamp): _description_
+        col (str, optional): _description_. Defaults to "closing_price".
+
+    Returns:
+        Tuple containing Stock: _description_
+    """
 
     stock_data = {
         "stock": "AAPL",
