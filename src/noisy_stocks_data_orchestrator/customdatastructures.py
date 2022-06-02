@@ -14,13 +14,6 @@ from pydantic import BaseModel
 # 2. Convert timeseries into Pandas DataFrame to analyze
 # 3. Convert DataFrame to JSON for publishing
 
-
-# TODO: Make tests
-# Test, all dataframe arrays are same length
-# Test, ValidationError
-# Test if the units are consistent
-# Test except SchemaError
-
 # TODO: Check if there are duplicates dates in dataframe; remove them; duplicate
 
 
@@ -50,6 +43,9 @@ class Stock(BaseModel):
         # TODO: Refactor - seperation of concerns
         self.time_series_df.dropna(inplace=True)  # Remove missing rows
         self.__validate_ts_and_set_df()  # Validate time series & set
+        self.time_series_df.drop_duplicates(
+            subset="timestamp", keep="first", inplace=True
+        )  # drop duplicate dates
         self.time_series_df.sort_values(
             "timestamp", ascending=True, inplace=True
         )  # Sort by date (ascending)
@@ -84,15 +80,13 @@ class Stock(BaseModel):
         Returns:
             int: Did the process succeed?
         """
-        # TODO: Refactor for seperation of concerns? (Validate, then set)
+
         try:
             self.__validate_schema()
         except SchemaError as se:
-            # print(f"{e}")  # TODO: Log error & pass this stock
+            # print(f"{e}")  # TODO: Log error
 
-            # try fixing by dropping rows with errors
-
-            # Take the pandas col "index" then make it a list
+            # attempt fix by dropping rows
             self.drop_failure_cases(se.failure_cases)
             # revalidate
             try:
