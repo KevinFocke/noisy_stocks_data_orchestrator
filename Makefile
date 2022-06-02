@@ -1,3 +1,4 @@
 .PHONY: test
 test:
-	PYTHONPATH=. pytest
+	PYTHONPATH=. 
+	pytest -vv

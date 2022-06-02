@@ -65,18 +65,18 @@ class Stock(BaseModel):
         Returns:
             int: Did the process succeed?
         """
-        # TODO: Refactor for seperation of concerns?
-        # TODO: Add explicit inplace parameter to replace df?
-        stock_schema = pa.DataFrameSchema(
+        # TODO: Refactor for seperation of concerns? (Validate, then set)
+
+        stock_df_schema = pa.DataFrameSchema(
             {
                 "timestamp": pa.Column(Timestamp, coerce=True),
                 "close_price": pa.Column(
-                    float, checks=pa.Check.greater_than_or_equal_to(0)
+                    float, checks=pa.Check.greater_than_or_equal_to(-1)
                 ),
             },
         )
         try:
-            self.time_series_df = stock_schema(self.time_series_df)
+            self.time_series_df = stock_df_schema(self.time_series_df)
         except SchemaError as e:
             print(f"{e}")  # TODO: Log error & pass this stock
             return 1  # TODO: Return an error?

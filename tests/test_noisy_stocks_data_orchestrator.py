@@ -1,7 +1,9 @@
 import pandas as pd
-
-# from data_structures import Stock
 from noisy_stocks_data_orchestrator import __version__, main_flow
+from noisy_stocks_data_orchestrator.customdatastructures import Stock
+
+# For typechecking use isinstance()
+# Start every test with test_
 
 
 def test_version():
@@ -20,8 +22,9 @@ def test_fixture_input_via_conftest(sanity_check_fixture):
     assert sanity_check_fixture == "testinput"
 
 
-# def create_stock(stock_with_date_nan):
-# stock = Stock(symbol="AAPL", time_series_df=stock_with_date_nan)
-# assert type(stock) == Stock
-# assert type(stock.symbol == String)
-# assert type(stock.time_series_df == pd.DataFrame)
+def test_create_stock(stock_with_date_nan):
+    stock = Stock(symbol="AAPL", time_series_df=stock_with_date_nan)
+
+    assert isinstance(stock, Stock)
+    assert isinstance(stock.symbol, str)
+    assert isinstance(stock.time_series_df, pd.DataFrame)

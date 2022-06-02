@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from prefect import flow, task
 
 import customdatastructures
@@ -16,7 +18,7 @@ def select_interesting_stock(stocks, criteria=""):
 
 
 @flow()
-def find_movers_and_shakers():
+def find_movers_and_shakers(date: datetime, col: str = "closing_price"):
     """On date, check the biggest percentage gain and loss of the col
 
     Args:
