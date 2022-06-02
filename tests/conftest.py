@@ -1,5 +1,6 @@
 import pandas as pd
 import pytest
+from noisy_stocks_data_orchestrator.customdatastructures import Stock
 
 """
 Single source of truth for fixtures across tests
@@ -21,13 +22,8 @@ def sanity_check_fixture():
 
 
 @pytest.fixture
-def sanity_check_array():
-    return [1, 1, 1, 1, 1]
-
-
-@pytest.fixture
 def stock_with_date_nan():
-    return pd.DataFrame(
+    df = pd.DataFrame(
         {
             "timestamp": [
                 "1996-10-04",
@@ -39,3 +35,17 @@ def stock_with_date_nan():
             "close_price": [1.3, 1.4, 0, 1, 5],
         }
     )
+    return Stock(symbol="AAPL", time_series_df=df)
+
+
+def stock_with_unequal_rows():
+    df = pd.DataFrame(
+        {
+            "timestamp": [
+                "1996-10-04",
+                "1980-02-05",
+            ],
+            "close_price": [1.3, 1.4, 0],
+        }
+    )
+    return Stock(symbol="AAPL", time_series_df=df)

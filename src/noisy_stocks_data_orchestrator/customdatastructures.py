@@ -4,9 +4,9 @@ from pandera.dtypes import Timestamp
 from pandera.errors import SchemaError
 from pydantic import BaseModel
 
-# Stock class composed of:
-# 1. Pandas DataFrame for analysis
-# 2. JSON for moving information
+# Classes should be PascalCase
+# Check type using pydantic
+# Mark optional parameters with NotRequired
 
 
 # Typical data order analysis:
@@ -15,22 +15,8 @@ from pydantic import BaseModel
 # 3. Convert DataFrame to JSON for publishing
 
 
-# Classes should be PascalCase
-# Mark optional parameters by NotRequired
-
-
-# Load unvalidated DataFrame
-
-
-# TODO: Test for data in future
-# define stock schema
-
-
-# Timestamp is naive
-
-
 # TODO: Make tests
-# Test, all arrays are same length
+# Test, all dataframe arrays are same length
 # Test, ValidationError
 # Test if the units are consistent
 # Test except SchemaError
@@ -49,6 +35,8 @@ class Stock(BaseModel):
         return self.json()
 
     def __data_clean_df(self):
+
+        # TODO: Refactor - seperation of concerns
         self.time_series_df.dropna(inplace=True)  # Remove missing rows
         self.__validate_ts_and_set_df()  # Validate time series & set
         self.time_series_df.sort_values(
