@@ -24,7 +24,18 @@ from pydantic import BaseModel
 # TODO: Check if there are duplicates dates in dataframe; remove them; duplicate
 
 
+class ObjectGenerationError(Exception):
+    """Exception raised if object cannot be created"""
+
+    def __init__(self, error_message="Failed to create object"):
+        self.error_message = error_message
+        super().__init__(
+            self.error_message
+        )  # inherit from parent class with extra attribute
+
+
 class Stock(BaseModel):
+    # TODO: Refactor Stock so it explicitly passes df
     symbol: str  # Stock symbol is unique identifier
     time_series_df: pd.DataFrame  # Check if type is DataFrame
 
@@ -42,7 +53,27 @@ class Stock(BaseModel):
         self.time_series_df.sort_values(
             "timestamp", ascending=True, inplace=True
         )  # Sort by date (ascending)
-        self.time_series_df.reset_index(drop=True)  # Reset index to newly sorted
+        self.time_series_df.reset_index(
+            drop=True, inplace=True
+        )  # Reset index to newly sorted
+
+    def drop_failure_cases(self, failure_cases):
+        """Drops failed cases from dataframe"""
+        index_list = failure_cases["index"].values.tolist()
+        return self.time_series_df.drop(index_list, inplace=True)
+
+    def __validate_schema(self):
+
+        stock_df_schema = pa.DataFrameSchema(
+            {
+                "timestamp": pa.Column(Timestamp, coerce=True),
+                "close_price": pa.Column(
+                    float, checks=pa.Check.greater_than_or_equal_to(0)
+                ),
+            },
+        )
+
+        self.time_series_df = stock_df_schema(self.time_series_df)
 
     def __validate_ts_and_set_df(self):
         """Validate time series dataframe and set
@@ -54,26 +85,32 @@ class Stock(BaseModel):
             int: Did the process succeed?
         """
         # TODO: Refactor for seperation of concerns? (Validate, then set)
-
-        stock_df_schema = pa.DataFrameSchema(
-            {
-                "timestamp": pa.Column(Timestamp, coerce=True),
-                "close_price": pa.Column(
-                    float, checks=pa.Check.greater_than_or_equal_to(-1)
-                ),
-            },
-        )
         try:
-            self.time_series_df = stock_df_schema(self.time_series_df)
-        except SchemaError as e:
-            print(f"{e}")  # TODO: Log error & pass this stock
-            return 1  # TODO: Return an error?
+            self.__validate_schema()
+        except SchemaError as se:
+            # print(f"{e}")  # TODO: Log error & pass this stock
+
+            # try fixing by dropping rows with errors
+
+            # Take the pandas col "index" then make it a list
+            self.drop_failure_cases(se.failure_cases)
+            # revalidate
+            try:
+                self.__validate_schema()
+            except SchemaError:
+                raise ObjectGenerationError
 
     def __init__(self, symbol: str, time_series_df: pd.DataFrame):
 
         # Initialize all variables #TODO: Rewrite using *args and **kwargs
 
         # Initialize object; inherit init from superclass
-        super().__init__(symbol=symbol, time_series_df=time_series_df)
-        # Dataclean upon initialization
-        self.__data_clean_df()
+
+        # Pydantic type checking
+        try:
+            super().__init__(symbol=symbol, time_series_df=time_series_df)
+            self.__data_clean_df()  # data clean with pandera
+        except ValueError:
+            raise ObjectGenerationError
+        except TypeError:
+            raise ObjectGenerationError

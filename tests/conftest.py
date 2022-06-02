@@ -49,3 +49,13 @@ def stock_with_unequal_rows():
         }
     )
     return Stock(symbol="AAPL", time_series_df=df)
+
+
+def stock_with_negative_closing_price():
+    df = pd.DataFrame(
+        {
+            "timestamp": ["1996-10-04", "1980-02-05", "1980-05-10"],
+            "close_price": [-1.3, 1.4, -5],
+        }
+    )
+    return Stock(symbol="AAPL", time_series_df=df)

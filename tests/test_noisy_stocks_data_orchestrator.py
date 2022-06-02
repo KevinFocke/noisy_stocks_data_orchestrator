@@ -1,9 +1,10 @@
+import numpy as np
 import pandas as pd
 import pytest
 from noisy_stocks_data_orchestrator import __version__, main_flow
 from noisy_stocks_data_orchestrator.customdatastructures import Stock
 
-from tests.conftest import stock_with_unequal_rows
+from tests.conftest import stock_with_negative_closing_price, stock_with_unequal_rows
 
 # For typechecking use isinstance()
 # Start every test with test_
@@ -43,3 +44,15 @@ def test_stock_df_wrong_size_length():
 
     # When testing exception message, convert it to a string
     assert str(ve.value) == "All arrays must be of the same length"
+
+
+def test_stock_df_wrong_close_price():
+    # with pytest.raises(TypeError) as se:
+    stock = stock_with_negative_closing_price()
+    closing_price_array = stock.time_series_df["close_price"].values
+    expected_result = np.array([1.4])
+
+    # assert closing_price_series.values.tolist() == [1.4]
+
+    assert closing_price_array == expected_result
+    # assert str(se.value) == "Schema"
