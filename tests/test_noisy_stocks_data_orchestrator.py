@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from noisy_stocks_data_orchestrator import __version__, main_flow
-from noisy_stocks_data_orchestrator.customdatastructures import Stock
+from noisy_stocks_data_orchestrator.customdatastructures import TimeSeries
 
 from tests.conftest import (
     stock_with_duplicate_dates,
@@ -33,8 +33,8 @@ def test_fixture_input_via_conftest(sanity_check_fixture):
 
 def test_create_stock(stock_with_date_nan):
     stock = stock_with_date_nan
-    assert isinstance(stock, Stock)
-    assert isinstance(stock.symbol, str)
+    assert isinstance(stock, TimeSeries)
+    assert isinstance(stock.name, str)
     assert isinstance(stock.time_series_df, pd.DataFrame)
 
 

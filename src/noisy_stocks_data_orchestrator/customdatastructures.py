@@ -19,18 +19,15 @@ class ObjectGenerationError(Exception):
     """Object cannot be created"""
 
 
-class Stock(BaseModel):
-
-    # TODO: Refactor Stock so it explicitly passes df
-
-    symbol: str  # Stock symbol is unique identifier
+class TimeSeries(BaseModel):
+    name: str  # unique identifier
     time_series_df: pd.DataFrame  # Check if type is DataFrame
 
     class Config:  # Pydantic configuration
         arbitrary_types_allowed = True
 
     def stock_to_JSON(self):
-        """create JSON of stock data
+        """create JSON
 
         Returns:
             JSON
@@ -58,8 +55,8 @@ class Stock(BaseModel):
         return self.time_series_df.drop(index_list, inplace=True)
 
     def __validate_schema(self):
-        """Validate pandera stock df schema"""
-        stock_df_schema = pa.DataFrameSchema(
+        """Validate pandera df schema"""
+        time_series_df_schema = pa.DataFrameSchema(
             {
                 "timestamp": pa.Column(Timestamp, coerce=True),
                 "close_price": pa.Column(
@@ -68,7 +65,7 @@ class Stock(BaseModel):
             },
         )
 
-        self.time_series_df = stock_df_schema(self.time_series_df)
+        self.time_series_df = time_series_df_schema(self.time_series_df)
 
     def __validate_ts_and_set_df(self):
         """Validate time series dataframe and set
@@ -90,13 +87,13 @@ class Stock(BaseModel):
             except SchemaError:
                 raise ObjectGenerationError
 
-    def __init__(self, symbol: str, time_series_df: pd.DataFrame):
+    def __init__(self, name: str, time_series_df: pd.DataFrame):
 
         # Initialize object with Pydantic type checking
         # Inherit init from superclass
 
         try:
-            super().__init__(symbol=symbol, time_series_df=time_series_df)
+            super().__init__(name=name, time_series_df=time_series_df)
             self.__data_clean_df()
         except ValueError:
             raise ObjectGenerationError
