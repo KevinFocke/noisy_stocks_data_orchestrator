@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -8,6 +10,7 @@ from tests.conftest import (
     stock_with_duplicate_dates,
     stock_with_negative_closing_price,
     stock_with_unequal_rows,
+    stock_with_unordered_dates,
 )
 
 # For typechecking use isinstance()
@@ -55,15 +58,25 @@ def test_stock_df_wrong_close_price():
     stock = stock_with_negative_closing_price()
     closing_price_array = stock.time_series_df["close_price"].values
     expected_result = np.array([1.4])
-
-    # assert closing_price_series.values.tolist() == [1.4]
-
     assert closing_price_array == expected_result
-    # assert str(se.value) == "Schema"
 
 
 def test_drop_duplicate_dates():
     stock = stock_with_duplicate_dates()
     closing_price_array = stock.time_series_df["close_price"].values
-    expected_result = np.array([1.4, 1.3])
+    expected_result = np.array([1.4, 1.3])  # dates are also reordered
     assert np.array_equal(closing_price_array, expected_result)  # type: ignore
+
+
+def test_dates_sorted():
+    stock = stock_with_unordered_dates()
+    timestamp_array = stock.time_series_df["timestamp"].values
+    # expected_result in datetime
+    expected_result = pd.to_datetime(
+        [
+            "1976-10-04T00:00:00.000000000",
+            "1980-02-05T00:00:00.000000000",
+            "1996-10-04T00:00:00.000000000",
+        ]
+    ).values
+    assert np.array_equal(timestamp_array, expected_result)  # type:ignore
