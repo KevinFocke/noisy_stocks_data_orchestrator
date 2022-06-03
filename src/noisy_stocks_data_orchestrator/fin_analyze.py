@@ -5,6 +5,7 @@ from prefect import flow, task
 import customdatastructures
 
 # TODO: Rewrite program to use data structures
+# TODO: Ensure equal time between timestamps
 
 
 @task()

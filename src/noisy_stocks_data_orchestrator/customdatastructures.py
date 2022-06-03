@@ -15,15 +15,14 @@ from pydantic import BaseModel
 # 3. Convert DataFrame to Markdown for publishing
 
 
-# TODO: Ensure equal time between timestamps
-
-
 class ObjectGenerationError(Exception):
-    """Exception raised if object cannot be created"""
+    """Object cannot be created"""
 
 
 class Stock(BaseModel):
+
     # TODO: Refactor Stock so it explicitly passes df
+
     symbol: str  # Stock symbol is unique identifier
     time_series_df: pd.DataFrame  # Check if type is DataFrame
 
@@ -31,10 +30,15 @@ class Stock(BaseModel):
         arbitrary_types_allowed = True
 
     def stock_to_JSON(self):
+        """create JSON of stock data
+
+        Returns:
+            JSON
+        """
         return self.json()
 
     def __data_clean_df(self):
-
+        """Clean the dataframe"""
         # Remove missing rows
         self.time_series_df.dropna(inplace=True)
         # Validate time series & set
@@ -49,12 +53,12 @@ class Stock(BaseModel):
         self.time_series_df.reset_index(drop=True, inplace=True)
 
     def drop_failure_cases(self, failure_cases):
-        """Drops failed cases from dataframe"""
+        """Drop failed cases from dataframe"""
         index_list = failure_cases["index"].values.tolist()
         return self.time_series_df.drop(index_list, inplace=True)
 
     def __validate_schema(self):
-
+        """Validate pandera stock df schema"""
         stock_df_schema = pa.DataFrameSchema(
             {
                 "timestamp": pa.Column(Timestamp, coerce=True),
@@ -71,9 +75,6 @@ class Stock(BaseModel):
 
         Args:
             df (pd.DataFrame): Unvalidated Pandas DataFrame
-
-        Returns:
-            int: Did the process succeed?
         """
 
         try:
@@ -91,14 +92,12 @@ class Stock(BaseModel):
 
     def __init__(self, symbol: str, time_series_df: pd.DataFrame):
 
-        # Initialize all variables #TODO: Rewrite using *args and **kwargs
+        # Initialize object with Pydantic type checking
+        # Inherit init from superclass
 
-        # Initialize object; inherit init from superclass
-
-        # Pydantic type checking
         try:
             super().__init__(symbol=symbol, time_series_df=time_series_df)
-            self.__data_clean_df()  # data clean with pandera
+            self.__data_clean_df()
         except ValueError:
             raise ObjectGenerationError
         except TypeError:
