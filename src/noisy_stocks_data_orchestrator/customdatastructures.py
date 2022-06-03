@@ -5,26 +5,21 @@ from pandera.errors import SchemaError
 from pydantic import BaseModel
 
 # Classes should be PascalCase
-# Check type using pydantic
-# Mark optional parameters with NotRequired
+# Check type using pydantic, check DataFrame using pandera
+# Mark optional pydantic parameters with NotRequired
 
 
-# Typical data order analysis:
+# Typical order of data analysis:
 # 1. Fetch required timeseries aggregation from database (JSON)
-# 2. Convert timeseries into Pandas DataFrame to analyze
-# 3. Convert DataFrame to JSON for publishing
+# 2. Convert timeseries into Pandas DataFrame for analysis
+# 3. Convert DataFrame to Markdown for publishing
 
-# TODO: Check if there are duplicates dates in dataframe; remove them; duplicate
+
+# TODO: Ensure equal time between timestamps
 
 
 class ObjectGenerationError(Exception):
     """Exception raised if object cannot be created"""
-
-    def __init__(self, error_message="Failed to create object"):
-        self.error_message = error_message
-        super().__init__(
-            self.error_message
-        )  # inherit from parent class with extra attribute
 
 
 class Stock(BaseModel):
@@ -40,18 +35,18 @@ class Stock(BaseModel):
 
     def __data_clean_df(self):
 
-        # TODO: Refactor - seperation of concerns
-        self.time_series_df.dropna(inplace=True)  # Remove missing rows
-        self.__validate_ts_and_set_df()  # Validate time series & set
+        # Remove missing rows
+        self.time_series_df.dropna(inplace=True)
+        # Validate time series & set
+        self.__validate_ts_and_set_df()
+        # Drop duplicate dates
         self.time_series_df.drop_duplicates(
             subset="timestamp", keep="first", inplace=True
-        )  # drop duplicate dates
-        self.time_series_df.sort_values(
-            "timestamp", ascending=True, inplace=True
-        )  # Sort by date (ascending)
-        self.time_series_df.reset_index(
-            drop=True, inplace=True
-        )  # Reset index to newly sorted
+        )
+        # Sort dates
+        self.time_series_df.sort_values("timestamp", ascending=True, inplace=True)
+        # Reset index
+        self.time_series_df.reset_index(drop=True, inplace=True)
 
     def drop_failure_cases(self, failure_cases):
         """Drops failed cases from dataframe"""

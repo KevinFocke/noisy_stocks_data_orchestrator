@@ -69,3 +69,13 @@ def stock_with_duplicate_dates():
         }
     )
     return Stock(symbol="AAPL", time_series_df=df)
+
+
+def stock_with_unordered_dates():
+    df = pd.DataFrame(
+        {
+            "timestamp": ["1996-10-04", "1980-02-05", "1976-10-04"],
+            "close_price": [1.3, 1.4, 5],
+        }
+    )
+    return Stock(symbol="AAPL", time_series_df=df)

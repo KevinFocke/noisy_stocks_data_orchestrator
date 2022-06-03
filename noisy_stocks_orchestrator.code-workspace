@@ -1,0 +1,12 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"testing.openTesting": "neverOpen",
+		"testing.automaticallyOpenPeekViewDuringAutoRun": false,
+		"testing.automaticallyOpenPeekView": "never"
+	}
+}
