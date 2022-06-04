@@ -1,9 +1,10 @@
+import dask as dd
 from prefect import flow, task
 from prefect.task_runners import SequentialTaskRunner
+from pydantic import PositiveInt, validate_arguments
 
 """Data Inflow Module
 """
-import os
 
 
 @flow
@@ -13,41 +14,39 @@ def query_database(query):
 
 
 @task
-def open_url(url):
-    # TODO: Write open_url function
+def extract_url(url):
+    # TODO: Write open_url functiona using requests
     # TODO: Enable recursive file fetching from URL
 
     pass
 
 
 def path_exists(path):
-    # check using os library
-
-    # os.path.exists(filepath)
 
     pass
 
 
-def open_file(path):
+def extract_file(path):
 
     # Does path exist?
     path_exists(path)
 
-    # check using os library
+    #  df = dd.read_csv(r"urlpath/filename")
 
-    # Go to path
-
-    # if path is folder, open every child file
-    # recursive into children folders
     pass
 
 
-def open_folder(path, recursive="n", recursive_levels=0):
-
+def extract_folder(path, file_suffix_in_folder, recursive="n", recursive_levels=0):
+    # TODO: stub
     path_exists(path)
     # check if is folder
 
-    # base case; folder is empty
+    # urlpath = path + r"*" + file_suffix
+
+    # df = dd.read_csv(r"urlpath/*.csv")
+    # https://docs.dask.org/en/stable/generated/dask.dataframe.read_csv.html
+
+    # base case; folder is empty or recursive_levels < 0
 
     # how many levels deep can you recurse into folder structure?
 
@@ -55,30 +54,47 @@ def open_folder(path, recursive="n", recursive_levels=0):
 
 
 @flow(task_runner=SequentialTaskRunner())
-def extract(type="", path="", recursive="n", recursive_levels=5):
+@validate_arguments
+def extract(
+    source_type: str = "",
+    path: str = "",
+    file_suffix_in_folder: str = ".txt",
+    recursive: str = "n",
+    recursive_levels: PositiveInt = 5,
+):
 
+    # TODO: Rename file_suffix_in_folder?
+
+    # file suffix is used to glob match fol
     types = {
-        "url": open_url(path),
-        "file": open_file(path),
-        "folder": open_folder(path, recursive, recursive_levels),
+        "url": extract_url(path),
+        "file": extract_file(path),
+        "folder": extract_folder(
+            path, file_suffix_in_folder, recursive, recursive_levels
+        ),
     }
 
+    extraction = None
     # Depending on type, call extraction method
-    if type in types:
+
+    if source_type in types:
         pass
         # call associated method
+
+    # Check if extraction was succesful; extraction not None
+
+    # Return list of dask Dataframes
 
 
 @task
 def transform():
+    # Datacleaning
     return
 
 
 @task
 def load():
     """Load data into database"""
-
-    # Compress
     return
 
 
@@ -89,7 +105,7 @@ def compress():
 
 
 @flow(task_runner=SequentialTaskRunner())
-def ingest_dataset(name, time_series_col):
+def ingest_data(name, time_series_col):
     # ETL Dataset into database
 
     extract()
