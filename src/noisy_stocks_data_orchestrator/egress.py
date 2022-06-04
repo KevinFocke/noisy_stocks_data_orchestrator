@@ -5,6 +5,7 @@ from prefect.task_runners import SequentialTaskRunner
 """
 
 # TODO: Set pandas backend to plotly https://plotly.com/python/pandas-backend/
+# TODO: Static image export plotly https://plotly.com/python/static-image-export
 
 
 @task()
