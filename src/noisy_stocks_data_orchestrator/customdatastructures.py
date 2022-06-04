@@ -23,7 +23,7 @@ class ObjectGenerationError(Exception):
 
 class TimeSeries(BaseModel):
     name: str  # unique identifier
-    dataset_profile: int = -1  # Which dataset?
+    dataset_profile_unique_id: int = -1  # Which dataset?
     time_series_df: pd.DataFrame  # Check if type is DataFrame
 
     class Config:  # Pydantic configuration
