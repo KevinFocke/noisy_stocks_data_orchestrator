@@ -8,6 +8,14 @@ import customdatastructures
 # TODO: Ensure equal time between timestamps
 
 
+@flow()
+def normalize_time_series():
+    # Ensure equal time between timestamps
+
+    # Index timestamp based on first value in time series
+    return
+
+
 @task()
 def find_highest_correlation(historical_stock_data):
     return historical_stock_data
