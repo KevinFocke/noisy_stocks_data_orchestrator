@@ -88,7 +88,11 @@ def extract(
 
 @task
 def transform():
-    # Datacleaning
+    # General datacleaning
+    # Unfortunately, it's very difficult to generalize for all datasets
+
+    # Sort timestamps ascending
+    # Normalize dataset based on start date
     return
 
 

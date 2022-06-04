@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import pandas as pd
 import pandera as pa
 from pandera.dtypes import Timestamp
@@ -21,6 +23,7 @@ class ObjectGenerationError(Exception):
 
 class TimeSeries(BaseModel):
     name: str  # unique identifier
+    dataset_profile: int = -1  # Which dataset?
     time_series_df: pd.DataFrame  # Check if type is DataFrame
 
     class Config:  # Pydantic configuration
@@ -87,13 +90,13 @@ class TimeSeries(BaseModel):
             except SchemaError:
                 raise ObjectGenerationError
 
-    def __init__(self, name: str, time_series_df: pd.DataFrame):
+    def __init__(self, *args, **kwargs):
 
         # Initialize object with Pydantic type checking
         # Inherit init from superclass
 
         try:
-            super().__init__(name=name, time_series_df=time_series_df)
+            super().__init__(*args, **kwargs)
             self.__data_clean_df()
         except ValueError:
             raise ObjectGenerationError
