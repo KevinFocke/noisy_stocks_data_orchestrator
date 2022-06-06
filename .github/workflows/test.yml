@@ -40,10 +40,10 @@ jobs:
       - name: Display Python version
         run: python -c "import sys; print(sys.version)"
       - name: Poetry set env
-        run: poetry env use python3.10
-      - name: Install dependencies
+        run: Poetry env use python3.10
+      - name: Poetry install dependencies
         run: poetry install --no-interaction --no-root
-      - name: Install library
+      - name: Poetry install library
         run: poetry install --no-interaction
       #- name: Activate virtual environment
       #  run: |
