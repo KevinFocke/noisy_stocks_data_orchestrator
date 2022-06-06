@@ -29,6 +29,7 @@ def create_path_object(path: str):
     return Path(path)
 
 
+@validate_arguments
 @flow(task_runner=SequentialTaskRunner())
 def check_and_create_folder(folder_url: Path, create: int = 1):
     # TODO: Refactor? Feels granular enough for now.
