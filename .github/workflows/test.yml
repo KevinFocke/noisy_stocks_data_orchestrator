@@ -35,6 +35,8 @@ jobs:
           virtualenvs-in-project: true
       - name: Check Poetry version
         run: poetry --version
+      - name: Poetry use python 3.10
+        run: poetry env use python3.10
       - name: Cache Poetry
         uses: actions/setup-python@v3
         with:
