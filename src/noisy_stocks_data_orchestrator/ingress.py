@@ -8,9 +8,6 @@ from pydantic import PositiveInt, validate_arguments
 """Data Inflow Module
 """
 
-# Best practice: Use Kaggle CLI to download datasets
-# authentication via kaggle.json in .kaggle
-
 
 @flow
 def query_database(query):
@@ -18,6 +15,7 @@ def query_database(query):
     return
 
 
+@task
 def create_path_object(path: str):
     """Create normalized path
 
@@ -31,12 +29,39 @@ def create_path_object(path: str):
     return Path(path)
 
 
-def check_folder_existence(folder_url: Path, create: int = 0):
+@flow(task_runner=SequentialTaskRunner())
+def check_and_create_folder(folder_url: Path, create: int = 1):
+    # TODO: Refactor? Feels granular enough for now.
     if not Path.is_dir(folder_url):
         if create == 1:
             print(f"Folder {folder_url} does not exist, creating it.")
             Path.mkdir(folder_url, parents=True)
     return Path.is_dir(folder_url)
+
+
+@flow
+def download_kaggle_dataset(
+    dataset_list: list[str] = [
+        r"borismarjanovic/price-volume-data-for-all-us-stocks-etfs"
+    ],
+    download_folder_path: str = r"\.datasets",
+):
+    # eg. borismarjanovic/price-volume-data-for-all-us-stocks-etfs
+
+    # authentication via kaggle.json in .kaggle
+    # kaggle datasets download -d borismarjanovic/price-volume-data-for-all-us-stocks-etfs
+    # Download zipped dataset
+
+    # TODO: Refactor download_folder_path_object? Doesn't roll off the tongue that well…
+
+    # TODO: Think through which kinds of errors can happen
+
+    download_folder_path_object = create_path_object(download_folder_path)
+    check_and_create_folder(download_folder_path_object, create=1)
+
+    kaggle_base_download = r"kaggle datasets download"
+
+    # Unzip dataset
 
 
 @task

@@ -6,7 +6,7 @@ import pytest
 from noisy_stocks_data_orchestrator import __version__, main_flow
 from noisy_stocks_data_orchestrator.customdatastructures import TimeSeries
 from noisy_stocks_data_orchestrator.ingress import (
-    check_folder_existence,
+    check_and_create_folder,
     create_path_object,
 )
 
@@ -19,6 +19,11 @@ from tests.conftest import (
 
 # For typechecking use isinstance()
 # Start every test with test_
+
+# Prefect testing:
+# Testing state:
+# state.is_succesful()
+# state.result()   # With parenthesis to correclty resolve via function call
 
 
 def test_version():
@@ -88,20 +93,25 @@ def test_dates_sorted():
 
 def test_folder_existence(tmp_path):
     assert isinstance(tmp_path, Path)
-    assert check_folder_existence(tmp_path)
+    assert check_and_create_folder(tmp_path).result()
 
 
 def test_folder_creation(tmp_path):
     assert isinstance(tmp_path, Path)
     non_existant_path = tmp_path / "hfdahdasfaeg"
     assert isinstance(non_existant_path, Path)
-    assert check_folder_existence(tmp_path)
-    assert check_folder_existence(non_existant_path, create=1)
+    assert check_and_create_folder(tmp_path).result()
+    assert check_and_create_folder(non_existant_path, create=1).result()
 
 
 def test_folder_non_existent(tmp_path):
     assert isinstance(tmp_path, Path)
     non_existant_path = tmp_path / "hfdahdasfaeg"
     assert isinstance(non_existant_path, Path)
-    assert check_folder_existence(tmp_path)
-    assert check_folder_existence(non_existant_path, create=0) == False
+    assert check_and_create_folder(tmp_path).result()
+    assert check_and_create_folder(non_existant_path, create=0).result() is False
+
+
+# TODO: Fix error code Prefect Future
+# How to check for error code instead of flow https://docs.prefect.io/core/idioms/testing-flows.html
+# TODO: Rewrite folder texts
