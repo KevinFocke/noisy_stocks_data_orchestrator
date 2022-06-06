@@ -41,7 +41,7 @@ jobs:
         run: python -c "import sys; print(sys.version)"
       - name: Install dependencies
         run: |
-        poetry env use "3.10"
+        poetry env use python3.10
         poetry install --no-interaction --no-root
       - name: Install library
         run: poetry install --no-interaction
