@@ -43,8 +43,6 @@ jobs:
         run: Poetry env use python3.10
       - name: Poetry install dependencies
         run: poetry install --no-interaction --no-root
-      - name: Poetry install library
-        run: poetry install --no-interaction
       #- name: Activate virtual environment
       #  run: |
       #    source $VENV
