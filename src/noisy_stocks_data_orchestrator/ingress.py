@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import List
 
 import dask as dd
 from prefect import flow, task
@@ -44,7 +45,7 @@ def check_and_create_folder(folder_url: Path, create: int = 1):
 @validate_arguments
 @flow
 def download_kaggle_dataset(
-    dataset_list: list[str] = [
+    dataset_list: List[str] = [
         r"borismarjanovic/price-volume-data-for-all-us-stocks-etfs"
     ],
     download_folder_path: str = r"\.datasets",
