@@ -21,6 +21,13 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
+      - name: Install Poetry
+        uses: snok/install-poetry@v1.3.1
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+      - name: Check Poetry version
+        run: poetry --version
       - name: Set up Python 3.x
         uses: actions/setup-python@v3
         with:
@@ -32,13 +39,6 @@ jobs:
       # You can test your matrix by printing the current Python version
       - name: Display Python version
         run: python -c "import sys; print(sys.version)"
-      - name: Install Poetry
-        uses: snok/install-poetry@v1.3.1
-        with:
-          virtualenvs-create: true
-          virtualenvs-in-project: true
-      - name: Check Poetry version
-        run: poetry --version
       - name: Install dependencies
         run: poetry install --no-interaction --no-root
       - name: Install library
