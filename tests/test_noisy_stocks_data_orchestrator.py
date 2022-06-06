@@ -25,6 +25,12 @@ from tests.conftest import (
 # state.is_succesful()
 # state.result()   # With parenthesis to correclty resolve via function call
 
+# Common troubleshoot:
+# If you:
+#  getdataset_list: list[str] = [
+#  TypeError: 'type' object is not subscriptable
+# Then the used Python version is not ^3.10
+
 
 def test_version():
     assert __version__ == "0.1.0"
