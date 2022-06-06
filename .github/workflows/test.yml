@@ -33,8 +33,8 @@ jobs:
         uses: snok/install-poetry@v1.3.1
       - name: Check Poetry version
         run: poetry --version
-      - name: Poetry use python 3.10
-        run: poetry env use python3.10
+      - name: Poetry use python ${{matrix.python-version}}
+        run: poetry env use ${{matrix.python-version}}
       - name: Cache Poetry
         uses: actions/setup-python@v3
         with:
