@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false # false means: if one job fails, continue the others
       matrix: 
-        os: [ "ubuntu-20.04" ]
+      os: [ "ubuntu-20.04" ]
     defaults:
       run:
         shell: bash # use bash for Windows compatability
@@ -35,19 +35,20 @@ jobs:
           python-version: '3.10'
           # Optional - x64 or x86 architecture, defaults to x64
           architecture: 'x64'
+          cache: 'poetry'
       # You can test your matrix by printing the current Python version
       - name: Display Python version
         run: python -c "import sys; print(sys.version)"
       - name: Install dependencies
-        run: poetry install --no-interaction --no-root
+        run: |
+        poetry env use "3.10"
+        poetry install --no-interaction --no-root
       - name: Install library
         run: poetry install --no-interaction
       #- name: Activate virtual environment
       #  run: |
       #    source $VENV
       #    pytest --version
-      - name: Display poetry python version
-        run: poetry run python -c "import sys; print(sys.version)"
       - name: Pytest within Poetry environment
         run: poetry run pytest -v --durations=0 --durations-min=1
       
