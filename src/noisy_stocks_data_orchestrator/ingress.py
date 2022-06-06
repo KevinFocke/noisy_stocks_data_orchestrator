@@ -15,6 +15,7 @@ def query_database(query):
     return
 
 
+@validate_arguments
 @task
 def create_path_object(path: str):
     """Create normalized path

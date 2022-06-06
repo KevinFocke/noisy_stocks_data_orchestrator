@@ -47,6 +47,8 @@ jobs:
       #  run: |
       #    source $VENV
       #    pytest --version
+      - name: Display poetry python version
+        run: poetry python --version
       - name: Pytest within Poetry environment
         run: poetry run pytest -v --durations=0 --durations-min=1
       
