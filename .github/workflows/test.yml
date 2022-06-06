@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false # false means: if one job fails, continue the others
       matrix:
-        os: ["ubuntu-20.04"]
+        os: ["ubuntu-20.04", "ubuntu-22.04"]
         python-version: ["3.10"]
     defaults:
       run:
