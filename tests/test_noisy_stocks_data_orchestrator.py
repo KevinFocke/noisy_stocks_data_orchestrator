@@ -1,8 +1,14 @@
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 import pytest
 from noisy_stocks_data_orchestrator import __version__, main_flow
 from noisy_stocks_data_orchestrator.customdatastructures import TimeSeries
+from noisy_stocks_data_orchestrator.ingress import (
+    check_folder_existence,
+    create_path_object,
+)
 
 from tests.conftest import (
     stock_with_duplicate_dates,
@@ -78,3 +84,24 @@ def test_dates_sorted():
         ]
     ).values
     assert np.array_equal(timestamp_array, expected_result)  # type:ignore
+
+
+def test_folder_existence(tmp_path):
+    assert isinstance(tmp_path, Path)
+    assert check_folder_existence(tmp_path)
+
+
+def test_folder_creation(tmp_path):
+    assert isinstance(tmp_path, Path)
+    non_existant_path = tmp_path / "hfdahdasfaeg"
+    assert isinstance(non_existant_path, Path)
+    assert check_folder_existence(tmp_path)
+    assert check_folder_existence(non_existant_path, create=1)
+
+
+def test_folder_non_existent(tmp_path):
+    assert isinstance(tmp_path, Path)
+    non_existant_path = tmp_path / "hfdahdasfaeg"
+    assert isinstance(non_existant_path, Path)
+    assert check_folder_existence(tmp_path)
+    assert check_folder_existence(non_existant_path, create=0) == False

@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import dask as dd
 from prefect import flow, task
 from prefect.task_runners import SequentialTaskRunner
@@ -6,11 +8,35 @@ from pydantic import PositiveInt, validate_arguments
 """Data Inflow Module
 """
 
+# Best practice: Use Kaggle CLI to download datasets
+# authentication via kaggle.json in .kaggle
+
 
 @flow
 def query_database(query):
 
     return
+
+
+def create_path_object(path: str):
+    """Create normalized path
+
+    Args:
+        path (str): link to folder
+
+    Returns:
+        Path: object-oriented filesystem path
+    """
+    # optionally use .resolve() to make absolute link
+    return Path(path)
+
+
+def check_folder_existence(folder_url: Path, create: int = 0):
+    if not Path.is_dir(folder_url):
+        if create == 1:
+            print(f"Folder {folder_url} does not exist, creating it.")
+            Path.mkdir(folder_url, parents=True)
+    return Path.is_dir(folder_url)
 
 
 @task

@@ -1,6 +1,7 @@
 import pandas as pd
 import pytest
 from noisy_stocks_data_orchestrator.customdatastructures import TimeSeries
+from noisy_stocks_data_orchestrator.ingress import create_path_object
 
 """
 Single source of truth for fixtures across tests
@@ -79,3 +80,8 @@ def stock_with_unordered_dates():
         }
     )
     return TimeSeries(name="AAPL", time_series_df=df)
+
+
+# Create Path
+# Create folder
+# Undo any steps; undo creation of folder
