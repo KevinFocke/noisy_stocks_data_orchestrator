@@ -39,6 +39,7 @@ def check_and_create_folder(folder_url: Path, create: int = 1):
     return Path.is_dir(folder_url)
 
 
+@validate_arguments
 @flow
 def download_kaggle_dataset(
     dataset_list: list[str] = [
