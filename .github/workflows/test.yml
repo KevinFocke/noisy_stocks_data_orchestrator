@@ -1,0 +1,51 @@
+name: Test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+  workflow_dispatch: #allows to run workflow from Github Actions dashboard
+
+jobs:
+  test-OS:
+    strategy:
+      fail-fast: false # false means: if one job fails, continue the others
+      matrix: 
+        os: [ "ubuntu-20.04" ]
+    defaults:
+      run:
+        shell: bash # use bash for Windows compatability
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+      - name: Set up Python 3.x
+        uses: actions/setup-python@v3
+        with:
+          # Semantic version range syntax or exact version of a Python version
+          python-version: '3.10'
+          # Optional - x64 or x86 architecture, defaults to x64
+          architecture: 'x64'
+      # You can test your matrix by printing the current Python version
+      - name: Display Python version
+        run: python -c "import sys; print(sys.version)"
+      - name: Install Poetry
+        uses: snok/install-poetry@v1.3.1
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+      - name: Check Poetry version
+        run: poetry --version
+      - name: Install dependencies
+        run: poetry install --no-interaction --no-root
+      - name: Install library
+        run: poetry install --no-interaction
+      #- name: Activate virtual environment
+      #  run: |
+      #    source $VENV
+      #    pytest --version
+      - name: Pytest within Poetry environment
+        run: poetry run pytest -v --durations=0 --durations-min=1
+      
