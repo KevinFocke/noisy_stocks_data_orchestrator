@@ -4,6 +4,8 @@ import time
 from prefect import flow, task
 from prefect.task_runners import DaskTaskRunner
 
+# TODO replace DaskTaskRunner with collectionts
+
 
 @task(retries=3, retry_delay_seconds=60)
 def test_parallellization_helper_1(number):

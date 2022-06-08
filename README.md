@@ -16,7 +16,7 @@ This is a project-based learning experience. My main goals for the project:
 	* Parallelize processes using Dask
 	* Extract datasets using Kaggle REST API 
 	* Transform datasets into consistent & normalized Pandas DataFrame columns
-	* Load datasets into local database (easily expandable to other PostgreSQL databases)
+	* Load datasets into local database (PostgreSQL)
 	* Query database for timerange
 	* Calculate time-lagged autocorrelation across datasets
 	* Export results to human-readable format for website publishing
