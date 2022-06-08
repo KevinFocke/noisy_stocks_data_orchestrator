@@ -138,3 +138,5 @@ datasets
 
 # Internal Development Files
 dev_internal
+logs
+scripts
