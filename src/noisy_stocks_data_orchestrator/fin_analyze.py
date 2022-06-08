@@ -1,6 +1,7 @@
 from datetime import datetime
 
-from prefect import flow, task
+from prefect.flows import flow
+from prefect.tasks import task
 
 import customdatastructures
 

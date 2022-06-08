@@ -1,5 +1,6 @@
-from prefect import flow, task
+from prefect.flows import flow
 from prefect.task_runners import SequentialTaskRunner
+from prefect.tasks import task
 
 """Data Outflow Module
 """

@@ -118,6 +118,4 @@ def test_folder_non_existent(tmp_path):
     assert check_and_create_folder(non_existant_path, create=0).result() is False
 
 
-# TODO: Fix error code Prefect Future
-# How to check for error code instead of flow https://docs.prefect.io/core/idioms/testing-flows.html
-# TODO: Rewrite folder texts
+# TODO: Create tests for extract_url, path_exists, extract_file,

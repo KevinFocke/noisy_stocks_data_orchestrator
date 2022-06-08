@@ -1,7 +1,7 @@
 from pathlib import Path
 
-import dask as dd
-from prefect import flow, task
+from prefect.flows import flow
+from prefect.tasks import task
 from prefect.task_runners import SequentialTaskRunner
 from pydantic import PositiveInt, validate_arguments
 
@@ -52,7 +52,10 @@ def download_kaggle_dataset(
     # eg. borismarjanovic/price-volume-data-for-all-us-stocks-etfs
 
     # authentication via kaggle.json in .kaggle
+
+    # Datasets:
     # kaggle datasets download -d borismarjanovic/price-volume-data-for-all-us-stocks-etfs
+    # kaggle datasets download -d neuromusic/avocado-prices
     # Download zipped dataset
 
     # TODO: Refactor download_folder_path_object? Doesn't roll off the tongue that well…
@@ -154,6 +157,9 @@ def transform():
 @task
 def load():
     """Load data into database"""
+
+    # During load only exact duplicates should be dropped
+    # Same date is okay and even desirable
     return
 
 

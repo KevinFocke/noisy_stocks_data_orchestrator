@@ -1,7 +1,8 @@
 import random
 import time
 
-from prefect import flow, task
+from prefect.flows import flow
+from prefect.tasks import task
 from prefect.task_runners import DaskTaskRunner
 
 # TODO replace DaskTaskRunner with collectionts
