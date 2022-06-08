@@ -43,7 +43,7 @@ class TimeSeries(BaseModel):
         self.time_series_df.dropna(inplace=True)
         # Validate time series & set
         self.__validate_ts_and_set_df()
-        # Drop duplicate dates
+        # Drop duplicate dates for analysis
         self.time_series_df.drop_duplicates(
             subset="timestamp", keep="first", inplace=True
         )
