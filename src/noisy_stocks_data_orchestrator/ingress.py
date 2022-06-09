@@ -3,7 +3,7 @@ from pathlib import Path
 from prefect.flows import flow
 from prefect.task_runners import SequentialTaskRunner
 from prefect.tasks import task
-from pydantic import PositiveInt, validate_arguments
+from pydantic import validate_arguments
 
 """Data Inflow Module
 """
@@ -108,37 +108,17 @@ def extract_folder(path, file_suffix_in_folder, recursive="n", recursive_levels=
 
     # how many levels deep can you recurse into folder structure?
 
+
+@validate_arguments
+@flow
+def extract(
+    source_type: str = "",
+    path: str = "",
+    file_suffix_in_folder: str = ".txt",
+    recursive: str = "n",
+):
+    # WISHLIST: Define recursion levels ; PositiveInt pydantic type could be useful
     pass
-
-
-# @flow(task_runner=SequentialTaskRunner())
-# @validate_arguments
-# def extract(
-# source_type: str = "",
-# path: str = "",
-# file_suffix_in_folder: str = ".txt",
-# recursive: str = "n",
-# ):
-
-# # TODO: Rename file_suffix_in_folder?
-
-# # file suffix is used to glob match fol
-# types = {
-# "url": extract_url(path),
-# "file": extract_file(path),
-# "folder": extract_folder(path, file_suffix_in_folder, recursive),
-# }
-
-# extraction = None
-# # Depending on type, call extraction method
-
-# if source_type in types:
-# pass
-# # call associated method
-
-# # Check if extraction was succesful; extraction not None
-
-# # Return list of dask Dataframes
 
 
 @task
@@ -163,6 +143,8 @@ def load():
 @task
 def compress():
     """Compress database"""
+
+    # WISHLIST: Add compression
     # https://docs.timescale.com/timescaledb/latest/how-to-guides/compression/manually-compress-chunks/#main-content
 
 

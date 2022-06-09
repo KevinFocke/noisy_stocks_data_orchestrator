@@ -120,13 +120,9 @@ def test_folder_non_existent(tmp_path):
     # https://docs.python.org/3/library/pathlib.html
 
 
-def test_fixt_csv(temp_ingress_file_csv):
+def test_fixture_csv(temp_ingress_file_csv):
     assert temp_ingress_file_csv.is_file()
-    with open(temp_ingress_file_csv) as fp:
-        output = fp.read()
-    unused = temp_ingress_file_csv / "hi"
-    assert "a" == "a"
 
 
-def test_fixt_txt(temp_ingress_file_txt):
+def test_fixture_txt(temp_ingress_file_txt):
     assert temp_ingress_file_txt.is_file()

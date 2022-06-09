@@ -94,7 +94,8 @@ def factory_temp_file(tmp_path):
         suffix (str): The suffix of your filename eg. ".txt" for "tempfile.txt"
 
     Return:
-        path (Path): path to temporary file with sample data; path formatted using built-in pathlib
+        path (Path): path to temporary file with sample data;
+        Path object created by built-in pathlib
     """
 
     def _create_temp_file(filesuffix):
