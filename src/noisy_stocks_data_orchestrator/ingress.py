@@ -1,8 +1,8 @@
 from pathlib import Path
 
 from prefect.flows import flow
-from prefect.tasks import task
 from prefect.task_runners import SequentialTaskRunner
+from prefect.tasks import task
 from pydantic import PositiveInt, validate_arguments
 
 """Data Inflow Module
@@ -111,37 +111,34 @@ def extract_folder(path, file_suffix_in_folder, recursive="n", recursive_levels=
     pass
 
 
-@flow(task_runner=SequentialTaskRunner())
-@validate_arguments
-def extract(
-    source_type: str = "",
-    path: str = "",
-    file_suffix_in_folder: str = ".txt",
-    recursive: str = "n",
-    recursive_levels: PositiveInt = 5,
-):
+# @flow(task_runner=SequentialTaskRunner())
+# @validate_arguments
+# def extract(
+# source_type: str = "",
+# path: str = "",
+# file_suffix_in_folder: str = ".txt",
+# recursive: str = "n",
+# ):
 
-    # TODO: Rename file_suffix_in_folder?
+# # TODO: Rename file_suffix_in_folder?
 
-    # file suffix is used to glob match fol
-    types = {
-        "url": extract_url(path),
-        "file": extract_file(path),
-        "folder": extract_folder(
-            path, file_suffix_in_folder, recursive, recursive_levels
-        ),
-    }
+# # file suffix is used to glob match fol
+# types = {
+# "url": extract_url(path),
+# "file": extract_file(path),
+# "folder": extract_folder(path, file_suffix_in_folder, recursive),
+# }
 
-    extraction = None
-    # Depending on type, call extraction method
+# extraction = None
+# # Depending on type, call extraction method
 
-    if source_type in types:
-        pass
-        # call associated method
+# if source_type in types:
+# pass
+# # call associated method
 
-    # Check if extraction was succesful; extraction not None
+# # Check if extraction was succesful; extraction not None
 
-    # Return list of dask Dataframes
+# # Return list of dask Dataframes
 
 
 @task

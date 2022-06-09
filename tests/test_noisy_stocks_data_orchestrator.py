@@ -5,10 +5,7 @@ import pandas as pd
 import pytest
 from noisy_stocks_data_orchestrator import __version__, main_flow
 from noisy_stocks_data_orchestrator.customdatastructures import TimeSeries
-from noisy_stocks_data_orchestrator.ingress import (
-    check_and_create_folder,
-    create_path_object,
-)
+from noisy_stocks_data_orchestrator.ingress import check_and_create_folder
 
 from tests.conftest import (
     stock_with_duplicate_dates,
@@ -117,5 +114,23 @@ def test_folder_non_existent(tmp_path):
     assert check_and_create_folder(tmp_path).result()
     assert check_and_create_folder(non_existant_path, create=0).result() is False
 
+    # TODO: Create tests for extract_url, path_exists, extract_file,
 
-# TODO: Create tests for extract_url, path_exists, extract_file,
+    # TODO: Pathlib GLOB IT UP! (to recursively open folders)
+    # https://docs.python.org/3/library/pathlib.html
+
+
+def test_fixt(temp_ingress_csv_files):
+    assert temp_ingress_csv_files.is_file()
+    with open(temp_ingress_csv_files) as fp:
+        output = fp.read()
+    unused = temp_ingress_csv_files / "hi"
+    assert "a" == "a"
+
+
+def test_fixt_txt(temp_ingress_txt_files):
+    assert temp_ingress_txt_files.is_file()
+    with open(temp_ingress_txt_files) as fp:
+        output = fp.read()
+    unused = temp_ingress_txt_files / "hi"
+    assert "a" == "a"

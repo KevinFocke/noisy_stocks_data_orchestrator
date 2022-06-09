@@ -1,7 +1,6 @@
 import pandas as pd
 import pytest
 from noisy_stocks_data_orchestrator.customdatastructures import TimeSeries
-from noisy_stocks_data_orchestrator.ingress import create_path_object
 
 """
 Single source of truth for fixtures across tests
@@ -85,3 +84,28 @@ def stock_with_unordered_dates():
 # Create Path
 # Create folder
 # Undo any steps; undo creation of folder
+
+
+@pytest.fixture
+def temp_ingress_textual_based_files():
+    pass
+
+
+@pytest.fixture
+def temp_ingress_csv_files(tmp_path):
+    # Based on a.us.txt in Stocks
+    filename = "testfile" + ".csv"
+    filepath = tmp_path / filename
+    data = [
+        "Date, Open, High, Low, Close, Volume, OpenInt",
+        "1999 - 11 - 18, 30.713, 33.754, 27.002, 29.702, 66277506, 0",
+        "1999 - 11 - 19, 28.986, 29.027, 26.872, 27.257, 16142920, 0",
+        "1999 - 11 - 22, 27.886, 29.702, 27.044, 29.702, 6970266, 0",
+    ]
+    # open as file pointer, append to it (implicitly creates file if does not exist)
+    with open(filepath, "a") as fp:
+        for line in data:
+            fp.write(line)
+            fp.write("\n")
+    assert filepath.is_file()
+    return filepath
