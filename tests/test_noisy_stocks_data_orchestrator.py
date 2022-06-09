@@ -5,7 +5,8 @@ import pandas as pd
 import pytest
 from noisy_stocks_data_orchestrator import __version__, main_flow
 from noisy_stocks_data_orchestrator.customdatastructures import TimeSeries
-from noisy_stocks_data_orchestrator.ingress import check_and_create_folder
+from noisy_stocks_data_orchestrator.ingress import create_folder, folder_exists
+from prefect.flows import flow
 
 from tests.conftest import (
     stock_with_duplicate_dates,
@@ -94,25 +95,30 @@ def test_dates_sorted():
     assert np.array_equal(timestamp_array, expected_result)  # type:ignore
 
 
+@flow
 def test_folder_existence(tmp_path):
     assert isinstance(tmp_path, Path)
-    assert check_and_create_folder(tmp_path).result()
+    assert folder_exists(tmp_path).result()
 
 
+@flow
 def test_folder_creation(tmp_path):
     assert isinstance(tmp_path, Path)
     non_existant_path = tmp_path / "hfdahdasfaeg"
     assert isinstance(non_existant_path, Path)
-    assert check_and_create_folder(tmp_path).result()
-    assert check_and_create_folder(non_existant_path, create=1).result()
+    # Does not yet exist
+    assert not folder_exists(non_existant_path).result()
+    # Create and check
+    assert create_folder(non_existant_path).result()
+    assert folder_exists(non_existant_path).result()
 
 
+@flow
 def test_folder_non_existent(tmp_path):
     assert isinstance(tmp_path, Path)
     non_existant_path = tmp_path / "hfdahdasfaeg"
     assert isinstance(non_existant_path, Path)
-    assert check_and_create_folder(tmp_path).result()
-    assert check_and_create_folder(non_existant_path, create=0).result() is False
+    assert folder_exists(tmp_path).result() is False
 
     # TODO: Create tests for extract_url, path_exists, extract_file,
 

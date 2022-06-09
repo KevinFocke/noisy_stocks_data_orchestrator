@@ -9,6 +9,7 @@ import customdatastructures
 # TODO: Ensure equal time between timestamps
 
 
+# Correlation is parralellizable! https://docs.dask.org/en/stable/dataframe.html
 @flow()
 def normalize_time_series():
     # Ensure equal time between timestamps

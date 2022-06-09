@@ -1,4 +1,5 @@
 from pathlib import Path
+from queue import SimpleQueue
 
 from prefect.flows import flow
 from prefect.task_runners import SequentialTaskRunner
@@ -30,73 +31,29 @@ def create_path_object(path: str):
     return Path(path)
 
 
-@validate_arguments
-@flow(task_runner=SequentialTaskRunner())
-def check_and_create_folder(folder_url: Path, create: int = 1):
-    # TODO: Refactor? Feels granular enough for now.
-    if not Path.is_dir(folder_url):
-        if create == 1:
-            print(f"Folder {folder_url} does not exist, creating it.")
-            Path.mkdir(folder_url, parents=True)
-    return Path.is_dir(folder_url)
-
-
-@validate_arguments
-@flow
-def download_kaggle_dataset(
-    dataset_list: list[str] = [
-        r"borismarjanovic/price-volume-data-for-all-us-stocks-etfs"
-    ],
-    download_folder_path: str = r"\.datasets",
-):
-    # eg. borismarjanovic/price-volume-data-for-all-us-stocks-etfs
-
-    # authentication via kaggle.json in .kaggle
-
-    # Datasets:
-    # kaggle datasets download -d borismarjanovic/price-volume-data-for-all-us-stocks-etfs
-    # kaggle datasets download -d neuromusic/avocado-prices
-    # Download zipped dataset
-
-    # TODO: Refactor download_folder_path_object? Doesn't roll off the tongue that well…
-
-    # TODO: Think through which kinds of errors can happen
-
-    # download_folder_path_object = create_path_object(download_folder_path)
-    # check_and_create_folder(download_folder_path_object, create=1)
-
-    # kaggle_base_download = r"kaggle datasets download"
-
-    # Unzip dataset
-    pass
-
-
 @task
-def extract_url(url):
-    # TODO: Write open_url functiona using requests
-    # TODO: Enable recursive file fetching from URL
-
-    pass
+def folder_exists(path: Path):
+    return Path.is_dir(path)
 
 
-def path_exists(path):
-
-    pass
-
-
-def extract_file(path):
-
-    # Does path exist?
-    path_exists(path)
-
-    #  df = dd.read_csv(r"urlpath/filename")
-
-    pass
+@validate_arguments
+@task
+def create_folder(folder_url: Path):
+    if not folder_exists(folder_url):
+        print(f"Folder {folder_url} does not exist, creating it.")
+        Path.mkdir(folder_url, parents=True)
+        if folder_exists(folder_url):
+            return True  # Folder created
+        else:
+            raise ValueError("Folder should have been created, but was not.")
+    else:
+        print("Folder already exists")
+        return False  # No folder created
 
 
 def extract_folder(path, file_suffix_in_folder, recursive="n", recursive_levels=0):
     # TODO: stub
-    path_exists(path)
+    folder_exists(path)
     # check if is folder
 
     # urlpath = path + r"*" + file_suffix
@@ -111,12 +68,15 @@ def extract_folder(path, file_suffix_in_folder, recursive="n", recursive_levels=
 
 @validate_arguments
 @flow
-def extract(
+def file_extraction_flow(
     source_type: str = "",
     path: str = "",
     file_suffix_in_folder: str = ".txt",
     recursive: str = "n",
 ):
+    file_urls: SimpleQueue = SimpleQueue()
+    # Implement simple queue structure https://github.com/python/cpython/blob/3.10/Lib/queue.py
+
     # WISHLIST: Define recursion levels ; PositiveInt pydantic type could be useful
     pass
 
@@ -148,11 +108,18 @@ def compress():
     # https://docs.timescale.com/timescaledb/latest/how-to-guides/compression/manually-compress-chunks/#main-content
 
 
+@task
+def extraction_selector(resource_location, resource_type):
+    # Choose the fitting extraction method for the resource_type
+    pass
+    # extraction_options = {"folder": folder_extraction}
+
+
 @flow(task_runner=SequentialTaskRunner())
 def ingest_data(name, time_series_col):
     # ETL Dataset into database
 
-    extract()
+    extraction_selector()
     transform()
     load()
     compress()
