@@ -9,8 +9,28 @@ from pydantic import validate_arguments
 """Data Inflow Module
 """
 
+# TODO: Steps for folder ingestion:
+# List path + subdirectories of path
+# https://docs.python.org/3/library/pathlib.html
+# For each (sub)directory, put directory in DirectoryExtractionQueue
+# Get directory out of DirectoryExtractionQueue until empty
+# For each directory, create the files list (no subdirectories!)
+# For each file in file list, put in FileExtractionQueue
+# Get file directory out of FileExtractionQueue until empty
+# For each file:
+# 1. create a TimeSeries class
+# https://docs.dask.org/en/stable/generated/dask.dataframe.read_csv.html
+# dd.read_csv("*.csv", parse_dates = "date_col_name", include_path_column=True)
+# df = df.set_index("date_col_name")
+# drop duplicates
+# df = df.drop_duplicates()
 
-@flow
+# Open question: How to ensure dataset is not already ingested?
+
+# How to add new entries to a partially ingested dataset?
+
+
+@task
 def query_database(query):
 
     return
@@ -31,6 +51,7 @@ def create_path_object(path: str):
     return Path(path)
 
 
+@validate_arguments
 @task
 def folder_exists(path: Path):
     return Path.is_dir(path)
@@ -49,36 +70,6 @@ def create_folder(folder_url: Path):
     else:
         print("Folder already exists")
         return False  # No folder created
-
-
-def extract_folder(path, file_suffix_in_folder, recursive="n", recursive_levels=0):
-    # TODO: stub
-    folder_exists(path)
-    # check if is folder
-
-    # urlpath = path + r"*" + file_suffix
-
-    # df = dd.read_csv(r"urlpath/*.csv")
-    # https://docs.dask.org/en/stable/generated/dask.dataframe.read_csv.html
-
-    # base case; folder is empty or recursive_levels < 0
-
-    # how many levels deep can you recurse into folder structure?
-
-
-@validate_arguments
-@flow
-def file_extraction_flow(
-    source_type: str = "",
-    path: str = "",
-    file_suffix_in_folder: str = ".txt",
-    recursive: str = "n",
-):
-    file_urls: SimpleQueue = SimpleQueue()
-    # Implement simple queue structure https://github.com/python/cpython/blob/3.10/Lib/queue.py
-
-    # WISHLIST: Define recursion levels ; PositiveInt pydantic type could be useful
-    pass
 
 
 @task
@@ -112,6 +103,7 @@ def compress():
 def extraction_selector(resource_location, resource_type):
     # Choose the fitting extraction method for the resource_type
     pass
+
     # extraction_options = {"folder": folder_extraction}
 
 

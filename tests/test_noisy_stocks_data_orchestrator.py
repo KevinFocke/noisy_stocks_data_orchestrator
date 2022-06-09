@@ -122,9 +122,6 @@ def test_folder_non_existent(tmp_path):
 
     # TODO: Create tests for extract_url, path_exists, extract_file,
 
-    # TODO: Pathlib GLOB IT UP! (to recursively open folders)
-    # https://docs.python.org/3/library/pathlib.html
-
 
 def test_fixture_csv(temp_ingress_file_csv):
     assert temp_ingress_file_csv.is_file()
