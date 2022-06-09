@@ -71,10 +71,6 @@ First, start up a Python 3.10 devcontainer. All commands should be run from with
 
 	pip install poetry
 
-Create env file in workspace: 
-
-	poetry config virtualenvs.in-project true
-
 Double check your settings:
 
 	poetry config --list
@@ -83,7 +79,7 @@ Activate env:
 
 	poetry shell
 
-Upon initial install, restart VSCode. Select python interpreter. Selecting the correct interpreter can be further automated via VSCode tasks.json & launch.json.
+Upon initial install, restart VSCode & select python interpreter. Selecting the correct interpreter can be further automated via VSCode tasks.json & launch.json.
 
 ## Other
 TODO: Create files for Black, Flake8 & isort settings
