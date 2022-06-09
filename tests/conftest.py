@@ -85,27 +85,68 @@ def stock_with_unordered_dates():
 # Create folder
 # Undo any steps; undo creation of folder
 
-
-@pytest.fixture
-def temp_ingress_textual_based_files():
-    pass
+# TODO: Refactor fixture; make DRY (only filename suffix changes)
 
 
 @pytest.fixture
-def temp_ingress_csv_files(tmp_path):
+def temp_ingress_csv_file(tmp_path):
     # Based on a.us.txt in Stocks
     filename = "testfile" + ".csv"
     filepath = tmp_path / filename
-    data = [
+    input_data = [
         "Date, Open, High, Low, Close, Volume, OpenInt",
         "1999 - 11 - 18, 30.713, 33.754, 27.002, 29.702, 66277506, 0",
         "1999 - 11 - 19, 28.986, 29.027, 26.872, 27.257, 16142920, 0",
         "1999 - 11 - 22, 27.886, 29.702, 27.044, 29.702, 6970266, 0",
     ]
     # open as file pointer, append to it (implicitly creates file if does not exist)
+    # Write the data
     with open(filepath, "a") as fp:
-        for line in data:
+        for line in input_data:
             fp.write(line)
             fp.write("\n")
+
+    # Read the data
+    read_data = []
+    with open(filepath, "r") as fp:
+        for line in range(len(input_data)):
+            read_data.append(fp.readline())
+
+    for index, line in enumerate(read_data):
+        read_data[index] = line.strip("\n")
+    assert read_data == input_data
     assert filepath.is_file()
+
+    return filepath
+
+
+@pytest.fixture
+def temp_ingress_txt_file(tmp_path, request):
+    # Based on a.us.txt in Stocks
+    filename = "testfile" + ".txt"
+    filepath = tmp_path / filename
+    input_data = [
+        "Date, Open, High, Low, Close, Volume, OpenInt",
+        "1999 - 11 - 18, 30.713, 33.754, 27.002, 29.702, 66277506, 0",
+        "1999 - 11 - 19, 28.986, 29.027, 26.872, 27.257, 16142920, 0",
+        "1999 - 11 - 22, 27.886, 29.702, 27.044, 29.702, 6970266, 0",
+    ]
+    # open as file pointer, append to it (implicitly creates file if does not exist)
+    # Write the data
+    with open(filepath, "a") as fp:
+        for line in input_data:
+            fp.write(line)
+            fp.write("\n")
+
+    # Read the data
+    read_data = []
+    with open(filepath, "r") as fp:
+        for line in range(len(input_data)):
+            read_data.append(fp.readline())
+
+    for index, line in enumerate(read_data):
+        read_data[index] = line.strip("\n")
+    assert read_data == input_data
+    assert filepath.is_file()
+
     return filepath
