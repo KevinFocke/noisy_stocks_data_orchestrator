@@ -133,10 +133,10 @@ def factory_temp_file(tmp_path):
 
 
 @pytest.fixture
-def temp_ingress_csv_file(factory_temp_file):
+def temp_ingress_file_csv(factory_temp_file):
     return factory_temp_file(filesuffix=".csv")
 
 
 @pytest.fixture
-def temp_ingress_txt_file(factory_temp_file):
+def temp_ingress_file_txt(factory_temp_file):
     return factory_temp_file(filesuffix=".txt")
