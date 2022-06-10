@@ -59,31 +59,26 @@ class ResourceFactory:
     # Depending on resource_type, create a resource
 
     def create_path_from_location(self):
-        self.resource_path = Path(self.resource_location)
+        # self.resource_path = Path(self.resource_location)
+        pass
 
     def create_resource(self):
         # If resource is url, make url
         # else make pathlib Path
-        if self.resource_type == "folder":
-            self.resource_path = Path(self.resource_location)
-            return ResourceFolder(
-                resource_path=self.resource_path, resource_schema=self.resource_schema
-            )
+        # if self.resource_type == "folder":
+        #     self.resource_path = Path(self.resource_location)
+        #     return ResourceFolder(
+        #         resource_path=self.resource_path, resource_schema=self.resource_schema
+        #     )
+        pass
 
     # Using dictionary, eg {"file":resource_file(), "folder":resource_folder()}
     def __init__(self, *args, **kwargs):
 
         # Initialize object with Pydantic type checking
         # Inherit init from superclass
-        try:
-            super().__init__(*args, **kwargs)
-            return self.create_resource()
-        except ValueError:
-            raise ValueError
-        except TypeError:
-            raise TypeError
-
-    pass
+        super().__init__(*args, **kwargs)
+        return self.create_resource()
 
 
 # TODO: Make TimeSeries method use prefect flows & tasks
@@ -169,10 +164,5 @@ class TimeSeries(BaseModel):
         # Initialize object with Pydantic type checking
         # Inherit init from superclass
 
-        try:
-            super().__init__(*args, **kwargs)
-            self.__data_clean_df()
-        except ValueError:
-            raise ValueError
-        except TypeError:
-            raise TypeError
+        super().__init__(*args, **kwargs)
+        self.__data_clean_df()
