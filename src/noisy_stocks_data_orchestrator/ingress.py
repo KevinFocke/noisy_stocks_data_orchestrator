@@ -134,7 +134,7 @@ def extraction_selector(resource_location, resource_type, queues):
 def ingress_data(resource_schema, resource_location, resource_type):
     # ETL Dataset into database
     resource = Resource(
-        resource_schema=schema,
+        resource_schema=resource_schema,
         resource_location=resource_location,
         resource_type=resource_type,
     )
