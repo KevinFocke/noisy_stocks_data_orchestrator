@@ -6,7 +6,7 @@ from prefect.task_runners import SequentialTaskRunner
 from prefect.tasks import task
 from pydantic import validate_arguments
 
-from customdatastructures import Resource
+from customdatastructures import ResourceFactory, resource_factory
 
 """Data Inflow Module
 """
@@ -102,37 +102,30 @@ def load():
 
 
 @task
-def compress():
-    """Compress database"""
-
-    # WISHLIST: Add compression
-    # https://docs.timescale.com/timescaledb/latest/how-to-guides/compression/manually-compress-chunks/#main-content
-
-
-@task
-def folder_extraction(folder_location):
+def folder_extraction(resource: resource_factory):
 
     pass
-
-
-@task
-def extraction_selector(resource_location, resource_type, queues):
-    # Choose the fitting extraction method for the resource_type
-    pass
-
-    # extraction_options = {"folder": folder_extraction}
 
 
 @flow(task_runner=SequentialTaskRunner())
 def ingress_data(resource_schema, resource_location, resource_type):
     # ETL Dataset into database
-    resource = Resource(
+    resource = ResourceFactory(
         resource_schema=resource_schema,
         resource_location=resource_location,
         resource_type=resource_type,
     )
     #  initialize queue if not existing
-    extraction_selector()
+    resource.enqueue()
+    resource.process_queue()
     transform()
     load()
     compress()
+
+
+@task
+def compress():
+    """Compress database"""
+
+    # WISHLIST: Add compression
+    # https://docs.timescale.com/timescaledb/latest/how-to-guides/compression/manually-compress-chunks/#main-content

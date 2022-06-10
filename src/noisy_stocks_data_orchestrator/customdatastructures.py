@@ -13,15 +13,6 @@ from pydantic import BaseModel, PositiveInt
 # Check type using pydantic, check DataFrame using pandera
 
 
-class Resource(BaseModel):
-    resource_type: str
-    resource_location: str
-    resource_schema: pa.DataFrameSchema
-
-    class Config:
-        arbitrary_types_allowed = True
-
-
 class ExtractionQueue(BaseModel):
     timeout_pop: PositiveInt = 1
     _queue: SimpleQueue = SimpleQueue()  # Should not be accessed
@@ -44,15 +35,55 @@ class ExtractionQueue(BaseModel):
 
 
 class FolderExtractionQueue(ExtractionQueue):
-    pass
-
-
-class FileExtractionQueue(ExtractionQueue):
-    pass
-    file_queue_dirty: SimpleQueue
-
     class Config:  # Pydantic configuration
         arbitrary_types_allowed = True
+
+    pass
+
+
+class ResourceFolder(BaseModel):
+    resource_path: Path
+    resource_schema: pa.DataFrameSchema
+
+    def enqueue(self):
+        pass
+
+    def process(self):
+        pass
+
+
+class ResourceFactory:
+    resource_type: str
+    resource_location: str
+    resource_schema: pa.DataFrameSchema
+    # Depending on resource_type, create a resource
+
+    def create_path_from_location(self):
+        self.resource_path = Path(self.resource_location)
+
+    def create_resource(self):
+        # If resource is url, make url
+        # else make pathlib Path
+        if self.resource_type == "folder":
+            self.resource_path = Path(self.resource_location)
+            return ResourceFolder(
+                resource_path=self.resource_path, resource_schema=self.resource_schema
+            )
+
+    # Using dictionary, eg {"file":resource_file(), "folder":resource_folder()}
+    def __init__(self, *args, **kwargs):
+
+        # Initialize object with Pydantic type checking
+        # Inherit init from superclass
+        try:
+            super().__init__(*args, **kwargs)
+            return self.create_resource()
+        except ValueError:
+            raise ValueError
+        except TypeError:
+            raise TypeError
+
+    pass
 
 
 # TODO: Make TimeSeries method use prefect flows & tasks
@@ -129,10 +160,9 @@ class TimeSeries(BaseModel):
             # attempt fix by dropping rows
             self.drop_failure_cases(se.failure_cases)
             # revalidate
-            try:
-                self.__validate_schema()
-            except SchemaError:
-                raise SchemaError
+            self.__validate_schema()
+
+    # WISHLIST: Refactor data cleaning into seperate function
 
     def __init__(self, *args, **kwargs):
 
