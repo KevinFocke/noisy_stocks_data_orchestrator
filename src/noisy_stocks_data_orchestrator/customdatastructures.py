@@ -9,6 +9,7 @@ from prefect.flows import flow
 from prefect.tasks import task
 from pydantic import BaseModel, PositiveInt
 
+
 # Classes should be PascalCase
 # Check type using pydantic, check DataFrame using pandera
 
@@ -72,7 +73,7 @@ class ExtractionQueue(BaseModel):
 
 
 class FolderExtractionQueue(ExtractionQueue):
-    pass  #
+    pass
 
 
 class FileExtractionQueue(ExtractionQueue):
@@ -81,26 +82,6 @@ class FileExtractionQueue(ExtractionQueue):
 
     class Config:  # Pydantic configuration
         arbitrary_types_allowed = True
-
-
-@task
-def create_folder_extraction_queue(path: Path):
-
-    if not folder_exists(path):
-        return ValueError(f"Folder {path} not found")
-
-    # TODO: Pathlib GLOB IT UP! (to recursively open folders)
-
-
-def clean_folder_queue():
-    file_queue: SimpleQueue = SimpleQueue()
-    pass
-    # df = dd.read_csv(r"urlpath/*.csv")
-    # https://docs.dask.org/en/stable/generated/dask.dataframe.read_csv.html
-
-    # base case; folder is empty or recursive_levels < 0
-
-    # how many levels deep can you recurse into folder structure?
 
 
 # TODO: Make TimeSeries method use prefect flows & tasks

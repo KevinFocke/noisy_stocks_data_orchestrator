@@ -40,14 +40,6 @@ def query_database(query):
     return
 
 
-@flow
-def extraction_queue_creator():
-    """Create extraction queue
-    Return: List of queues
-    """
-    pass
-
-
 @validate_arguments
 @task
 def create_path_object(path: str):
@@ -119,6 +111,7 @@ def compress():
 
 @task
 def folder_extraction(folder_location):
+
     pass
 
 
@@ -138,7 +131,6 @@ def ingress_data(resource_schema, resource_location, resource_type):
         resource_location=resource_location,
         resource_type=resource_type,
     )
-    create_queue(resource)
     #  initialize queue if not existing
     extraction_selector()
     transform()
