@@ -6,6 +6,8 @@ from prefect.task_runners import SequentialTaskRunner
 from prefect.tasks import task
 from pydantic import validate_arguments
 
+from customdatastructures import Resource
+
 """Data Inflow Module
 """
 
@@ -38,6 +40,14 @@ def query_database(query):
     return
 
 
+@flow
+def extraction_queue_creator():
+    """Create extraction queue
+    Return: List of queues
+    """
+    pass
+
+
 @validate_arguments
 @task
 def create_path_object(path: str):
@@ -55,8 +65,14 @@ def create_path_object(path: str):
 
 @validate_arguments
 @task
+def file_exists(path: Path):
+    return path.is_file()
+
+
+@validate_arguments
+@task
 def folder_exists(path: Path):
-    return Path.is_dir(path)
+    return path.is_dir()
 
 
 @validate_arguments
@@ -102,7 +118,12 @@ def compress():
 
 
 @task
-def extraction_selector(resource_location, resource_type):
+def folder_extraction(folder_location):
+    pass
+
+
+@task
+def extraction_selector(resource_location, resource_type, queues):
     # Choose the fitting extraction method for the resource_type
     pass
 
@@ -110,9 +131,15 @@ def extraction_selector(resource_location, resource_type):
 
 
 @flow(task_runner=SequentialTaskRunner())
-def ingest_data(name, time_series_col):
+def ingress_data(resource_schema, resource_location, resource_type):
     # ETL Dataset into database
-
+    resource = Resource(
+        resource_schema=schema,
+        resource_location=resource_location,
+        resource_type=resource_type,
+    )
+    create_queue(resource)
+    #  initialize queue if not existing
     extraction_selector()
     transform()
     load()

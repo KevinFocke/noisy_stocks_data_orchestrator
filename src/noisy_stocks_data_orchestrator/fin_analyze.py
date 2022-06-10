@@ -9,7 +9,14 @@ import customdatastructures
 # TODO: Ensure equal time between timestamps
 
 
+# Typical order of data analysis:
+# 1. Fetch required timeseries aggregation from database (JSON)
+# 2. Convert timeseries into Pandas DataFrame for analysis
+# 3. Convert DataFrame to Markdown for publishing
+
 # Correlation is parralellizable! https://docs.dask.org/en/stable/dataframe.html
+
+
 @flow()
 def normalize_time_series():
     # Ensure equal time between timestamps

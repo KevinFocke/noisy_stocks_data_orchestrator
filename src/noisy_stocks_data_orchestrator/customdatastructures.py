@@ -1,7 +1,5 @@
-from datetime import datetime
 from pathlib import Path
 from queue import Empty, Full, SimpleQueue
-from typing import Optional
 
 import pandas as pd
 import pandera as pa
@@ -9,26 +7,52 @@ from pandera.dtypes import Timestamp
 from pandera.errors import SchemaError
 from prefect.flows import flow
 from prefect.tasks import task
-from pydantic import BaseModel, PositiveInt, PrivateAttr
-
-from ingress import folder_exists
+from pydantic import BaseModel, PositiveInt
 
 # Classes should be PascalCase
 # Check type using pydantic, check DataFrame using pandera
-
-# Typical order of data analysis:
-# 1. Fetch required timeseries aggregation from database (JSON)
-# 2. Convert timeseries into Pandas DataFrame for analysis
-# 3. Convert DataFrame to Markdown for publishing
 
 
 class ObjectGenerationError(Exception):
     """Object cannot be created"""
 
 
+class Resource(BaseModel):
+    resource_type: str
+    resource_location: str
+    resource_schema: pa.DataFrameSchema
+
+    class Config:
+        arbitrary_types_allowed = True
+
+    def __init__(self, *args, **kwargs):
+
+        # Initialize object with Pydantic type checking
+        # Inherit init from superclass
+
+        try:
+            super().__init__(*args, **kwargs)
+        except ValueError:
+            raise ObjectGenerationError
+        except TypeError:
+            raise ObjectGenerationError
+
+
 class ExtractionQueue(BaseModel):
     timeout_pop: PositiveInt = 1
     _queue: SimpleQueue = SimpleQueue()  # Should not be accessed
+
+    def __init__(self, *args, **kwargs):
+
+        # Initialize object with Pydantic type checking
+        # Inherit init from superclass
+
+        try:
+            super().__init__(*args, **kwargs)
+        except ValueError:
+            raise ObjectGenerationError
+        except TypeError:
+            raise ObjectGenerationError
 
     class Config:  # Pydantic configuration
         arbitrary_types_allowed = True
