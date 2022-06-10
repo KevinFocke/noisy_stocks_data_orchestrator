@@ -102,22 +102,8 @@ def load():
 
 
 @flow(task_runner=SequentialTaskRunner())
-def resource_extraction(resource_schema, resource_location, resource_type):
-    @task
-    def folder_extraction(folder: ResourceFolder):
-        folder.enqueue()
-        folder.process()
-
-    resource = ResourceFactory(
-        resource_schema=resource_schema,
-        resource_location=resource_location,
-        resource_type=resource_type,
-    )
-    if resource_type == "file":
-        pass
-
-    if resource_type == "folder":
-        folder_extraction(resource)
+def extract(resource_schema, resource_location, resource_type):
+    pass
 
 
 @flow(task_runner=SequentialTaskRunner())
@@ -125,8 +111,11 @@ def ingress_data(resource_schema, resource_location, resource_type):
     # ETL Dataset into database
 
     #  initialize queue if not existing
-    resource.enqueue()
-    resource.process_queue()
+    extract(
+        resource_schema=resource_schema,
+        resource_location=resource_location,
+        resource_type=resource_type,
+    )
     transform()
     load()
     compress()

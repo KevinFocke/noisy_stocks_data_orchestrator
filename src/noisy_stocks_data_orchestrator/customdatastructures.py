@@ -73,7 +73,9 @@ class ResourceFactory:
 class TimeSeries(BaseModel):
     name: str  # unique identifier
     dataset_profile_unique_id: int = 0  # Which dataset?
+    # TODO: Rename dataset to resource
     # TODO: Add parameter deciding schema
+    resource_schema: pa.DataFrameSchema
     time_series_df: pd.DataFrame  # Check if type is DataFrame
 
     class Config:  # Pydantic configuration
@@ -107,22 +109,14 @@ class TimeSeries(BaseModel):
         index_list = failure_cases["index"].values.tolist()
         return self.time_series_df.drop(index_list, inplace=True)
 
-    # TODO: Refactor schema, can be provided to function
+    # TODO: Refactor schema, should be provided to function
     # This works for the stock, but not for the avocados
     # Each dataset has a schema associated with it
     # stock_dataset schema
     # avocado_dataset_schema
     def __validate_schema(self):
         """Validate pandera df schema"""
-        time_series_df_schema = pa.DataFrameSchema(
-            {
-                "timestamp": pa.Column(Timestamp, coerce=True),
-                "close_price": pa.Column(
-                    float, checks=pa.Check.greater_than_or_equal_to(0)
-                ),
-            },
-        )
-
+        time_series_df_schema = self.resource_schema
         self.time_series_df = time_series_df_schema(self.time_series_df)
 
     def __validate_ts_and_set_df(self):
