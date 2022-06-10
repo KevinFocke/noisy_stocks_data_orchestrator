@@ -6,7 +6,7 @@ from prefect.task_runners import SequentialTaskRunner
 from prefect.tasks import task
 from pydantic import validate_arguments
 
-from customdatastructures import ResourceFactory, resource_factory
+from customdatastructures import ResourceFactory
 
 """Data Inflow Module
 """
@@ -102,7 +102,7 @@ def load():
 
 
 @task
-def folder_extraction(resource: resource_factory):
+def folder_extraction(resource: ResourceFactory):
 
     pass
 
