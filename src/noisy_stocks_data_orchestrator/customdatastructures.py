@@ -22,16 +22,10 @@ class ExtractionQueue(BaseModel):
         orm_mode = True
 
     def pop(self):
-        try:
-            return self._queue.get(timeout=self.timeout_pop)
-        except Empty:
-            raise Empty
+        return self._queue.get(timeout=self.timeout_pop)
 
     def push(self, item):
-        try:
-            self._queue.put(item)
-        except Full:
-            raise Full
+        self._queue.put(item)
 
 
 class FolderExtractionQueue(ExtractionQueue):
