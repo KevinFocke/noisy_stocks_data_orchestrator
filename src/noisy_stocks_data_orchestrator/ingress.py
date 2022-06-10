@@ -9,6 +9,9 @@ from pydantic import validate_arguments
 """Data Inflow Module
 """
 
+
+# TODO: Add typical order of data inflow documentation
+
 # TODO: Steps for folder ingestion:
 # List path + subdirectories of path
 # https://docs.python.org/3/library/pathlib.html
@@ -17,13 +20,12 @@ from pydantic import validate_arguments
 # For each directory, create the files list (no subdirectories!)
 # For each file in file list, put in FileExtractionQueue
 # Get file directory out of FileExtractionQueue until empty
-# For each file:
-# 1. create a TimeSeries class
+# For each file: create a TimeSeries class
+# Save the TimeSeries class to database, the key is the name
+# If timestamp is already in database for the stock, do not add.
+# (it would be a duplicate)
+# Include ingestion origin data
 # https://docs.dask.org/en/stable/generated/dask.dataframe.read_csv.html
-# dd.read_csv("*.csv", parse_dates = "date_col_name", include_path_column=True)
-# df = df.set_index("date_col_name")
-# drop duplicates
-# df = df.drop_duplicates()
 
 # Open question: How to ensure dataset is not already ingested?
 

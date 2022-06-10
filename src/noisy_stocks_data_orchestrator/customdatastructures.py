@@ -1,6 +1,6 @@
 from datetime import datetime
 from pathlib import Path
-from queue import SimpleQueue
+from queue import Empty, Full, SimpleQueue
 from typing import Optional
 
 import pandas as pd
@@ -9,14 +9,12 @@ from pandera.dtypes import Timestamp
 from pandera.errors import SchemaError
 from prefect.flows import flow
 from prefect.tasks import task
-from pydantic import BaseModel
+from pydantic import BaseModel, PositiveInt, PrivateAttr
 
 from ingress import folder_exists
 
 # Classes should be PascalCase
 # Check type using pydantic, check DataFrame using pandera
-# Mark optional pydantic parameters with NotRequired
-
 
 # Typical order of data analysis:
 # 1. Fetch required timeseries aggregation from database (JSON)
@@ -28,29 +26,42 @@ class ObjectGenerationError(Exception):
     """Object cannot be created"""
 
 
-class FolderExtractionQueue(BaseModel):
-    folder_queue_dirty: SimpleQueue
+class ExtractionQueue(BaseModel):
+    timeout_pop: PositiveInt = 1
+    _queue: SimpleQueue = SimpleQueue()  # Should not be accessed
 
     class Config:  # Pydantic configuration
         arbitrary_types_allowed = True
+        orm_mode = True
+
+    def pop(self):
+        try:
+            return self._queue.get(timeout=self.timeout_pop)
+        except Empty:
+            raise Empty
+
+    def push(self, item):
+        try:
+            self._queue.put(item)
+        except Full:
+            raise Full
 
 
-class FileExtractionQueue(BaseModel):
+class FolderExtractionQueue(ExtractionQueue):
+    pass  #
+
+
+class FileExtractionQueue(ExtractionQueue):
+    pass
     file_queue_dirty: SimpleQueue
 
     class Config:  # Pydantic configuration
         arbitrary_types_allowed = True
 
-    @flow
-    def _clean_file_queue(self, file_queue_dirty):
-        # While the queue is not empty, check if it's a file
-        pass
-
 
 @task
 def create_folder_extraction_queue(path: Path):
-    # TODO: Add recursve folder extraction into a queue
-    # check if is folder
+
     if not folder_exists(path):
         return ValueError(f"Folder {path} not found")
 
@@ -60,11 +71,6 @@ def create_folder_extraction_queue(path: Path):
 def clean_folder_queue():
     file_queue: SimpleQueue = SimpleQueue()
     pass
-    # Check if url is a file, then add to queue
-    # Implement simple queue structure https://github.com/python/cpython/blob/3.10/Lib/queue.py
-    # https://docs.python.org/3/library/pathlib.html
-    # urlpath = path + r"*" + file_suffix
-
     # df = dd.read_csv(r"urlpath/*.csv")
     # https://docs.dask.org/en/stable/generated/dask.dataframe.read_csv.html
 

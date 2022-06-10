@@ -1,4 +1,5 @@
 from pathlib import Path
+from queue import Empty, SimpleQueue
 
 import numpy as np
 import pandas as pd
@@ -129,3 +130,12 @@ def test_fixture_csv(temp_ingress_file_csv):
 
 def test_fixture_txt(temp_ingress_file_txt):
     assert temp_ingress_file_txt.is_file()
+
+
+def test_fixture_extraction_fixt_extraction_queue(fixt_extraction_queue):
+    assert isinstance(fixt_extraction_queue._queue, SimpleQueue)
+    assert fixt_extraction_queue.pop() == 8
+    assert fixt_extraction_queue.pop() == 7
+    assert fixt_extraction_queue.pop() == "Rose"
+    with pytest.raises(Empty):
+        return fixt_extraction_queue.pop()
