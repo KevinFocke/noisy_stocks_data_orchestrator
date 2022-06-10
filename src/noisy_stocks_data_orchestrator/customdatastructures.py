@@ -52,31 +52,22 @@ class ResourceFactory:
     resource_schema: pa.DataFrameSchema
     # Depending on resource_type, create a resource
 
+    def produce(self):
+        # If resource type is found, produce an object of it
+        pass
+
     def create_path_from_location(self):
         # self.resource_path = Path(self.resource_location)
         pass
 
     def create_resource(self):
-        # If resource is url, make url
-        # else make pathlib Path
-        # if self.resource_type == "folder":
-        #     self.resource_path = Path(self.resource_location)
-        #     return ResourceFolder(
-        #         resource_path=self.resource_path, resource_schema=self.resource_schema
-        #     )
+        # TODO: Add Url
+
         pass
-
-    # Using dictionary, eg {"file":resource_file(), "folder":resource_folder()}
-    def __init__(self, *args, **kwargs):
-
-        # Initialize object with Pydantic type checking
-        # Inherit init from superclass
-        super().__init__(*args, **kwargs)
-        return self.create_resource()
 
 
 # TODO: Make TimeSeries method use prefect flows & tasks
-# TODO: Add data cleaning
+# TODO: Refactor data cleaning
 
 
 class TimeSeries(BaseModel):

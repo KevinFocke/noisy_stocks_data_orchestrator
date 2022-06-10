@@ -6,7 +6,7 @@ from prefect.task_runners import SequentialTaskRunner
 from prefect.tasks import task
 from pydantic import validate_arguments
 
-from customdatastructures import ResourceFactory
+from customdatastructures import ResourceFactory, ResourceFolder
 
 """Data Inflow Module
 """
@@ -101,20 +101,29 @@ def load():
     return
 
 
-@task
-def folder_extraction(resource: ResourceFactory):
-
-    pass
-
-
 @flow(task_runner=SequentialTaskRunner())
-def ingress_data(resource_schema, resource_location, resource_type):
-    # ETL Dataset into database
+def resource_extraction(resource_schema, resource_location, resource_type):
+    @task
+    def folder_extraction(folder: ResourceFolder):
+        folder.enqueue()
+        folder.process()
+
     resource = ResourceFactory(
         resource_schema=resource_schema,
         resource_location=resource_location,
         resource_type=resource_type,
     )
+    if resource_type == "file":
+        pass
+
+    if resource_type == "folder":
+        folder_extraction(resource)
+
+
+@flow(task_runner=SequentialTaskRunner())
+def ingress_data(resource_schema, resource_location, resource_type):
+    # ETL Dataset into database
+
     #  initialize queue if not existing
     resource.enqueue()
     resource.process_queue()
