@@ -152,7 +152,7 @@ def test_fixt_extraction_queue(fixt_extraction_queue):
         return fixt_extraction_queue.pop()
 
 
-def test_fixt_three_files_same_folder(
+def test_fixt_three_stock_csv_same_folder(
     fixt_three_stock_csv_same_folder,
     stock_sample_data_1,
     stock_sample_data_2,
