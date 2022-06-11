@@ -1,3 +1,4 @@
+from itertools import combinations
 from pathlib import Path
 from queue import Empty, SimpleQueue
 
@@ -151,28 +152,74 @@ def test_fixt_extraction_queue(fixt_extraction_queue):
         return fixt_extraction_queue.pop()
 
 
-def test_fixt_three_files_same_folder(fixt_three_stock_csv_same_folder):
-    assert (
-        fixt_three_stock_csv_same_folder[0]["folder_path"]
-        == fixt_three_stock_csv_same_folder[1]["folder_path"]
-        == fixt_three_stock_csv_same_folder[2]["folder_path"]
-    )  # should be same folder
+def test_fixt_three_files_same_folder(
+    fixt_three_stock_csv_same_folder,
+    stock_sample_data_1,
+    stock_sample_data_2,
+    stock_sample_data_3,
+):
+    # Python subtlety:  1 != 2 != 1 will evaluate to true; evaluated right to left
+    # Thus using combinations to compare each element
+    folder_paths = [
+        fixt_three_stock_csv_same_folder[number]["folder_path"]
+        for number in range(len(fixt_three_stock_csv_same_folder))
+    ]
+    file_paths = [
+        fixt_three_stock_csv_same_folder[number]["file_path"]
+        for number in range(len(fixt_three_stock_csv_same_folder))
+    ]
+    file_input_data_list = [
+        fixt_three_stock_csv_same_folder[number]["file_input_data"]
+        for number in range(len(fixt_three_stock_csv_same_folder))
+    ]
+    file_path_combinations = combinations(file_paths, 2)
+    folder_path_combinations = combinations(folder_paths, 2)
+    for combination in folder_path_combinations:
+        assert combination[0] == combination[1]  # expecting same folders
+    for combination in file_path_combinations:
+        assert combination[0] != combination[1]  # expecting different files
+    # Compare received data to sample data
+    stock_sample_data_list = [
+        stock_sample_data_1,
+        stock_sample_data_2,
+        stock_sample_data_3,
+    ]
+    for index in range(len(file_input_data_list)):
+        assert file_input_data_list[index] == stock_sample_data_list[index]
 
-    assert (
-        fixt_three_stock_csv_same_folder[0]["file_path"]
-        != fixt_three_stock_csv_same_folder[1]["file_path"]
-        != fixt_three_stock_csv_same_folder[2]["file_path"]
-    )  # Should be different files
 
+def test_fixt_three_stock_csv_different_folder(
+    fixt_three_stock_csv_different_folder,
+    stock_sample_data_1,
+    stock_sample_data_2,
+    stock_sample_data_3,
+):
 
-def test_fixt_three_stock_csv_different_folder(fixt_three_stock_csv_different_folder):
-    assert (
-        fixt_three_stock_csv_different_folder[0]["folder_path"]
-        != fixt_three_stock_csv_different_folder[1]["folder_path"]
-        != fixt_three_stock_csv_different_folder[2]["folder_path"]
-    )  # should be different folder
-    assert (
-        fixt_three_stock_csv_different_folder[0]["file_path"]
-        != fixt_three_stock_csv_different_folder[1]["file_path"]
-        != fixt_three_stock_csv_different_folder[2]["file_path"]
-    )  # Should be different files
+    # Python subtlety:  1 != 2 != 1 will evaluate to true; evaluated right to left
+    # Thus using combinations to compare each element
+    folder_paths = [
+        fixt_three_stock_csv_different_folder[number]["folder_path"]
+        for number in range(len(fixt_three_stock_csv_different_folder))
+    ]
+    file_paths = [
+        fixt_three_stock_csv_different_folder[number]["file_path"]
+        for number in range(len(fixt_three_stock_csv_different_folder))
+    ]
+    folder_path_combinations = combinations(folder_paths, 2)
+    file_path_combinations = combinations(file_paths, 2)
+    for combination in folder_path_combinations:
+        assert combination[0] != combination[1]  # expecting different folders
+    for combination in file_path_combinations:
+        assert combination[0] != combination[1]  # expecting different files
+    file_input_data_list = [
+        fixt_three_stock_csv_different_folder[number]["file_input_data"]
+        for number in range(len(fixt_three_stock_csv_different_folder))
+    ]
+    # Compare received data to sample data
+    stock_sample_data_list = [
+        stock_sample_data_1,
+        stock_sample_data_2,
+        stock_sample_data_3,
+    ]
+    for index in range(len(file_input_data_list)):
+        assert file_input_data_list[index] == stock_sample_data_list[index]
