@@ -199,14 +199,14 @@ def factory_temp_file(tmp_path):
 
     def _create_temp_file(
         filesuffix=".csv",
-        input_data=[
+        file_input_data=[
             "Date, Open, High, Low, Close, Volume, OpenInt",
             "1999 - 11 - 18, 30.713, 33.754, 27.002, 29.702, 66277506, 0",
             "1999 - 11 - 19, 28.986, 29.027, 26.872, 27.257, 16142920, 0",
             "1999 - 11 - 22, 27.886, 29.702, 27.044, 29.702, 6970266, 0",
         ],
         include_folder_path=0,  # if 1, return the filepath + basepath as tuple
-        include_input_data=0,  # if 1, include
+        include_file_input_data=0,  # if 1, include
         foldernumber=None,
         filenumber=1,
         tmp_path=tmp_path,
@@ -223,29 +223,29 @@ def factory_temp_file(tmp_path):
         # open as file pointer, append to it (implicitly creates file if does not exist)
         # Write the data
         with open(file_path, "a") as fp:
-            for line in input_data:
+            for line in file_input_data:
                 fp.write(line)
                 fp.write("\n")
 
-        _validate_temp_file(file_path, input_data)
+        _validate_temp_file(file_path, file_input_data)
         output_dict = {}
         if include_folder_path == 1:
             output_dict["folder_path"] = tmp_path
-        if include_input_data == 1:
-            output_dict["include_input_data"] = input_data
+        if include_file_input_data == 1:
+            output_dict["file_input_data"] = file_input_data
         output_dict["file_path"] = file_path
         return output_dict
 
-    def _validate_temp_file(filepath, input_data):
+    def _validate_temp_file(filepath, file_input_data):
         # Read the data
         read_data = []
         with open(filepath, "r") as fp:
-            for line in range(len(input_data)):
+            for line in range(len(file_input_data)):
                 read_data.append(fp.readline())
 
         for index, line in enumerate(read_data):
             read_data[index] = line.strip("\n")
-        assert read_data == input_data
+        assert read_data == file_input_data
         assert filepath.is_file()
 
     return _create_temp_file  # Call subfunction
@@ -286,7 +286,7 @@ def fixt_folder_extraction_queue():
 def fixt_three_stock_csv_same_folder(
     factory_temp_file, stock_sample_data_1, stock_sample_data_2, stock_sample_data_3
 ):
-    path_list = []
+    path_list_of_dicts = []
     lower_bound = 0
     upper_bound = 3  # upper bound not inclusive
     stock_sample_data_list = [
@@ -296,50 +296,44 @@ def fixt_three_stock_csv_same_folder(
     ]
 
     for number in range(lower_bound, upper_bound):
-        path_list.append(
+        path_list_of_dicts.append(
             factory_temp_file(
-                input_data=stock_sample_data_list[number],
+                file_input_data=stock_sample_data_list[number],
                 include_folder_path=1,
+                include_file_input_data=1,
                 filenumber=number,
             )
-        )  # returns (filepath, folderpath)
+        )  # returns dict with file_path, folder_path as keys
 
-    assert (
-        path_list[0][0] != path_list[1][0] != path_list[2][0]
-    )  # should be different files
-    assert (
-        path_list[0][1] == path_list[1][1] == path_list[2][1]
-    )  # should be same folder
-
-    return path_list  # tuples of (filepath, folderpath, data)
+    return path_list_of_dicts  # Per file, includes a dict of {}
 
 
 @pytest.fixture
 def fixt_three_stock_csv_different_folder(
     factory_temp_file, stock_sample_data_1, stock_sample_data_2, stock_sample_data_3
 ):
-    filepath1, folderpath1 = factory_temp_file(
-        input_data=stock_sample_data_1,
-        include_folder_path=1,
-        filenumber=1,
-        foldernumber=1,
-    )
-    filepath2, folderpath2 = factory_temp_file(
-        input_data=stock_sample_data_2,
-        include_folder_path=1,
-        filenumber=2,
-        foldernumber=2,
-    )
-    filepath3, folderpath3 = factory_temp_file(
-        input_data=stock_sample_data_3,
-        include_folder_path=1,
-        filenumber=3,
-        foldernumber=3,
-    )
-    assert (
-        folderpath1 != folderpath2 == folderpath3
-    )  # Files should be created in different folder
-    assert filepath1 != filepath2 != filepath3  # should be different files
+
+    path_list_of_dicts = []
+    lower_bound = 0
+    upper_bound = 3  # upper bound not inclusive
+    stock_sample_data_list = [
+        stock_sample_data_1,
+        stock_sample_data_2,
+        stock_sample_data_3,
+    ]
+
+    for number in range(lower_bound, upper_bound):
+        path_list_of_dicts.append(
+            factory_temp_file(
+                file_input_data=stock_sample_data_list[number],
+                include_folder_path=1,
+                include_file_input_data=1,
+                filenumber=number,
+                foldernumber=number,
+            )
+        )  # returns dict with file_path, folder_path as keys
+
+    return path_list_of_dicts  # tuples of (filepath, folderpath, data)
 
 
 # TODO: create file extraciton queue fixture

@@ -136,7 +136,7 @@ def test_fixture_csv(temp_ingress_file_csv):
 def test_fixture_txt(temp_ingress_file_txt):
     assert temp_ingress_file_txt["file_path"].is_file()
     filename = str(temp_ingress_file_txt["file_path"]).split(r"/")[-1]
-    expected_suffix = ".csv"
+    expected_suffix = ".txt"
     lower_bound = len(filename) - len(expected_suffix)
     suffix = filename[lower_bound:]
     assert suffix == expected_suffix
@@ -151,28 +151,28 @@ def test_fixt_extraction_queue(fixt_extraction_queue):
         return fixt_extraction_queue.pop()
 
 
-def test_fixt_file_extraction_queue(
-    factory_temp_file, stock_sample_data_1, stock_sample_data_2, stock_sample_data_3
-):
-    filepath1, tmp_path1 = factory_temp_file(
-        input_data=stock_sample_data_1,
-        include_folder_path=1,
-        filenumber=1,
-    )
-    filepath2, tmp_path2 = factory_temp_file(
-        input_data=stock_sample_data_2,
-        include_folder_path=1,
-        filenumber=2,
-    )
-    filepath3, tmp_path3 = factory_temp_file(
-        input_data=stock_sample_data_3,
-        include_folder_path=1,
-        filenumber=3,
-    )
-    assert tmp_path1 == tmp_path2 == tmp_path3  # Files should be created in same folder
-    assert filepath1 != filepath2 != filepath3  # should be different files
-
-
 def test_fixt_three_files_same_folder(fixt_three_stock_csv_same_folder):
-    a = 8
-    assert a == 8
+    assert (
+        fixt_three_stock_csv_same_folder[0]["folder_path"]
+        == fixt_three_stock_csv_same_folder[1]["folder_path"]
+        == fixt_three_stock_csv_same_folder[2]["folder_path"]
+    )  # should be same folder
+
+    assert (
+        fixt_three_stock_csv_same_folder[0]["file_path"]
+        != fixt_three_stock_csv_same_folder[1]["file_path"]
+        != fixt_three_stock_csv_same_folder[2]["file_path"]
+    )  # Should be different files
+
+
+def test_fixt_three_stock_csv_different_folder(fixt_three_stock_csv_different_folder):
+    assert (
+        fixt_three_stock_csv_different_folder[0]["folder_path"]
+        != fixt_three_stock_csv_different_folder[1]["folder_path"]
+        != fixt_three_stock_csv_different_folder[2]["folder_path"]
+    )  # should be different folder
+    assert (
+        fixt_three_stock_csv_different_folder[0]["file_path"]
+        != fixt_three_stock_csv_different_folder[1]["file_path"]
+        != fixt_three_stock_csv_different_folder[2]["file_path"]
+    )  # Should be different files
