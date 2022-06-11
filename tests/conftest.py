@@ -1,3 +1,5 @@
+from os import mkdir
+from pathlib import Path
 from queue import Empty, SimpleQueue
 
 import pandas as pd
@@ -189,8 +191,10 @@ def factory_temp_file(tmp_path):
         suffix (str): The suffix of your filename eg. ".txt" for "tempfile.txt"
 
     Return:
-        path (Path): path to temporary file with sample data;
-        Path object created by built-in pathlib
+    #TODO: Create dictionary instead! Rewrite documentation
+    # TODO: Rewrite tests that do not access path
+        If include_folder_path = 0: Path to file
+        If include_folder_path = 1: tuple (Path to file, Path to folder)
     """
 
     def _create_temp_file(
@@ -202,25 +206,35 @@ def factory_temp_file(tmp_path):
             "1999 - 11 - 22, 27.886, 29.702, 27.044, 29.702, 6970266, 0",
         ],
         include_folder_path=0,  # if 1, return the filepath + basepath as tuple
-        foldernumber=1,
+        include_input_data=0,  # if 1, include
+        foldernumber=None,
         filenumber=1,
+        tmp_path=tmp_path,
     ):
         # input_data default based on first three lines of a.us.txt in Stocks
         filename = "testfile" + str(filenumber) + filesuffix
-        filepath = tmp_path / filename
+        if foldernumber is not None:
+            tmp_path = tmp_path / str(foldernumber)
+            mkdir(tmp_path)
+            assert isinstance(tmp_path, Path)
+            assert tmp_path.is_dir()
+        file_path = tmp_path / filename
 
         # open as file pointer, append to it (implicitly creates file if does not exist)
         # Write the data
-        with open(filepath, "a") as fp:
+        with open(file_path, "a") as fp:
             for line in input_data:
                 fp.write(line)
                 fp.write("\n")
 
-        _validate_temp_file(filepath, input_data)
+        _validate_temp_file(file_path, input_data)
+        output_dict = {}
         if include_folder_path == 1:
-            return (filepath, tmp_path)
-        else:
-            return filepath
+            output_dict["folder_path"] = tmp_path
+        if include_input_data == 1:
+            output_dict["include_input_data"] = input_data
+        output_dict["file_path"] = file_path
+        return output_dict
 
     def _validate_temp_file(filepath, input_data):
         # Read the data
@@ -266,6 +280,66 @@ def fixt_extraction_queue():
 def fixt_folder_extraction_queue():
     filepath = temp_ingress_file_csv  # Path to
     assert filepath.is_file()
+
+
+@pytest.fixture
+def fixt_three_stock_csv_same_folder(
+    factory_temp_file, stock_sample_data_1, stock_sample_data_2, stock_sample_data_3
+):
+    path_list = []
+    lower_bound = 0
+    upper_bound = 3  # upper bound not inclusive
+    stock_sample_data_list = [
+        stock_sample_data_1,
+        stock_sample_data_2,
+        stock_sample_data_3,
+    ]
+
+    for number in range(lower_bound, upper_bound):
+        path_list.append(
+            factory_temp_file(
+                input_data=stock_sample_data_list[number],
+                include_folder_path=1,
+                filenumber=number,
+            )
+        )  # returns (filepath, folderpath)
+
+    assert (
+        path_list[0][0] != path_list[1][0] != path_list[2][0]
+    )  # should be different files
+    assert (
+        path_list[0][1] == path_list[1][1] == path_list[2][1]
+    )  # should be same folder
+
+    return path_list  # tuples of (filepath, folderpath, data)
+
+
+@pytest.fixture
+def fixt_three_stock_csv_different_folder(
+    factory_temp_file, stock_sample_data_1, stock_sample_data_2, stock_sample_data_3
+):
+    filepath1, folderpath1 = factory_temp_file(
+        input_data=stock_sample_data_1,
+        include_folder_path=1,
+        filenumber=1,
+        foldernumber=1,
+    )
+    filepath2, folderpath2 = factory_temp_file(
+        input_data=stock_sample_data_2,
+        include_folder_path=1,
+        filenumber=2,
+        foldernumber=2,
+    )
+    filepath3, folderpath3 = factory_temp_file(
+        input_data=stock_sample_data_3,
+        include_folder_path=1,
+        filenumber=3,
+        foldernumber=3,
+    )
+    assert (
+        folderpath1 != folderpath2 == folderpath3
+    )  # Files should be created in different folder
+    assert filepath1 != filepath2 != filepath3  # should be different files
 
 
 # TODO: create file extraciton queue fixture

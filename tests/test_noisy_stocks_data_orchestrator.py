@@ -125,11 +125,21 @@ def test_folder_non_existent(tmp_path):
 
 
 def test_fixture_csv(temp_ingress_file_csv):
-    assert temp_ingress_file_csv.is_file()
+    assert temp_ingress_file_csv["file_path"].is_file()
+    filename = str(temp_ingress_file_csv["file_path"]).split(r"/")[-1]
+    expected_suffix = ".csv"
+    lower_bound = len(filename) - len(expected_suffix)
+    suffix = filename[lower_bound:]
+    assert suffix == expected_suffix
 
 
 def test_fixture_txt(temp_ingress_file_txt):
-    assert temp_ingress_file_txt.is_file()
+    assert temp_ingress_file_txt["file_path"].is_file()
+    filename = str(temp_ingress_file_txt["file_path"]).split(r"/")[-1]
+    expected_suffix = ".csv"
+    lower_bound = len(filename) - len(expected_suffix)
+    suffix = filename[lower_bound:]
+    assert suffix == expected_suffix
 
 
 def test_fixt_extraction_queue(fixt_extraction_queue):
@@ -146,18 +156,23 @@ def test_fixt_file_extraction_queue(
 ):
     filepath1, tmp_path1 = factory_temp_file(
         input_data=stock_sample_data_1,
-        include_temp_path=1,
+        include_folder_path=1,
         filenumber=1,
     )
     filepath2, tmp_path2 = factory_temp_file(
         input_data=stock_sample_data_2,
-        include_temp_path=1,
+        include_folder_path=1,
         filenumber=2,
     )
     filepath3, tmp_path3 = factory_temp_file(
         input_data=stock_sample_data_3,
-        include_temp_path=1,
+        include_folder_path=1,
         filenumber=3,
     )
     assert tmp_path1 == tmp_path2 == tmp_path3  # Files should be created in same folder
     assert filepath1 != filepath2 != filepath3  # should be different files
+
+
+def test_fixt_three_files_same_folder(fixt_three_stock_csv_same_folder):
+    a = 8
+    assert a == 8
