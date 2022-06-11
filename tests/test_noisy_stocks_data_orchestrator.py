@@ -132,10 +132,32 @@ def test_fixture_txt(temp_ingress_file_txt):
     assert temp_ingress_file_txt.is_file()
 
 
-def test_fixture_extraction_fixt_extraction_queue(fixt_extraction_queue):
+def test_fixt_extraction_queue(fixt_extraction_queue):
     assert isinstance(fixt_extraction_queue._queue, SimpleQueue)
     assert fixt_extraction_queue.pop() == 8
     assert fixt_extraction_queue.pop() == 7
     assert fixt_extraction_queue.pop() == "Rose"
     with pytest.raises(Empty):
         return fixt_extraction_queue.pop()
+
+
+def test_fixt_file_extraction_queue(
+    factory_temp_file, stock_sample_data_1, stock_sample_data_2, stock_sample_data_3
+):
+    filepath1, tmp_path1 = factory_temp_file(
+        input_data=stock_sample_data_1,
+        include_temp_path=1,
+        filenumber=1,
+    )
+    filepath2, tmp_path2 = factory_temp_file(
+        input_data=stock_sample_data_2,
+        include_temp_path=1,
+        filenumber=2,
+    )
+    filepath3, tmp_path3 = factory_temp_file(
+        input_data=stock_sample_data_3,
+        include_temp_path=1,
+        filenumber=3,
+    )
+    assert tmp_path1 == tmp_path2 == tmp_path3  # Files should be created in same folder
+    assert filepath1 != filepath2 != filepath3  # should be different files

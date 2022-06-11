@@ -149,6 +149,39 @@ def stock_with_unordered_dates():
 
 
 @pytest.fixture
+def stock_sample_data_1():
+    # First 4 lines of aa.us.txt
+    return [
+        "Date,Open,High,Low,Close,Volume,OpenInt",
+        "1970-01-02,2.2972,2.3178,2.2972,2.2972,26437,0",
+        "1970-01-05,2.2972,2.2972,2.2544,2.2759,29887,0",
+        "1970-01-06,2.2759,2.2759,2.2342,2.2342,106900,0",
+    ]
+
+
+@pytest.fixture
+def stock_sample_data_2():
+    # First 4 lines of aaap.us.txt
+    return [
+        "Date,Open,High,Low,Close,Volume,OpenInt",
+        "2015-11-11,18.5,25.9,18,24.5,1584600,0",
+        "2015-11-12,24.25,27.12,22.5,25,83000,0",
+        "2015-11-13,25.47,26.2,24.55,25.26,67300,0",
+    ]
+
+
+@pytest.fixture
+def stock_sample_data_3():
+    # First 4 lines of aaba.us.txt
+    return [
+        "Date,Open,High,Low,Close,Volume,OpenInt",
+        "1996-04-12,1.05,1.79,1.02,1.38,408720000,0",
+        "1996-04-15,1.49,1.5,1.25,1.34,79231200,0",
+        "1996-04-16,1.34,1.34,1.17,1.2,48026400,0]",
+    ]
+
+
+@pytest.fixture
 def factory_temp_file(tmp_path):
     """Provide temporary file with sample data
 
@@ -160,16 +193,22 @@ def factory_temp_file(tmp_path):
         Path object created by built-in pathlib
     """
 
-    def _create_temp_file(filesuffix):
-        # Based on a.us.txt in Stocks
-        filename = "testfile" + filesuffix
-        filepath = tmp_path / filename
-        input_data = [
+    def _create_temp_file(
+        filesuffix=".csv",
+        input_data=[
             "Date, Open, High, Low, Close, Volume, OpenInt",
             "1999 - 11 - 18, 30.713, 33.754, 27.002, 29.702, 66277506, 0",
             "1999 - 11 - 19, 28.986, 29.027, 26.872, 27.257, 16142920, 0",
             "1999 - 11 - 22, 27.886, 29.702, 27.044, 29.702, 6970266, 0",
-        ]
+        ],
+        include_folder_path=0,  # if 1, return the filepath + basepath as tuple
+        foldernumber=1,
+        filenumber=1,
+    ):
+        # input_data default based on first three lines of a.us.txt in Stocks
+        filename = "testfile" + str(filenumber) + filesuffix
+        filepath = tmp_path / filename
+
         # open as file pointer, append to it (implicitly creates file if does not exist)
         # Write the data
         with open(filepath, "a") as fp:
@@ -178,7 +217,10 @@ def factory_temp_file(tmp_path):
                 fp.write("\n")
 
         _validate_temp_file(filepath, input_data)
-        return filepath
+        if include_folder_path == 1:
+            return (filepath, tmp_path)
+        else:
+            return filepath
 
     def _validate_temp_file(filepath, input_data):
         # Read the data
@@ -217,3 +259,13 @@ def fixt_extraction_queue():
     queue.push(7)
     queue.push("Rose")
     return queue
+
+
+# TODO: Create folder_extraction_queue fixture
+@pytest.fixture
+def fixt_folder_extraction_queue():
+    filepath = temp_ingress_file_csv  # Path to
+    assert filepath.is_file()
+
+
+# TODO: create file extraciton queue fixture
