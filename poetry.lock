@@ -922,6 +922,21 @@ uvicorn = ">=0.14.0"
 dev = ["flake8", "flaky", "ipython", "jinja2", "mkdocs", "mkdocs-gen-files", "mkdocs-material", "mkdocstrings-python-legacy", "moto", "mypy", "pre-commit", "pytest", "pytest-asyncio (>=0.18.2)", "pytest-cov", "pytest-env", "pytest-timeout", "pytkdocs (>=0.14.2)", "pyyaml", "requests", "virtualenv", "watchfiles", "respx", "mock", "setuptools (!=60.9.0)"]
 
 [[package]]
+name = "prefect-sqlalchemy"
+version = "0.1.0"
+description = "Prefect integrations for interacting with SQLAlchemy."
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[package.dependencies]
+prefect = ">=2.0a13"
+sqlalchemy = ">=1.4.31"
+
+[package.extras]
+dev = ["pytest", "black", "flake8", "mypy", "mkdocs", "mkdocs-material", "mkdocstrings", "isort", "pre-commit", "pytest-asyncio", "mkdocs-gen-files", "interrogate", "coverage", "psycopg2", "asyncpg", "mock"]
+
+[[package]]
 name = "protobuf"
 version = "3.20.1"
 description = "Protocol Buffers"
@@ -1429,7 +1444,7 @@ heapdict = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "e88a5233966e68fc101b8f988ad523bacdb8f2d0da8a4f3276e202ab9a02ea92"
+content-hash = "abdf57877f9ce9aae701d598994e1e472042e700143379d16e18344e7280eb6c"
 
 [metadata.files]
 aiofiles = [
@@ -2058,6 +2073,10 @@ pluggy = [
 prefect = [
     {file = "prefect-2.0b6-py3-none-any.whl", hash = "sha256:539042dda10145d4cb23bacfdb3dd4840f03c6b1e64a7722237193b41bf41e23"},
     {file = "prefect-2.0b6.tar.gz", hash = "sha256:d1ebbcb84d935e2eae2c0782b199d73e15dd62af828ec9e2d8873aae3a31236c"},
+]
+prefect-sqlalchemy = [
+    {file = "prefect-sqlalchemy-0.1.0.tar.gz", hash = "sha256:7f5ec6d0aa91ae445212239c5c8c7b8f5488fb4321ea41fe3743e527878415f6"},
+    {file = "prefect_sqlalchemy-0.1.0-py3-none-any.whl", hash = "sha256:b28cd4c55929d503274186dda1e382e3f1c0fe565475f2074a915789ef7da165"},
 ]
 protobuf = [
     {file = "protobuf-3.20.1-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:3cc797c9d15d7689ed507b165cd05913acb992d78b379f6014e013f9ecb20996"},

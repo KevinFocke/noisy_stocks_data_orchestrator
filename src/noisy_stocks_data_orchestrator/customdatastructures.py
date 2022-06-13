@@ -32,6 +32,8 @@ class FolderExtractionQueue(ExtractionQueue):
     class Config:  # Pydantic configuration
         arbitrary_types_allowed = True
 
+    # If no files, skip & log message.
+
     pass
 
 

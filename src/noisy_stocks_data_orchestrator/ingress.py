@@ -24,7 +24,7 @@ from customdatastructures import ResourceFactory, ResourceFolder
 # Get file directory out of FileExtractionQueue until empty
 # For each file: create a TimeSeries class
 # Save the TimeSeries class to database, the key is the name
-# If timestamp is already in database for the stock, do not add.
+
 # (it would be a duplicate)
 # Include ingestion origin data
 # https://docs.dask.org/en/stable/generated/dask.dataframe.read_csv.html
@@ -36,7 +36,9 @@ from customdatastructures import ResourceFactory, ResourceFolder
 
 @task
 def query_database(query):
-
+    # Query using https://prefecthq.github.io/prefect-sqlalchemy/
+    # Might raise errors https://github.com/timescale/timescaledb/issues/2226
+    # https://github.com/PrefectHQ/prefect-sqlalchemy/blob/main/prefect_sqlalchemy/credentials.py
     return
 
 
@@ -98,6 +100,9 @@ def load():
 
     # During load only exact duplicates should be dropped
     # Same date is okay and even desirable
+    # Upsert table to ignore duplicate entries and make action idempotent
+    # If timestamp is already in database for the stock, do not add.
+    # https://docs.timescale.com/timescaledb/latest/how-to-guides/write-data/upsert/#create-a-table-with-a-unique-constraint
     return
 
 

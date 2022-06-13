@@ -12,6 +12,7 @@ pandera = "^0.11.0"
 kaggle = "^1.5.12"
 bokeh = "^2.4.3"
 dask = {extras = ["complete"], version = "^2022.5.2"}
+prefect-sqlalchemy = "^0.1.0"
 
 
 [tool.poetry.dev-dependencies]
