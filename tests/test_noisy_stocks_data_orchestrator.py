@@ -1,6 +1,5 @@
 from itertools import combinations
 from pathlib import Path
-from queue import Empty, SimpleQueue
 
 import numpy as np
 import pandas as pd
@@ -141,15 +140,6 @@ def test_fixture_txt(temp_ingress_file_txt):
     lower_bound = len(filename) - len(expected_suffix)
     suffix = filename[lower_bound:]
     assert suffix == expected_suffix
-
-
-def test_fixt_extraction_queue(fixt_extraction_queue):
-    assert isinstance(fixt_extraction_queue._queue, SimpleQueue)
-    assert fixt_extraction_queue.pop() == 8
-    assert fixt_extraction_queue.pop() == 7
-    assert fixt_extraction_queue.pop() == "Rose"
-    with pytest.raises(Empty):
-        return fixt_extraction_queue.pop()
 
 
 def test_fixt_three_stock_csv_same_folder(

@@ -1,14 +1,10 @@
 from os import mkdir
 from pathlib import Path
-from queue import Empty, SimpleQueue
 
 import pandas as pd
 import pandera as pa
 import pytest
-from noisy_stocks_data_orchestrator.customdatastructures import (
-    ExtractionQueue,
-    TimeSeries,
-)
+from noisy_stocks_data_orchestrator.customdatastructures import TimeSeries
 from pandera.dtypes import Timestamp
 
 """
@@ -259,20 +255,6 @@ def temp_ingress_file_csv(factory_temp_file):
 @pytest.fixture
 def temp_ingress_file_txt(factory_temp_file):
     return factory_temp_file(filesuffix=".txt")
-
-
-@pytest.fixture
-def empty_extraction_queue():
-    return ExtractionQueue()
-
-
-@pytest.fixture
-def fixt_extraction_queue():
-    queue = ExtractionQueue()
-    queue.push(8)
-    queue.push(7)
-    queue.push("Rose")
-    return queue
 
 
 # TODO: Create folder_extraction_queue fixture
