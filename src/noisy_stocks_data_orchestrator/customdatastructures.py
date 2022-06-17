@@ -1,82 +1,71 @@
+"""Custom data structures and their methods
+    """
+
 from pathlib import Path
-from queue import Empty, Full, SimpleQueue
 
 import pandas as pd
 import pandera as pa
-from pandera.dtypes import Timestamp
 from pandera.errors import SchemaError
-from prefect.flows import flow
 from prefect.tasks import task
-from pydantic import BaseModel, PositiveInt
+from pydantic import BaseModel, validate_arguments
 
 # Classes should be PascalCase
 # Check type using pydantic, check DataFrame using pandera
 
 
-class ExtractionQueue(BaseModel):
-    timeout_pop: PositiveInt = 1
-    _queue: SimpleQueue = SimpleQueue()  # Should not be accessed
-
-    class Config:  # Pydantic configuration
-        arbitrary_types_allowed = True
-        orm_mode = True
-
-    def pop(self):
-        return self._queue.get(timeout=self.timeout_pop)
-
-    def push(self, item):
-        self._queue.put(item)
+@validate_arguments
+@task
+def file_exists(path: Path):
+    return path.is_file()
 
 
-class FolderExtractionQueue(ExtractionQueue):
-    class Config:  # Pydantic configuration
-        arbitrary_types_allowed = True
+@validate_arguments
+@task
+def folder_exists(path: Path):
+    return path.is_dir()
 
-    # If no files, skip & log message.
+
+class Extractor(BaseModel):
+    resource_type: str
+    resource_location: str
+    resource_schema: pa.DataFrameSchema
+    file_suffix: str
+
+
+class ExtractorFromURL(Extractor):
+    pass
+    # Downloads file from URL, (unzips), and then c
+
+
+class ExtractorFromFilesystem(Extractor):
+    pass
+    # It extracts a file or folder from filesystem
+
+    def output_filepath_list(self):
+        pass
 
     pass
 
 
-class ResourceFolder(BaseModel):
-    resource_path: Path
-    resource_schema: pa.DataFrameSchema
-
-    def enqueue(self):
-        pass
-
-    def process(self):
-        pass
-
-
-class ResourceFactory:
-    resource_type: str
-    resource_location: str
-    resource_schema: pa.DataFrameSchema
-    # Depending on resource_type, create a resource
-
-    def produce(self):
-        # If resource type is found, produce an object of it
-        pass
+class ExtractorFactory(Extractor):
+    # Depending on resource_type, create a fitting extractor
 
     def create_path_from_location(self):
         # self.resource_path = Path(self.resource_location)
         pass
 
-    def create_resource(self):
+    def create_extractor(self):
         # TODO: Add Url
+
+        # If file or folder, create Path
+        # If URL, validate URL
 
         pass
 
 
-# TODO: Make TimeSeries method use prefect flows & tasks
-# TODO: Refactor data cleaning
-
-
 class TimeSeries(BaseModel):
     name: str  # unique identifier
-    dataset_profile_unique_id: int = 0  # Which dataset?
-    # TODO: Rename dataset to resource
-    # TODO: Add parameter deciding schema
+    resource_unique_id: int = 0  # Which dataset?
     resource_schema: pa.DataFrameSchema
     time_series_df: pd.DataFrame  # Check if type is DataFrame
 
