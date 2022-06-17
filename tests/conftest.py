@@ -43,17 +43,7 @@ def stock_with_date_nan():
             "close_price": [1.3, 1.4, 0, 1, 5],
         }
     )
-    time_series_df_schema = pa.DataFrameSchema(
-        {
-            "timestamp": pa.Column(Timestamp, coerce=True),
-            "close_price": pa.Column(
-                float, checks=pa.Check.greater_than_or_equal_to(0)
-            ),
-        }
-    )
-    return TimeSeries(
-        name="AAPL", time_series_df=df, time_series_df_schema=time_series_df_schema
-    )
+    return TimeSeries(name="AAPL", int_col_name="close_price", time_series_df=df)
 
 
 # WISHLIST: REFACTOR stocks to use a common df schema
@@ -67,17 +57,7 @@ def stock_with_unequal_rows():
             "close_price": [1.3, 1.4, 0],
         }
     )
-    time_series_df_schema = pa.DataFrameSchema(
-        {
-            "timestamp": pa.Column(Timestamp, coerce=True),
-            "close_price": pa.Column(
-                float, checks=pa.Check.greater_than_or_equal_to(0)
-            ),
-        }
-    )
-    return TimeSeries(
-        name="AAPL", time_series_df=df, time_series_df_schema=time_series_df_schema
-    )
+    return TimeSeries(name="AAPL", int_col_name="close_price", time_series_df=df)
 
 
 def stock_with_negative_closing_price():
@@ -87,17 +67,7 @@ def stock_with_negative_closing_price():
             "close_price": [-1.3, 1.4, -5],
         }
     )
-    time_series_df_schema = pa.DataFrameSchema(
-        {
-            "timestamp": pa.Column(Timestamp, coerce=True),
-            "close_price": pa.Column(
-                float, checks=pa.Check.greater_than_or_equal_to(0)
-            ),
-        }
-    )
-    return TimeSeries(
-        name="AAPL", time_series_df=df, time_series_df_schema=time_series_df_schema
-    )
+    return TimeSeries(name="AAPL", int_col_name="close_price", time_series_df=df)
 
 
 def stock_with_duplicate_dates():
@@ -107,18 +77,8 @@ def stock_with_duplicate_dates():
             "close_price": [1.3, 1.4, 5],
         }
     )
-    time_series_df_schema = pa.DataFrameSchema(
-        {
-            "timestamp": pa.Column(Timestamp, coerce=True),
-            "close_price": pa.Column(
-                float, checks=pa.Check.greater_than_or_equal_to(0)
-            ),
-        }
-    )
 
-    return TimeSeries(
-        name="AAPL", time_series_df=df, time_series_df_schema=time_series_df_schema
-    )
+    return TimeSeries(name="AAPL", int_col_name="close_price", time_series_df=df)
 
 
 def stock_with_unordered_dates():
@@ -128,17 +88,7 @@ def stock_with_unordered_dates():
             "close_price": [1.3, 1.4, 5],
         }
     )
-    time_series_df_schema = pa.DataFrameSchema(
-        {
-            "timestamp": pa.Column(Timestamp, coerce=True),
-            "close_price": pa.Column(
-                float, checks=pa.Check.greater_than_or_equal_to(0)
-            ),
-        }
-    )
-    return TimeSeries(
-        name="AAPL", time_series_df=df, time_series_df_schema=time_series_df_schema
-    )
+    return TimeSeries(name="AAPL", int_col_name="close_price", time_series_df=df)
 
 
 # Create Path

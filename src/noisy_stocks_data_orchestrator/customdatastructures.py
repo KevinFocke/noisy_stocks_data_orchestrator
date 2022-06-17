@@ -5,12 +5,13 @@ from pathlib import Path
 
 import pandas as pd
 import pandera as pa
+from pandera.dtypes import Timestamp
 from pandera.errors import SchemaError
 from prefect.tasks import task
-from pydantic import BaseModel, validate_arguments
 
 # Classes should be PascalCase
 # Check type using pydantic, check DataFrame using pandera
+from pydantic import BaseModel, PrivateAttr, validate_arguments
 
 
 @validate_arguments
@@ -36,11 +37,23 @@ def folder_exists(path: Path):
 
 class TimeSeries(BaseModel):
     name: str  # unique identifier
-    time_series_df_schema: pa.DataFrameSchema
+    timestamp_col_name: str = "timestamp"
+    int_col_name: str  # What is the name of the integer column?
     time_series_df: pd.DataFrame  # Check if type is DataFrame
+    _time_series_df_schema: pa.DataFrameSchema = PrivateAttr()
 
     class Config:  # Pydantic configuration
         arbitrary_types_allowed = True
+
+    def __create_custom_df_schema(self):
+        self._time_series_df_schema = pa.DataFrameSchema(
+            {
+                "timestamp": pa.Column(Timestamp, coerce=True),
+                str(self.int_col_name): pa.Column(
+                    float, checks=pa.Check.greater_than_or_equal_to(0)
+                ),
+            }
+        )
 
     def __data_clean_df(self):
         """Clean the dataframe"""
@@ -77,7 +90,7 @@ class TimeSeries(BaseModel):
     # avocado_dataset_schema
     def __validate_schema(self):
         """Validate pandera df schema"""
-        time_series_df_schema = self.time_series_df_schema
+        time_series_df_schema = self._time_series_df_schema
         self.time_series_df = time_series_df_schema(self.time_series_df)
 
     def __validate_ts_and_set_df(self):
@@ -103,4 +116,5 @@ class TimeSeries(BaseModel):
         # Inherit init from superclass
 
         super().__init__(*args, **kwargs)
+        self.__create_custom_df_schema()
         self.__data_clean_df()
