@@ -1,6 +1,6 @@
 # Noisy Stocks
 
-Generates spurious stock correlations based on historical stock price movers & shakers. 
+Generates spurious stock correlations based on historical stock price movers & shakers.
 
 Published online on [noisystocks.com](noisystocks.com).
 
@@ -8,24 +8,23 @@ Published online on [noisystocks.com](noisystocks.com).
 
 This is a project-based learning experience. My main goals for the project:
 
-* Organize complex project into extendable & easily understandable modules 
+* Create a Cloud Native architecture (Container-Based + Dynamically-Scalable + Microservice-Oriented). The architecture is orchestrated by Kubernetes and uses pre-built and custom Docker images. The microservices are:
+	* Ingestion (ETL) service for new datasets (on-demand)
+	* Database service (PostgreSQL-based)
+	* Analysis service (Custom-written Python, parallellizing Pandas DataFrames using Dask). 
+	* Publishing service (custom Python + static site generation using Hugo)
+	* Logging service for Python flows using Prefect 2.0 (Orion).
+	* Logging service for communication observability between different microservices
 
-* Create automated data pipelines (ETL + Analysis + Publish)
-
-	* Orchestrate data pipelines using Prefect flows
-	* Parallelize processes using Dask
-	* Extract datasets using Kaggle REST API 
-	* Transform datasets into consistent & normalized Pandas DataFrame columns
-	* Load datasets into local database (PostgreSQL)
-	* Query database for timerange
-	* Calculate time-lagged autocorrelation across datasets
-	* Export results to human-readable format for website publishing
-
-* Practice advanced Test-Driven Development concepts (fixtures, API mocking)
+* Setup FastAPI communication accross different microservices
 
 * Enable continuous integration & continuous deployment in a production environment
+
+* Practice advanced Python Test-Driven Development concepts (fixtures, API mocking)
+
 * Make Python functions strongly typed using Pydantic & Pandera
-* Integrate back-end & front-end securely (Jamstack)
+
+* Integrate back-end & front-end securely using Jamstack.
 
 ## Installation
 Requires;
