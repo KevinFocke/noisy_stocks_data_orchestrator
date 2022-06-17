@@ -1,12 +1,11 @@
 from pathlib import Path
-from queue import SimpleQueue
 
 from prefect.flows import flow
 from prefect.task_runners import SequentialTaskRunner
 from prefect.tasks import task
 from pydantic import validate_arguments
 
-from customdatastructures import ResourceFactory, ResourceFolder
+from customdatastructures import folder_exists
 
 """Data Inflow Module
 """
@@ -59,18 +58,6 @@ def create_path_object(path: str):
 
 @validate_arguments
 @task
-def file_exists(path: Path):
-    return path.is_file()
-
-
-@validate_arguments
-@task
-def folder_exists(path: Path):
-    return path.is_dir()
-
-
-@validate_arguments
-@task
 def create_folder(folder_url: Path):
     if not folder_exists(folder_url):
         print(f"Folder {folder_url} does not exist, creating it.")
@@ -107,19 +94,28 @@ def load():
 
 
 @flow(task_runner=SequentialTaskRunner())
-def extract(resource_schema, resource_location, resource_type):
+def extract(resource_schema, resource_location, resource_type, file_suffix: str = ""):
+    # Create relevant resource queue via ResourceFactory
+
+    # Process queue
     pass
 
 
 @flow(task_runner=SequentialTaskRunner())
-def ingress_data(resource_schema, resource_location, resource_type):
+def ingress_data(
+    resource_schema, resource_location, resource_type, file_suffix: str = ""
+):
     # ETL Dataset into database
+    # assumption: resource_schema is uniform accross all files
+    # TODO: Skip files not fitting
+    # file_suffix is used to match files within folders
 
     #  initialize queue if not existing
     extract(
         resource_schema=resource_schema,
         resource_location=resource_location,
         resource_type=resource_type,
+        file_suffix=file_suffix,
     )
     transform()
     load()
