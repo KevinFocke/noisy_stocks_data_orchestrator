@@ -25,48 +25,18 @@ def folder_exists(path: Path):
     return path.is_dir()
 
 
-class Extractor(BaseModel):
-    resource_type: str
-    resource_location: str
-    resource_schema: pa.DataFrameSchema
-    file_suffix: str
+# Schema is always:
+# 1. timestamp column
+# 2. one or more columns that have integer values
 
+# During analysis, two columns are compared
 
-class ExtractorFromURL(Extractor):
-    pass
-    # Downloads file from URL, (unzips), and then c
-
-
-class ExtractorFromFilesystem(Extractor):
-    pass
-    # It extracts a file or folder from filesystem
-
-    def output_filepath_list(self):
-        pass
-
-    pass
-
-
-class ExtractorFactory(Extractor):
-    # Depending on resource_type, create a fitting extractor
-
-    def create_path_from_location(self):
-        # self.resource_path = Path(self.resource_location)
-        pass
-
-    def create_extractor(self):
-        # TODO: Add Url
-
-        # If file or folder, create Path
-        # If URL, validate URL
-
-        pass
+# Make one DataFrame per timestamp column pair
 
 
 class TimeSeries(BaseModel):
     name: str  # unique identifier
-    resource_unique_id: int = 0  # Which dataset?
-    resource_schema: pa.DataFrameSchema
+    time_series_df_schema: pa.DataFrameSchema
     time_series_df: pd.DataFrame  # Check if type is DataFrame
 
     class Config:  # Pydantic configuration
@@ -107,7 +77,7 @@ class TimeSeries(BaseModel):
     # avocado_dataset_schema
     def __validate_schema(self):
         """Validate pandera df schema"""
-        time_series_df_schema = self.resource_schema
+        time_series_df_schema = self.time_series_df_schema
         self.time_series_df = time_series_df_schema(self.time_series_df)
 
     def __validate_ts_and_set_df(self):
@@ -126,8 +96,6 @@ class TimeSeries(BaseModel):
             self.drop_failure_cases(se.failure_cases)
             # revalidate
             self.__validate_schema()
-
-    # WISHLIST: Refactor data cleaning into seperate function
 
     def __init__(self, *args, **kwargs):
 
