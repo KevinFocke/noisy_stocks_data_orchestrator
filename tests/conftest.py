@@ -110,7 +110,7 @@ def stock_with_unordered_dates():
     return TimeSeries(
         name="AAPL",
         int_col_name="close_price",
-        timestamp_col_name="timetamp",
+        timestamp_col_name="timestamp",
         time_series_df=df,
     )
 

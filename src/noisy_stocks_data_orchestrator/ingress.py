@@ -10,6 +10,7 @@ from customdatastructures import folder_exists
 """Data Inflow Module
 """
 
+
 # During load only exact duplicates should be dropped
 # Same date is okay and even desirable
 # Upsert table to ignore duplicate entries and make action idempotent
@@ -17,6 +18,7 @@ from customdatastructures import folder_exists
 # https://docs.timescale.com/timescaledb/latest/how-to-guides/write-data/upsert/#create-a-table-with-a-unique-constraint
 
 
+# (it would be a duplicate)
 # Include ingestion origin data
 # https://docs.dask.org/en/stable/generated/dask.dataframe.read_csv.html
 

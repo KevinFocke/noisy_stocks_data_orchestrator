@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from pandera.errors import SchemaError
 from prefect.flows import flow
 from prefect.tasks import task
 
@@ -27,6 +28,7 @@ def normalize_time_series():
 
 @task()
 def find_highest_correlation(historical_stock_data):
+    # TODO: Skip any timeseries that raises a SchemaError
     return historical_stock_data
 
 

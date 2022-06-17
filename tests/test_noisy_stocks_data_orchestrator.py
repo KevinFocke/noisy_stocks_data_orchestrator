@@ -7,6 +7,7 @@ import pytest
 from noisy_stocks_data_orchestrator import __version__, main_flow
 from noisy_stocks_data_orchestrator.customdatastructures import TimeSeries
 from noisy_stocks_data_orchestrator.ingress import create_folder, folder_exists
+from pandera.errors import SchemaError
 from prefect.flows import flow
 
 from tests.conftest import (
@@ -69,10 +70,8 @@ def test_stock_df_wrong_size_length():
 
 def test_stock_df_wrong_close_price():
     # with pytest.raises(TypeError) as se:
-    stock = stock_with_negative_closing_price()
-    closing_price_array = stock.time_series_df["close_price"].values
-    expected_result = np.array([1.4])
-    assert closing_price_array == expected_result
+    with pytest.raises(SchemaError) as ve:
+        stock_with_negative_closing_price()
 
 
 def test_drop_duplicate_dates():
