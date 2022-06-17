@@ -6,7 +6,6 @@ from pathlib import Path
 import pandas as pd
 import pandera as pa
 from pandera.dtypes import Timestamp
-from pandera.errors import SchemaError
 from prefect.tasks import task
 
 # Classes should be PascalCase
@@ -37,7 +36,7 @@ def folder_exists(path: Path):
 
 class TimeSeries(BaseModel):
     name: str  # unique identifier
-    timestamp_col_name: str = "timestamp"
+    timestamp_col_name: str  # What is the name of the timestamp column?
     int_col_name: str  # What is the name of the integer column?
     time_series_df: pd.DataFrame  # Check if type is DataFrame
     _time_series_df_schema: pa.DataFrameSchema = PrivateAttr()
@@ -48,8 +47,8 @@ class TimeSeries(BaseModel):
     def __create_custom_df_schema(self):
         self._time_series_df_schema = pa.DataFrameSchema(
             {
-                "timestamp": pa.Column(Timestamp, coerce=True),
-                str(self.int_col_name): pa.Column(
+                self.timestamp_col_name: pa.Column(Timestamp, coerce=True),
+                self.int_col_name: pa.Column(
                     float, checks=pa.Check.greater_than_or_equal_to(0)
                 ),
             }
@@ -57,18 +56,22 @@ class TimeSeries(BaseModel):
 
     def __data_clean_df(self):
         """Clean the dataframe"""
+
         # Remove missing rows
         self.time_series_df.dropna(inplace=True)
         # Validate time series & set
         self.__validate_ts_and_set_df()
         # Drop duplicate dates for analysis
         self.time_series_df.drop_duplicates(
-            subset="timestamp", keep="first", inplace=True
+            subset=self.timestamp_col_name, keep="first", inplace=True
         )
         # Sort dates
-        self.time_series_df.sort_values("timestamp", ascending=True, inplace=True)
+        self.time_series_df.sort_values(
+            self.timestamp_col_name, ascending=True, inplace=True
+        )
         # Reset index
         self.time_series_df.reset_index(drop=True, inplace=True)
+        self.time_series_df.set_index(self.timestamp_col_name, inplace=True)
 
     def stock_to_JSON(self):
         """create JSON
@@ -100,15 +103,7 @@ class TimeSeries(BaseModel):
             df (pd.DataFrame): Unvalidated Pandas DataFrame
         """
 
-        try:
-            self.__validate_schema()
-        except SchemaError as se:
-            # print(f"{e}")  # TODO: Log error
-
-            # attempt fix by dropping rows
-            self.drop_failure_cases(se.failure_cases)
-            # revalidate
-            self.__validate_schema()
+        self.__validate_schema()
 
     def __init__(self, *args, **kwargs):
 

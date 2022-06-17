@@ -84,7 +84,7 @@ def test_drop_duplicate_dates():
 
 def test_dates_sorted():
     stock = stock_with_unordered_dates()
-    timestamp_array = stock.time_series_df["timestamp"].values
+    timestamp_array = stock.time_series_df.index.values
     # expected_result in datetime
     expected_result = pd.to_datetime(
         [
