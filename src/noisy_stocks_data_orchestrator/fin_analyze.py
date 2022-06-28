@@ -6,18 +6,11 @@ from prefect.tasks import task
 
 import customdatastructures
 
-# TODO: Rewrite program to use data structures
-# TODO: Ensure equal time between timestamps
-
-
-# Typical order of data analysis:
-# 1. Fetch required timeseries aggregation from database (JSON)
-# 2. Convert timeseries into Pandas DataFrame for analysis
-# 3. Convert DataFrame to Markdown for publishing
+# TODO: Ensure timestamps align
 
 # Correlation is parralellizable! https://docs.dask.org/en/stable/dataframe.html
 
-#TODO: Avoid highest correlation duplicates of the same stock + timerange combination. Filter it out of the eventual list. 
+# TODO: Avoid highest correlation duplicates of the same stock + timerange combination. Append all threads to same olist, then sort, then filter duplicate stocks out of the eventual list.
 
 
 @flow()

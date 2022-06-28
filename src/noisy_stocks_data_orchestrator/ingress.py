@@ -2,11 +2,13 @@ from pathlib import Path
 
 import pandas as pd
 from pandas import DataFrame
+from prefect.flows import flow
+from prefect.task_runners import SequentialTaskRunner
 from prefect.tasks import task
 from pydantic import validate_arguments
 from sqlalchemy import create_engine, engine
 
-from customdatastructures import folder_exists
+from customdatastructures import TimeSeries, folder_exists
 
 """Data Inflow Module
 """
@@ -21,40 +23,70 @@ from customdatastructures import folder_exists
 # https://docs.dask.org/en/stable/generated/dask.dataframe.read_csv.html
 
 
+# Ingress data into database using Talend + Pandas Exploratory research
 class Config_Arbitrary_Types_Allowed:
     arbitrary_types_allowed = True
 
 
-@validate_arguments
+@validate_arguments(config=Config_Arbitrary_Types_Allowed)
+@task
 def create_database_engine(conn_string: str) -> engine.base.Engine:
     return create_engine(conn_string)
 
 
-@validate_arguments(
-    config=Config_Arbitrary_Types_Allowed
-)  # No specific validator for engine, checks type
+@validate_arguments(config=Config_Arbitrary_Types_Allowed)
+@task(retries=3, retry_delay_seconds=3)
 def query_database(sql_alchemy_engine: engine.base.Engine, query: str) -> DataFrame:
     connection = sql_alchemy_engine.connect()  # Connect to the database
     return pd.read_sql(query, connection)  # Run query and convert into pd DataFrame
 
 
-conn_string = "postgresql+psycopg2://postgres:postgres@127.0.0.1:5432/stocks"
+# TODO: Move create_engine out of global scope
 
-query = "SELECT *\
+conn_string = "postgresql+psycopg2://postgres:postgres@127.0.0.1:5432/stocks"
+myengine = create_engine(conn_string)
+
+
+@validate_arguments(config=Config_Arbitrary_Types_Allowed)
+@task
+def normalize_timestamp(df: DataFrame) -> TimeSeries:
+    """Normalize to UTC; Pandera needs Timezone Unaware"""
+    # Set timestamp as index // required by tz_localize
+    df.set_index("timestamp", inplace=True)
+
+    # normalize timezone to UTC, then make timezone unaware for pandera validation
+    df = df.tz_convert("UTC").tz_localize(None)
+
+    # Reset index
+    return TimeSeries(
+        stock_symbol_name="IBM",
+        timestamp_index_name="timestamp",
+        numeric_col_name="price_close",
+        time_series_df=df,
+    )
+
+
+# BUG: Cannot validate engine custom type, thus workaround by
+# checking inside Class https://github.com/PrefectHQ/prefect/issues/5663
+@flow(task_runner=SequentialTaskRunner())
+def query_database_to_TimeSeries(sql_alchemy_engine, query, timeout=10):
+
+    # get Prefect Future
+    prefect_future = query_database(sql_alchemy_engine=sql_alchemy_engine, query=query)
+
+    # calculate result
+
+    prefect_result_df = prefect_future.result(timeout=timeout)
+
+    # normalize date
+    return normalize_timestamp(df=prefect_result_df).result()
+
+
+query2 = "SELECT timestamp, price_close \
     FROM stock_timedata \
     WHERE stock_symbol = 'IBM' and timestamp between '2009-01-01' and '2009-02-01'"
 
-myengine = create_engine(conn_string)
-
-result1 = query_database(myengine, query)
-query2 = "SELECT *\
-    FROM stock_timedata \
-    WHERE stock_symbol = 'GIGA' and timestamp between '2009-01-01' and '2009-02-01'"
-
-result2 = query_database(myengine, query2)
-
-print(result1)
-print(result2)
+query_database_to_TimeSeries(sql_alchemy_engine=myengine, query=query2)
 
 
 @validate_arguments

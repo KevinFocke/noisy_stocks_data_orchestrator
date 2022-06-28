@@ -2,10 +2,8 @@ from os import mkdir
 from pathlib import Path
 
 import pandas as pd
-import pandera as pa
 import pytest
 from noisy_stocks_data_orchestrator.customdatastructures import TimeSeries
-from pandera.dtypes import Timestamp
 
 """
 Single source of truth for fixtures across tests
@@ -44,14 +42,13 @@ def stock_with_date_nan():
         }
     )
     return TimeSeries(
-        name="AAPL",
-        int_col_name="close_price",
-        timestamp_col_name="timestamp",
+        stock_symbol_name="AAPL",
+        numeric_col_name="close_price",
+        timestamp_index_name="timestamp",
         time_series_df=df,
     )
 
 
-# WISHLIST: REFACTOR stocks to use a common df schema
 def stock_with_unequal_rows():
     df = pd.DataFrame(
         {
@@ -63,9 +60,9 @@ def stock_with_unequal_rows():
         }
     )
     return TimeSeries(
-        name="AAPL",
-        int_col_name="close_price",
-        timestamp_col_name="timestamp",
+        stock_symbol_name="AAPL",
+        numeric_col_name="close_price",
+        timestamp_index_name="timestamp",
         time_series_df=df,
     )
 
@@ -78,9 +75,9 @@ def stock_with_negative_closing_price():
         }
     )
     return TimeSeries(
-        name="AAPL",
-        int_col_name="close_price",
-        timestamp_col_name="timestamp",
+        stock_symbol_name="AAPL",
+        numeric_col_name="close_price",
+        timestamp_index_name="timestamp",
         time_series_df=df,
     )
 
@@ -93,9 +90,9 @@ def stock_with_duplicate_dates():
         }
     )
     return TimeSeries(
-        name="AAPL",
-        int_col_name="close_price",
-        timestamp_col_name="timestamp",
+        stock_symbol_name="AAPL",
+        numeric_col_name="close_price",
+        timestamp_index_name="timestamp",
         time_series_df=df,
     )
 
@@ -108,9 +105,9 @@ def stock_with_unordered_dates():
         }
     )
     return TimeSeries(
-        name="AAPL",
-        int_col_name="close_price",
-        timestamp_col_name="timestamp",
+        stock_symbol_name="AAPL",
+        numeric_col_name="close_price",
+        timestamp_index_name="timestamp",
         time_series_df=df,
     )
 
@@ -161,10 +158,8 @@ def factory_temp_file(tmp_path):
         suffix (str): The suffix of your filename eg. ".txt" for "tempfile.txt"
 
     Return:
-    #TODO: Create dictionary instead! Rewrite documentation
-    # TODO: Rewrite tests that do not access path
-        If include_folder_path = 0: Path to file
-        If include_folder_path = 1: tuple (Path to file, Path to folder)
+        If include_folder_path = 0: Dict containing Path to file
+        If include_folder_path = 1: tuple (Dict(file_path: Path to file), Dict(folder_path: Path to folder))
     """
 
     def _create_temp_file(
@@ -231,7 +226,6 @@ def temp_ingress_file_txt(factory_temp_file):
     return factory_temp_file(filesuffix=".txt")
 
 
-# TODO: Create folder_extraction_queue fixture
 @pytest.fixture
 def fixt_folder_extraction_queue():
     filepath = temp_ingress_file_csv  # Path to
@@ -290,6 +284,3 @@ def fixt_three_stock_csv_different_folder(
         )  # returns dict with file_path, folder_path as keys
 
     return path_list_of_dicts  # tuples of (filepath, folderpath, data)
-
-
-# TODO: create file extraciton queue fixture

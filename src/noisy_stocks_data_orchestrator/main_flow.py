@@ -1,4 +1,4 @@
-from prefect import flow
+from prefect.flows import flow
 from prefect.task_runners import SequentialTaskRunner
 
 from egress import publish
@@ -42,6 +42,3 @@ def stock_correlation_flow():
 
     # Publish results of analysis
     publish()
-
-
-# WISHLIST: Second version should be event-driven, with flows as microprocesses. eg. Listener per Queue

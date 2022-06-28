@@ -5,7 +5,7 @@ from prefect.flows import flow
 from prefect.tasks import task
 from prefect.task_runners import DaskTaskRunner
 
-# TODO replace DaskTaskRunner with collectionts
+# TODO replace DaskTaskRunner with collections
 
 
 @task(retries=3, retry_delay_seconds=60)

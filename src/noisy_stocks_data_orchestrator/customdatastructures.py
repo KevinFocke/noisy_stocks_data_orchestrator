@@ -2,9 +2,11 @@
     """
 
 from pathlib import Path
+from typing import Optional
 
 import pandas as pd
 import pandera as pa
+from pandera import Index
 from pandera.dtypes import Timestamp
 from prefect.tasks import task
 
@@ -35,9 +37,9 @@ def folder_exists(path: Path):
 
 
 class TimeSeries(BaseModel):
-    name: str  # unique identifier
-    timestamp_col_name: str  # What is the name of the timestamp column?
-    int_col_name: str  # What is the name of the integer column?
+    stock_symbol_name: Optional[str]  # stock symbol
+    timestamp_index_name: str  # What is the name of the timestamp column?
+    numeric_col_name: str  # What is the name of the numeric column? eg. price_close
     time_series_df: pd.DataFrame  # Check if type is DataFrame
     _time_series_df_schema: pa.DataFrameSchema = PrivateAttr()
 
@@ -45,13 +47,15 @@ class TimeSeries(BaseModel):
         arbitrary_types_allowed = True
 
     def __create_custom_df_schema(self):
+        # At minimum will compare timestamp + value
+        # Base dict
         self._time_series_df_schema = pa.DataFrameSchema(
             {
-                self.timestamp_col_name: pa.Column(Timestamp, coerce=True),
-                self.int_col_name: pa.Column(
+                self.numeric_col_name: pa.Column(
                     float, checks=pa.Check.greater_than_or_equal_to(0)
-                ),
-            }
+                )
+            },
+            index=Index(Timestamp, coerce=True),
         )
 
     def __data_clean_df(self):
@@ -61,17 +65,6 @@ class TimeSeries(BaseModel):
         self.time_series_df.dropna(inplace=True)
         # Validate time series & set
         self.__validate_ts_and_set_df()
-        # Drop duplicate dates for analysis
-        self.time_series_df.drop_duplicates(
-            subset=self.timestamp_col_name, keep="first", inplace=True
-        )
-        # Sort dates
-        self.time_series_df.sort_values(
-            self.timestamp_col_name, ascending=True, inplace=True
-        )
-        # Reset index
-        self.time_series_df.reset_index(drop=True, inplace=True)
-        self.time_series_df.set_index(self.timestamp_col_name, inplace=True)
 
     def stock_to_JSON(self):
         """create JSON
@@ -81,16 +74,6 @@ class TimeSeries(BaseModel):
         """
         return self.json()
 
-    def drop_failure_cases(self, failure_cases):
-        """Drop failed cases from dataframe"""
-        index_list = failure_cases["index"].values.tolist()
-        return self.time_series_df.drop(index_list, inplace=True)
-
-    # TODO: Refactor schema, should be provided to function
-    # This works for the stock, but not for the avocados
-    # Each dataset has a schema associated with it
-    # stock_dataset schema
-    # avocado_dataset_schema
     def __validate_schema(self):
         """Validate pandera df schema"""
         time_series_df_schema = self._time_series_df_schema
@@ -109,7 +92,6 @@ class TimeSeries(BaseModel):
 
         # Initialize object with Pydantic type checking
         # Inherit init from superclass
-
         super().__init__(*args, **kwargs)
         self.__create_custom_df_schema()
         self.__data_clean_df()

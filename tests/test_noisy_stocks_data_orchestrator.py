@@ -51,7 +51,7 @@ def test_fixture_input_via_conftest(sanity_check_fixture):
 def test_create_stock(stock_with_date_nan):
     stock = stock_with_date_nan
     assert isinstance(stock, TimeSeries)
-    assert isinstance(stock.name, str)
+    assert isinstance(stock.stock_symbol_name, str)
     assert isinstance(stock.time_series_df, pd.DataFrame)
 
 
@@ -74,25 +74,18 @@ def test_stock_df_wrong_close_price():
         stock_with_negative_closing_price()
 
 
-def test_drop_duplicate_dates():
-    stock = stock_with_duplicate_dates()
-    closing_price_array = stock.time_series_df["close_price"].values
-    expected_result = np.array([1.4, 1.3])  # dates are also reordered
-    assert np.array_equal(closing_price_array, expected_result)  # type: ignore
-
-
-def test_dates_sorted():
-    stock = stock_with_unordered_dates()
-    timestamp_array = stock.time_series_df.index.values
-    # expected_result in datetime
-    expected_result = pd.to_datetime(
-        [
-            "1976-10-04T00:00:00.000000000",
-            "1980-02-05T00:00:00.000000000",
-            "1996-10-04T00:00:00.000000000",
-        ]
-    ).values
-    assert np.array_equal(timestamp_array, expected_result)  # type:ignore
+# def test_dates_sorted():
+#     stock = stock_with_unordered_dates()
+#     timestamp_array = stock.time_series_df.index.values
+#     # expected_result in datetime
+#     expected_result = pd.to_datetime(
+#         [
+#             "1976-10-04T00:00:00.000000000",
+#             "1980-02-05T00:00:00.000000000",
+#             "1996-10-04T00:00:00.000000000",
+#         ]
+#     ).values
+#     assert np.array_equal(timestamp_array, expected_result)  # type:ignore
 
 
 @flow
@@ -119,8 +112,6 @@ def test_folder_non_existent(tmp_path):
     non_existant_path = tmp_path / "hfdahdasfaeg"
     assert isinstance(non_existant_path, Path)
     assert folder_exists(tmp_path).result() is False
-
-    # TODO: Create tests for extract_url, path_exists, extract_file,
 
 
 def test_fixture_csv(temp_ingress_file_csv):
@@ -212,6 +203,3 @@ def test_fixt_three_stock_csv_different_folder(
     ]
     for index in range(len(file_input_data_list)):
         assert file_input_data_list[index] == stock_sample_data_list[index]
-
-
-# TODO: Write tests for FolderExtractionQueue + FileExtractionQueue
