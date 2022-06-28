@@ -8,32 +8,35 @@ Published online on [noisystocks.com](noisystocks.com).
 
 This is a project-based learning experience. My main goals for the project:
 
-* Create a Cloud Native architecture (Container-Based + Dynamically-Scalable + Microservice-Oriented). The architecture is orchestrated by Kubernetes and uses pre-built and custom Docker images. The microservices are:
-	* Ingestion (ETL) service for new datasets (on-demand)
-	* Database service (PostgreSQL-based)
-	* Analysis service (Custom-written Python, parallellizing Pandas DataFrames using Dask). 
+* Create a Cloud Native architecture (Container-Based + Dynamically-Scalable + Microservice-Oriented). The microservices are:
+	* Database service (Timescale, PostgresQL-based specialized for time series)
+	* Analysis service (Custom Python, parallellizing Pandas DataFrames using Dask). 
 	* Publishing service (custom Python + static site generation using Hugo)
-	* Logging service for Python flows using Prefect 2.0 (Orion).
-	* Logging service for communication observability between different microservices
+	* Orchestrator for Prefect 2.0 (Orion).
+	* Worker agent(s)
 
-* Setup FastAPI communication accross different microservices
+Features:
+* Automatically finds correlations based on provided time series
 
-* Enable continuous integration & continuous deployment in a production environment
+* Gracefully recovers from failure to minimize service interruptions
 
-* Practice advanced Python Test-Driven Development concepts (fixtures, API mocking)
+* Integrates back-end & front-end securely using Jamstack (Static Site Generation).
 
-* Make Python functions strongly typed using Pydantic & Pandera
+* Observability into every aspect of the architecture
 
-* Integrate back-end & front-end securely using Jamstack.
+* Strongly typed Python using Pydantic & Pandera to increase reliability
+
+* Optimized database with compression rates up to 80%+
+
+* Continuous integration & continuous deployment in a production environment
+
+
+Planned for version 1.5:
+
+* Add Content Management System (CMS) using a custom CLI interface
+
 
 ## Installation
-Requires;
-
-- Linux OS with GNU make installed (often installed by default)
-- Poetry see [pyproject.toml]
-- Kaggle API key saved in kaggle.json for security: https://www.kaggle.com/docs/api
-
-
 
 Install dependencies & create virtual Python environment:
 
