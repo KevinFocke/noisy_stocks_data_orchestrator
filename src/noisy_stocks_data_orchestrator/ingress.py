@@ -1,38 +1,60 @@
 from pathlib import Path
 
-from prefect.flows import flow
-from prefect.task_runners import SequentialTaskRunner
+import pandas as pd
+from pandas import DataFrame
 from prefect.tasks import task
 from pydantic import validate_arguments
+from sqlalchemy import create_engine, engine
 
 from customdatastructures import folder_exists
 
 """Data Inflow Module
 """
 
-
-# During load only exact duplicates should be dropped
-# Same date is okay and even desirable
+# Best practice: One engine should handle ALL queries
+# https://docs.sqlalchemy.org/en/14/core/connections.html#basic-usage
 # Upsert table to ignore duplicate entries and make action idempotent
 # If timestamp is already in database for the stock, do not add.
-# https://docs.timescale.com/timescaledb/latest/how-to-guides/write-data/upsert/#create-a-table-with-a-unique-constraint
+# https://docs.timescale.com/timescaledb/latest/how-to-guides/write-data/upsert/
 
 
-# (it would be a duplicate)
-# Include ingestion origin data
 # https://docs.dask.org/en/stable/generated/dask.dataframe.read_csv.html
 
-# Open question: How to ensure dataset is not already ingested?
 
-# How to add new entries to a partially ingested dataset?
+class Config_Arbitrary_Types_Allowed:
+    arbitrary_types_allowed = True
 
 
-@task
-def query_database(query):
-    # Query using https://prefecthq.github.io/prefect-sqlalchemy/
-    # Might raise errors https://github.com/timescale/timescaledb/issues/2226
-    # https://github.com/PrefectHQ/prefect-sqlalchemy/blob/main/prefect_sqlalchemy/credentials.py
-    return
+@validate_arguments
+def create_database_engine(conn_string: str) -> engine.base.Engine:
+    return create_engine(conn_string)
+
+
+@validate_arguments(
+    config=Config_Arbitrary_Types_Allowed
+)  # No specific validator for engine, checks type
+def query_database(sql_alchemy_engine: engine.base.Engine, query: str) -> DataFrame:
+    connection = sql_alchemy_engine.connect()  # Connect to the database
+    return pd.read_sql(query, connection)  # Run query and convert into pd DataFrame
+
+
+conn_string = "postgresql+psycopg2://postgres:postgres@127.0.0.1:5432/stocks"
+
+query = "SELECT *\
+    FROM stock_timedata \
+    WHERE stock_symbol = 'IBM' and timestamp between '2009-01-01' and '2009-02-01'"
+
+myengine = create_engine(conn_string)
+
+result1 = query_database(myengine, query)
+query2 = "SELECT *\
+    FROM stock_timedata \
+    WHERE stock_symbol = 'GIGA' and timestamp between '2009-01-01' and '2009-02-01'"
+
+result2 = query_database(myengine, query2)
+
+print(result1)
+print(result2)
 
 
 @validate_arguments
@@ -63,11 +85,3 @@ def create_folder(folder_url: Path):
     else:
         print("Folder already exists")
         return False  # No folder created
-
-
-@task
-def compress():
-    """Compress database"""
-
-    # WISHLIST: Add compression
-    # https://docs.timescale.com/timescaledb/latest/how-to-guides/compression/manually-compress-chunks/#main-content
