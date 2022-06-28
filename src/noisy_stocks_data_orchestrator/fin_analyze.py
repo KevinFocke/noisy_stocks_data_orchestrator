@@ -17,6 +17,8 @@ import customdatastructures
 
 # Correlation is parralellizable! https://docs.dask.org/en/stable/dataframe.html
 
+#TODO: Avoid highest correlation duplicates of the same stock + timerange combination. Filter it out of the eventual list. 
+
 
 @flow()
 def normalize_time_series():
