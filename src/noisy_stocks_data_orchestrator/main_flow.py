@@ -43,6 +43,9 @@ def stock_correlation_flow():
     ).result()
 
     print("hi")
+
+    # close the db connection
+    sql_alchemy_engine.dispose()
     # TODO: Add date for running the flow; default to today roughly 8 years ago*
     # * 365 * years. Take into account leap days!
     # TODO: Update functions and arguments
