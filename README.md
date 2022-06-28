@@ -10,9 +10,9 @@ This is a project-based learning experience. My main goals for the project:
 
 * Create a Cloud Native architecture (Container-Based + Dynamically-Scalable + Microservice-Oriented). The microservices are:
 	* Database service (Timescale, PostgresQL-based specialized for time series)
-	* Analysis service (Custom Python, parallellizing Pandas DataFrames using Dask). 
-	* Publishing service (custom Python + static site generation using Hugo)
-	* Orchestrator for Prefect 2.0 (Orion).
+	* Analysis service (Custom Python, parallellizing Pandas DataFrames using Dask)
+	* Publishing service (Custom Python + static site generation using Hugo)
+	* Data Orchestrator (Prefect 2.0)
 	* Worker agent(s)
 
 Features:
