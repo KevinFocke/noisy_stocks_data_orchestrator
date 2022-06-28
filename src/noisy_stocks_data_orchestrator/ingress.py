@@ -29,12 +29,6 @@ class Config_Arbitrary_Types_Allowed:
 
 
 @validate_arguments(config=Config_Arbitrary_Types_Allowed)
-@task
-def create_database_engine(conn_string: str) -> engine.base.Engine:
-    return create_engine(conn_string)
-
-
-@validate_arguments(config=Config_Arbitrary_Types_Allowed)
 @task(retries=3, retry_delay_seconds=3)
 def query_database(sql_alchemy_engine: engine.base.Engine, query: str) -> DataFrame:
     connection = sql_alchemy_engine.connect()  # Connect to the database
@@ -43,13 +37,10 @@ def query_database(sql_alchemy_engine: engine.base.Engine, query: str) -> DataFr
 
 # TODO: Move create_engine out of global scope
 
-conn_string = "postgresql+psycopg2://postgres:postgres@127.0.0.1:5432/stocks"
-myengine = create_engine(conn_string)
-
 
 @validate_arguments(config=Config_Arbitrary_Types_Allowed)
 @task
-def normalize_timestamp(df: DataFrame) -> TimeSeries:
+def normalize_timestamp(df: DataFrame) -> DataFrame:
     """Normalize to UTC; Pandera needs Timezone Unaware"""
     # Set timestamp as index // required by tz_localize
     df.set_index("timestamp", inplace=True)
@@ -57,13 +48,7 @@ def normalize_timestamp(df: DataFrame) -> TimeSeries:
     # normalize timezone to UTC, then make timezone unaware for pandera validation
     df = df.tz_convert("UTC").tz_localize(None)
 
-    # Reset index
-    return TimeSeries(
-        stock_symbol_name="IBM",
-        timestamp_index_name="timestamp",
-        numeric_col_name="price_close",
-        time_series_df=df,
-    )
+    return df
 
 
 # BUG: Cannot validate engine custom type, thus workaround by
@@ -79,14 +64,13 @@ def query_database_to_TimeSeries(sql_alchemy_engine, query, timeout=10):
     prefect_result_df = prefect_future.result(timeout=timeout)
 
     # normalize date
-    return normalize_timestamp(df=prefect_result_df).result()
-
-
-query2 = "SELECT timestamp, price_close \
-    FROM stock_timedata \
-    WHERE stock_symbol = 'IBM' and timestamp between '2009-01-01' and '2009-02-01'"
-
-query_database_to_TimeSeries(sql_alchemy_engine=myengine, query=query2)
+    df = normalize_timestamp(df=prefect_result_df).result()
+    return TimeSeries(
+        stock_symbol_name="IBM",
+        timestamp_index_name="timestamp",
+        numeric_col_name="price_close",
+        time_series_df=df,
+    )
 
 
 @validate_arguments
