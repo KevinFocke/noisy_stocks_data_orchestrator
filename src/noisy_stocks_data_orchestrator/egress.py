@@ -1,3 +1,6 @@
+import io
+
+import reverse_geocoder as rg  # Might need to be installed locally via pip
 from prefect.flows import flow
 from prefect.task_runners import SequentialTaskRunner
 from prefect.tasks import task
@@ -7,6 +10,26 @@ from prefect.tasks import task
 
 # TODO: Set pandas backend to plotly https://plotly.com/python/pandas-backend/
 # TODO: Static image export plotly https://plotly.com/python/static-image-export
+
+
+def reverse_geocoder(coordinates):
+    """input: ((latitude, longitude),)
+    output:
+    coordinates expects a TUPLE of multiple values!
+    eg. ((51.5214588, -0.1729636),)"""
+    geo = rg.RGeocoder(
+        mode=1,  # 1 = single processor, 2 = multi-processor
+        verbose=True,
+        stream=io.StringIO(open("egress_geonames_cities.csv", encoding="utf-8").read()),
+    )
+    results = geo.query(coordinates)
+
+    return results
+
+
+coordinates = ((51.5214588, -0.1729636),)
+results = reverse_geocoder(coordinates=coordinates)
+print(results)
 
 
 @task()

@@ -15,6 +15,7 @@ dask = {extras = ["complete"], version = "^2022.5.2"}
 prefect-sqlalchemy = "^0.1.0"
 SQLAlchemy = "^1.4.39"
 psycopg2-binary = "^2.9.3"
+reverse_geocoder = "1.5.1"
 
 
 [tool.poetry.dev-dependencies]
