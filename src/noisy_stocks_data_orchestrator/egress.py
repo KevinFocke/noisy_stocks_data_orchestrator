@@ -29,6 +29,7 @@ def reverse_geocoder(coordinates):
 
 coordinates = ((51.5214588, -0.1729636),)
 results = reverse_geocoder(coordinates=coordinates)
+# TODO: Add country code lookup based on Geocities
 print(results)
 
 
@@ -55,10 +56,16 @@ def save_files(markdown):
 
 @flow(task_runner=SequentialTaskRunner())
 def publish(historical_stock_data, best_fit):
+
     # Create visualization
     visualization = create_visualization()
+
     # Create files for export
     markdown = create_markdown_files(visualization)
+
+    # Credit: Cities database from Geocities
+    # Precipitation data from ...
+    # Stock data from ...
 
     # Save files to disk
     save_files(markdown)
