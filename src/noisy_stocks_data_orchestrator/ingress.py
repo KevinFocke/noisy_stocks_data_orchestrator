@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import dask.dataframe as dd
 import pandas as pd
 from pandas import DataFrame
 from prefect.flows import flow
@@ -63,6 +64,7 @@ def query_database_to_TimeSeries(sql_alchemy_engine, query, timeout=10):
     # normalize date
     df = normalize_timestamp(df=prefect_result_df).result()
 
+    # Need a minimum of 4 timestamps, prefers 5 if available
     # TODO: Decouple, how can I maximize the flexibility of a query?
     return TimeSeries(
         stock_symbol_name="IBM",
