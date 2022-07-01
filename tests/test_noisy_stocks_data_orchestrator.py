@@ -10,12 +10,7 @@ from noisy_stocks_data_orchestrator.ingress import create_folder, folder_exists
 from pandera.errors import SchemaError
 from prefect.flows import flow
 
-from tests.conftest import (
-    stock_with_duplicate_dates,
-    stock_with_negative_closing_price,
-    stock_with_unequal_rows,
-    stock_with_unordered_dates,
-)
+from tests.conftest import stock_with_negative_closing_price, stock_with_unequal_rows
 
 # For typechecking use isinstance()
 # Start every test with test_

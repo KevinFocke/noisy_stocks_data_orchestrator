@@ -1,6 +1,5 @@
 from pathlib import Path
 
-import dask.dataframe as dd
 import pandas as pd
 from pandas import DataFrame
 from prefect.flows import flow
@@ -52,7 +51,14 @@ def normalize_timestamp(df: DataFrame) -> DataFrame:
 # BUG: Cannot validate engine custom type, thus workaround by
 # checking inside Class https://github.com/PrefectHQ/prefect/issues/5663
 @flow(task_runner=SequentialTaskRunner())
-def query_database_to_TimeSeries(sql_alchemy_engine, query, timeout=10):
+def query_database_to_TimeSeries(
+    sql_alchemy_engine,
+    query,
+    numeric_col_name,
+    timestamp_index_name="timestamp",
+    stock_symbol_name=None,
+    timeout=10,
+):
 
     # get Prefect Future
     prefect_future = query_database(sql_alchemy_engine=sql_alchemy_engine, query=query)
@@ -64,12 +70,10 @@ def query_database_to_TimeSeries(sql_alchemy_engine, query, timeout=10):
     # normalize date
     df = normalize_timestamp(df=prefect_result_df).result()
 
-    # Need a minimum of 4 timestamps, prefers 5 if available
-    # TODO: Decouple, how can I maximize the flexibility of a query?
     return TimeSeries(
-        stock_symbol_name="IBM",
-        timestamp_index_name="timestamp",
-        numeric_col_name="price_close",
+        stock_symbol_name=stock_symbol_name,
+        timestamp_index_name=timestamp_index_name,
+        numeric_col_name=numeric_col_name,
         time_series_df=df,
     )
 
