@@ -245,6 +245,62 @@ def test_database_query_output_end_timestamp(fixt_database_query):
     assert fixt_database_query.output_end_timestamp() == "2022-07-03"
 
 
-@freeze_time("2012-01-14")
 def test_freeze_time():
-    assert datetime.now() == datetime(2012, 1, 14)
+    with freeze_time("2012-01-14"):
+        assert datetime.now() == datetime(2012, 1, 14)
+
+
+def test_database_query_begin_and_timestamp_scenario1(
+    fixt_database_query_begin_and_end_timestamp_scenario_1,
+):
+    assert (
+        fixt_database_query_begin_and_end_timestamp_scenario_1.output_begin_timestamp()
+        == "2022-06-29"
+    )
+
+    assert (
+        fixt_database_query_begin_and_end_timestamp_scenario_1.output_end_timestamp()
+        == "2022-07-03"
+    )
+
+
+def test_database_query_begin_and_timestamp_scenario2(
+    fixt_database_query_begin_and_end_timestamp_scenario_2,
+):
+    assert (
+        fixt_database_query_begin_and_end_timestamp_scenario_2.output_begin_timestamp()
+        == "2022-03-05"
+    )
+
+    assert (
+        fixt_database_query_begin_and_end_timestamp_scenario_2.output_end_timestamp()
+        == "2022-03-25"
+    )
+
+
+def test_database_query_begin_and_timestamp_scenario3(
+    fixt_database_query_begin_and_end_timestamp_scenario_3,
+):
+    assert (
+        fixt_database_query_begin_and_end_timestamp_scenario_3.output_begin_timestamp()
+        == "2008-10-06"
+    )
+
+    assert (
+        fixt_database_query_begin_and_end_timestamp_scenario_3.output_end_timestamp()
+        == "2008-10-20"
+    )
+
+
+def test_database_query_begin_and_timestamp_scenario4(
+    fixt_database_query_begin_and_end_timestamp_scenario_4,
+):
+    assert (
+        fixt_database_query_begin_and_end_timestamp_scenario_4.output_begin_timestamp()
+        == "1988-10-20"
+    )
+
+    assert (
+        fixt_database_query_begin_and_end_timestamp_scenario_4.output_end_timestamp()
+        == "1988-10-26"
+    )

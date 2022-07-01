@@ -78,12 +78,13 @@ def stock_correlation_flow():
     stocks_db_conn_string = (
         "postgresql+psycopg2://postgres:postgres@127.0.0.1:5432/stocks"
     )
-    # SQLAlchemy will not turn itself into a pickle from another process. DO NOT PICKLE!
-    sql_alchemy_stock_engine = create_engine(stocks_db_conn_string)
-
+    # preferences
     select_fields = ["timestamp", "stock_symbol", "price_close"]
     database_name = "stock_timedata"
     interval_in_days = 5
+    # SQLAlchemy will not turn itself into a pickle from another process. DO NOT PICKLE!
+    sql_alchemy_stock_engine = create_engine(stocks_db_conn_string)
+
     db_query_object = DatabaseQuery(
         select_fields=select_fields,
         from_database=database_name,

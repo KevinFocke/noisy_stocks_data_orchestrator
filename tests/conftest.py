@@ -1,7 +1,6 @@
 from datetime import datetime
 from os import mkdir
 from pathlib import Path
-from traceback import format_exception
 
 import pandas as pd
 import pytest
@@ -164,8 +163,10 @@ def factory_temp_file(tmp_path):
         suffix (str): The suffix of your filename eg. ".txt" for "tempfile.txt"
 
     Return:
-        If include_folder_path = 0: Dict containing Path to file
-        If include_folder_path = 1: tuple (Dict(file_path: Path to file), Dict(folder_path: Path to folder))
+        If include_folder_path = 0:
+        Dict containing Path to file
+        If include_folder_path = 1:
+        tuple (Dict(file_path: Path to file), Dict(folder_path: Path to folder))
     """
 
     def _create_temp_file(
@@ -318,5 +319,69 @@ def fixt_database_query_min_args_fakedate():
     )
 
 
+@pytest.fixture
+def fixt_database_query_begin_and_end_timestamp_scenario_1():
+    # Based on process_begin_and_end_timestamp
+    select_fields = ["timestamp", "stock_symbol", "price_close"]
+    database_name = "stock_timedata"
+    date_format = r"%Y-%m-%d"
+    begin_date = datetime.strptime("2022-06-29", date_format)
+    end_date = datetime.strptime("2022-07-03", date_format)
+
+    return DatabaseQuery(
+        select_fields=select_fields,
+        from_database=database_name,
+        process_begin_and_end_timestamp=(begin_date, end_date),
+    )
+
+
+@pytest.fixture
+def fixt_database_query_begin_and_end_timestamp_scenario_2():
+    # Based on process_begin_and_end_timestamp
+    select_fields = ["timestamp", "stock_symbol", "price_close"]
+    database_name = "stock_timedata"
+    date_format = r"%Y-%m-%d"
+    target_date = datetime.strptime("2022-03-15", date_format)
+    interval_in_days = 10
+
+    return DatabaseQuery(
+        select_fields=select_fields,
+        from_database=database_name,
+        target_date=target_date,
+        interval_in_days=interval_in_days,
+    )
+
+
+@pytest.fixture
+def fixt_database_query_begin_and_end_timestamp_scenario_3():
+    # Based on process_begin_and_end_timestamp
+    select_fields = ["timestamp", "stock_symbol", "price_close"]
+    database_name = "stock_timedata"
+    days_ago = 10
+    interval_in_days = 7
+
+    with freeze_time("2008-10-23"):
+        return DatabaseQuery(
+            select_fields=select_fields,
+            from_database=database_name,
+            days_ago=days_ago,
+            interval_in_days=interval_in_days,
+        )
+
+
+@pytest.fixture
+def fixt_database_query_begin_and_end_timestamp_scenario_4():
+    # Based on process_begin_and_end_timestamp
+    select_fields = ["timestamp", "stock_symbol", "price_close"]
+    database_name = "stock_timedata"
+    interval_in_days = 3
+
+    with freeze_time("2008-10-23"):
+        return DatabaseQuery(
+            select_fields=select_fields,
+            from_database=database_name,
+            interval_in_days=interval_in_days,
+        )
+
+
 # add test for custom data structure
-# SELECT timestamp,stock_symbol,price_close FROM stock_timedata WHERE timestamp >= '2002-06-26'and timestamp <= '2002-07-06';

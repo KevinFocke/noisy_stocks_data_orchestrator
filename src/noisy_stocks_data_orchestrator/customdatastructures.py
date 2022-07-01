@@ -41,10 +41,10 @@ def folder_exists(path: Path):
 
 class DatabaseQuery(BaseModel):
     """values and variables related to analysis ingestion stage. Upon initialization creates begin and end timestamps in matter of priority:
-    1. Based on interval_begin_and_end_timestamp (begin, end)
+    1. Based on process_begin_and_end_timestamp (begin, end)
     2. Based on target_date + interval_in_days
-    3. Based on time.now() - provided days_ago
-    4. Based on time.now() - 20 years ago"""
+    3. Based on time.now() - provided days_ago + interval_in_days
+    4. Based on time.now() - 20 years ago + interval_in_days"""
 
     # TODO: create test for each scenario
     select_fields: list[str]
@@ -66,12 +66,12 @@ class DatabaseQuery(BaseModel):
             + " WHERE "
             + r"timestamp >= "
             + r"'"
-            + str(self._begin_timestamp)
+            + str(self._begin_timestamp.date())
             + r"'"
             + r"and "
             + r"timestamp <= "
             + r"'"
-            + str(self._end_timestamp)
+            + str(self._end_timestamp.date())
             + r"'"
             + r";"
         )
@@ -83,9 +83,10 @@ class DatabaseQuery(BaseModel):
             if self.days_ago is None:
                 years_ago = 20
                 # TODO: Calculate leap years between now and date
-                self.days_ago = years_ago * 365 + 5
-            today = datetime.now().date()
+                self.days_ago = (years_ago * 365) + 5
+            today = datetime.now()
             return today - timedelta(days=self.days_ago)
+        return self.target_date
 
     def _unfold_select_fields(self):
         unfolded_select_fields = ""
@@ -129,7 +130,8 @@ class DatabaseQuery(BaseModel):
         # Inherit init from superclass
         super().__init__(*args, **kwargs)
         if self.process_begin_and_end_timestamp is None:
-            self.target_date = self.calculate_target_date()
+            if self.target_date is None:
+                self.target_date = self.calculate_target_date()
             self._begin_timestamp, self._end_timestamp = self.calculate_date_interval(
                 date=self.target_date, interval_in_days=self.interval_in_days  # type: ignore
             )
