@@ -1,11 +1,13 @@
 """Custom data structures and their methods
     """
 
+from datetime import datetime, strftime, strptime
 from pathlib import Path
 from typing import Optional
 
 import pandas as pd
 import pandera as pa
+from pandas import DatetimeIndex
 from pandera import Index
 from pandera.dtypes import Timestamp
 from prefect.tasks import task
@@ -13,6 +15,7 @@ from prefect.tasks import task
 # Classes should be PascalCase
 # Check type using pydantic, check DataFrame using pandera
 from pydantic import BaseModel, PrivateAttr, validate_arguments
+from pydantic.types import PositiveInt
 
 
 @validate_arguments
@@ -36,12 +39,38 @@ def folder_exists(path: Path):
 # Make one DataFrame per timestamp column pair
 
 
+class DatabaseQuery(BaseModel):
+    select_fields: list[str]
+    from_database: str
+    begin_timestamp: datetime
+    end_timestamp: datetime
+
+    def to_sql(self):
+        pass
+
+    def _output_date(self, date: datetime, date_output_format: str = r"%Y-%m-%d"):
+        return date.strftime(date_output_format)
+
+    def output_begin_timestamp(self, date_output_format: str = r"%Y-%m-%d"):
+        self._output_date(
+            date=self.begin_timestamp, date_output_format=date_output_format
+        )
+
+    def output_end_timestamp(self, date_output_format: str = r"%Y-%m-%d"):
+        self._output_date(
+            date=self.end_timestamp, date_output_format=date_output_format
+        )
+
+
 class TimeSeries(BaseModel):
     stock_symbol_name: Optional[str]  # stock symbol
     timestamp_index_name: str  # What is the name of the timestamp column?
     numeric_col_name: str  # What is the name of the numeric column? eg. price_close
     time_series_df: pd.DataFrame  # Check if type is DataFrame
     _time_series_df_schema: pa.DataFrameSchema = PrivateAttr()
+    _longest_timeseries_sequence_start: DatetimeIndex = PrivateAttr()
+    _longest_timeseries_sequence_end: DatetimeIndex = PrivateAttr()
+    _longest_timeseries_sequence_length: PositiveInt = PrivateAttr()
 
     class Config:  # Pydantic configuration
         arbitrary_types_allowed = True
