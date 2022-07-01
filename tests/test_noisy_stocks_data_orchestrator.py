@@ -1,14 +1,15 @@
 from itertools import combinations
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 import pytest
 from noisy_stocks_data_orchestrator import __version__, main_flow
 from noisy_stocks_data_orchestrator.customdatastructures import TimeSeries
 from noisy_stocks_data_orchestrator.ingress import create_folder, folder_exists
+from noisy_stocks_data_orchestrator.main_flow import calculate_stock_query_date
 from pandera.errors import SchemaError
 from prefect.flows import flow
+from prefect.testing.utilities import prefect_test_harness
 
 from tests.conftest import stock_with_negative_closing_price, stock_with_unequal_rows
 
@@ -198,3 +199,15 @@ def test_fixt_three_stock_csv_different_folder(
     ]
     for index in range(len(file_input_data_list)):
         assert file_input_data_list[index] == stock_sample_data_list[index]
+
+
+def test_calculate_stock_query_date():
+    @flow
+    def my_flow():
+        return calculate_stock_query_date(date="2022-07-01", interval="2")
+
+    stock_query_date = my_flow().result()
+    assert stock_query_date.result() == {
+        "begindate": "2022-06-29",
+        "enddate": "2022-07-03",
+    }

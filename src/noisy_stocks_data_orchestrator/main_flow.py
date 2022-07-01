@@ -22,9 +22,13 @@ def sanity_check():
 
 
 @task
-def calculate_stock_query_date(date, interval):
-    # TODO: write test
+def calculate_stock_query_date(date, interval_in_days):
+
     pass
+    # return {
+    #    "begindate": "2022-06-29",
+    #    "enddate": "2022-07-03",
+    # }
 
 
 @flow(task_runner=SequentialTaskRunner())
