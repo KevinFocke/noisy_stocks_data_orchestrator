@@ -1,3 +1,4 @@
+from datetime import datetime
 from itertools import combinations
 from pathlib import Path
 
@@ -6,7 +7,10 @@ import pytest
 from noisy_stocks_data_orchestrator import __version__, main_flow
 from noisy_stocks_data_orchestrator.customdatastructures import TimeSeries
 from noisy_stocks_data_orchestrator.ingress import create_folder, folder_exists
-from noisy_stocks_data_orchestrator.main_flow import calculate_stock_query_date
+from noisy_stocks_data_orchestrator.main_flow import (
+    calculate_date_interval,
+    construct_stocks_query,
+)
 from pandera.errors import SchemaError
 from prefect.flows import flow
 from prefect.testing.utilities import prefect_test_harness
@@ -66,7 +70,7 @@ def test_stock_df_wrong_size_length():
 
 def test_stock_df_wrong_close_price():
     # with pytest.raises(TypeError) as se:
-    with pytest.raises(SchemaError) as ve:
+    with pytest.raises(SchemaError):
         stock_with_negative_closing_price()
 
 
@@ -201,13 +205,41 @@ def test_fixt_three_stock_csv_different_folder(
         assert file_input_data_list[index] == stock_sample_data_list[index]
 
 
-def test_calculate_stock_query_date():
+def test_calculate_date_interval_2_days():
     @flow
-    def my_flow():
-        return calculate_stock_query_date(date="2022-07-01", interval="2")
+    def test_calc_date_interval_flow():
+        return calculate_date_interval(
+            date=datetime.strptime("2022-07-01", r"%Y-%m-%d"), interval_in_days=2
+        )
 
-    stock_query_date = my_flow().result()
+    stock_query_date = test_calc_date_interval_flow().result()
     assert stock_query_date.result() == {
-        "begindate": "2022-06-29",
-        "enddate": "2022-07-03",
+        "begin_date": "2022-06-29",
+        "end_date": "2022-07-03",
     }
+
+
+def test_calculate_date_interval_same_day():
+    @flow
+    def test_calc_date_interval_same_day_flow():
+        return calculate_date_interval(
+            date=datetime.strptime("2022-07-01", r"%Y-%m-%d"), interval_in_days=0
+        )
+
+    stock_query_date = test_calc_date_interval_same_day_flow().result()
+    assert stock_query_date.result() == {
+        "begin_date": "2022-07-01",
+        "end_date": "2022-07-01",
+    }
+
+
+def test_calculate_stock_query_creation():
+    with prefect_test_harness():
+        # run the flow against a temporary testing database
+        assert (
+            construct_stocks_query(
+                interval_in_days=2,
+                target_date=datetime.strptime("2002-07-02", r"%Y-%m-%d"),
+            ).result()
+            == r"SELECT timestamp,stock_symbol,price_close FROM stock_timedata WHERE timestamp >= '2002-06-30'and timestamp <= '2002-07-04';"
+        )
