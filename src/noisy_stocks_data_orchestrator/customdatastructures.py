@@ -1,7 +1,7 @@
 """Custom data structures and their methods
     """
 
-from datetime import datetime, strftime, strptime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Optional
 
@@ -40,26 +40,102 @@ def folder_exists(path: Path):
 
 
 class DatabaseQuery(BaseModel):
+    """values and variables related to analysis ingestion stage. Upon initialization creates begin and end timestamps in matter of priority:
+    1. Based on interval_begin_and_end_timestamp (begin, end)
+    2. Based on target_date + interval_in_days
+    3. Based on time.now() - provided days_ago
+    4. Based on time.now() - 20 years ago"""
+
+    # TODO: create test for each scenario
     select_fields: list[str]
     from_database: str
-    begin_timestamp: datetime
-    end_timestamp: datetime
+    interval_in_days: Optional[PositiveInt] = 5
+    process_begin_and_end_timestamp: Optional[tuple[datetime, datetime]] = None
+    _begin_timestamp: datetime = PrivateAttr()
+    _end_timestamp: datetime = PrivateAttr()
+    target_date: Optional[datetime] = None
+    days_ago: Optional[PositiveInt] = None  # eg 5 means 5 days ago
 
     def to_sql(self):
-        pass
+        # TODO: Rework to sqlalchemy query
+        stocks_query = (
+            r"SELECT "
+            + self._unfold_select_fields()
+            + r"FROM "
+            + str(self.from_database)
+            + " WHERE "
+            + r"timestamp >= "
+            + r"'"
+            + str(self._begin_timestamp)
+            + r"'"
+            + r"and "
+            + r"timestamp <= "
+            + r"'"
+            + str(self._end_timestamp)
+            + r"'"
+            + r";"
+        )
+        return stocks_query
+
+    def calculate_target_date(self):
+        # calculate target_date if not provided
+        if self.target_date is None:
+            if self.days_ago is None:
+                years_ago = 20
+                # TODO: Calculate leap years between now and date
+                self.days_ago = years_ago * 365 + 5
+            today = datetime.now().date()
+            return today - timedelta(days=self.days_ago)
+
+    def _unfold_select_fields(self):
+        unfolded_select_fields = ""
+        for field in self.select_fields:
+            unfolded_select_fields += field + r","
+        return unfolded_select_fields[:-1] + r" "  # remove last comma
 
     def _output_date(self, date: datetime, date_output_format: str = r"%Y-%m-%d"):
-        return date.strftime(date_output_format)
+        output_date = date.strftime(date_output_format)
+        return output_date
 
     def output_begin_timestamp(self, date_output_format: str = r"%Y-%m-%d"):
-        self._output_date(
-            date=self.begin_timestamp, date_output_format=date_output_format
+        return self._output_date(
+            date=self._begin_timestamp, date_output_format=date_output_format
         )
 
     def output_end_timestamp(self, date_output_format: str = r"%Y-%m-%d"):
-        self._output_date(
-            date=self.end_timestamp, date_output_format=date_output_format
+        return self._output_date(
+            date=self._end_timestamp, date_output_format=date_output_format
         )
+
+    def calculate_date_interval(
+        self,
+        date: datetime,
+        interval_in_days: PositiveInt = 5,
+    ) -> tuple[datetime, datetime]:
+        """
+        input: date in Year-Month-Day eg. 2022-07-20
+        interval_in_days eg. 2
+        output: dict eg {begindate:"2022-07-18"
+        enddate:"2022-07-22"""
+
+        begin_date = date - timedelta(int(interval_in_days))
+        end_date = date + timedelta(int(interval_in_days))
+
+        return (begin_date, end_date)
+
+    def __init__(self, *args, **kwargs):
+
+        # Initialize object with Pydantic type checking
+        # Inherit init from superclass
+        super().__init__(*args, **kwargs)
+        if self.process_begin_and_end_timestamp is None:
+            self.target_date = self.calculate_target_date()
+            self._begin_timestamp, self._end_timestamp = self.calculate_date_interval(
+                date=self.target_date, interval_in_days=self.interval_in_days  # type: ignore
+            )
+        else:  # interval is provided by user
+            self._begin_timestamp = self.process_begin_and_end_timestamp[0]
+            self._end_timestamp = self.process_begin_and_end_timestamp[1]
 
 
 class TimeSeries(BaseModel):

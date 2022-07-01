@@ -1,10 +1,15 @@
 from datetime import datetime
 from os import mkdir
 from pathlib import Path
+from traceback import format_exception
 
 import pandas as pd
 import pytest
-from noisy_stocks_data_orchestrator.customdatastructures import TimeSeries
+from freezegun import freeze_time
+from noisy_stocks_data_orchestrator.customdatastructures import (
+    DatabaseQuery,
+    TimeSeries,
+)
 
 """
 Single source of truth for fixtures across tests
@@ -285,3 +290,33 @@ def fixt_three_stock_csv_different_folder(
         )  # returns dict with file_path, folder_path as keys
 
     return path_list_of_dicts  # tuples of (filepath, folderpath, data)
+
+
+@pytest.fixture
+def fixt_database_query():
+    select_fields = ["timestamp", "stock_symbol", "price_close"]
+    database_name = "stock_timedata"
+    date_format = r"%Y-%m-%d"
+    begin_date = datetime.strptime("2022-06-29", date_format)
+    end_date = datetime.strptime("2022-07-03", date_format)
+
+    return DatabaseQuery(
+        select_fields=select_fields,
+        from_database=database_name,
+        process_begin_and_end_timestamp=(begin_date, end_date),
+    )
+
+
+@freeze_time("2012-01-14")
+@pytest.fixture
+def fixt_database_query_min_args_fakedate():
+    select_fields = ["timestamp", "stock_symbol", "price_close"]
+    database_name = "stock_timedata"
+    return DatabaseQuery(
+        select_fields=select_fields,
+        from_database=database_name,
+    )
+
+
+# add test for custom data structure
+# SELECT timestamp,stock_symbol,price_close FROM stock_timedata WHERE timestamp >= '2002-06-26'and timestamp <= '2002-07-06';

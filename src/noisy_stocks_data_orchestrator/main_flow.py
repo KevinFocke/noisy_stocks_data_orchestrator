@@ -7,6 +7,7 @@ from prefect.tasks import task
 from pydantic.types import PositiveInt
 from sqlalchemy import create_engine
 
+from customdatastructures import DatabaseQuery
 from ingress import query_database_to_TimeSeries
 
 # Convert dates to datetime
@@ -25,25 +26,6 @@ def sanity_check():
     return "Module_Found"
 
 
-@task
-def calculate_date_interval(
-    date: datetime, interval_in_days: PositiveInt = 5, date_format: str = r"%Y-%m-%d"
-) -> dict:
-    """
-    input: date in Year-Month-Day eg. 2022-07-20
-    interval_in_days eg. 2
-    output: dict eg {begindate:"2022-07-18"
-    enddate:"2022-07-22"""
-
-    begin_date = date - timedelta(int(interval_in_days))
-    end_date = date + timedelta(int(interval_in_days))
-
-    return {
-        "begin_date": begin_date.strftime(date_format),
-        "end_date": end_date.strftime(date_format),
-    }
-
-
 def calc_longest_timeseries_sequence(treshold: PositiveInt = 20):
     """calculate the largest timeseries sequence without gaps inbetween"""
 
@@ -60,25 +42,6 @@ def calc_longest_timeseries_sequence(treshold: PositiveInt = 20):
             cur_date_sequence_count += 1
         # df at index, not cur_date_sequence_count
     # take the max
-
-
-@flow(task_runner=SequentialTaskRunner())
-def construct_stocks_query(
-    interval_in_days: PositiveInt,
-    target_date: Optional[datetime] = None,
-    days_ago: Optional[PositiveInt] = None,  # eg. 5 means 5 days ago
-):
-
-    # calculate target_date if not provided
-    if target_date is None:
-        if days_ago is None:
-            years_ago = 20
-            # TODO: Calculate leap years between now and date
-            # TODO: refactor into modular function
-            days_ago = years_ago * 365 + 5
-        today = datetime.now()
-        target_date = today - timedelta(days=days_ago)
-
     # 20 stocks minimum
 
     # group by date, count the # of stocks
@@ -91,47 +54,6 @@ def construct_stocks_query(
 
     # times_gaps = df.index - df.index.shift(1)
     # calculate date interval
-    date_interval = calculate_date_interval(
-        date=target_date, interval_in_days=interval_in_days, date_format=r"%Y-%m-%d"
-    ).result()
-    begin_date = date_interval.get("begin_date")
-    end_date = date_interval.get("end_date")
-
-    select_fields = ["timestamp", "stock_symbol", "price_close"]
-
-    # CLUDGE
-    unfolded_select_fields = ""
-    for field in select_fields:
-        unfolded_select_fields += field + r","
-    unfolded_select_fields = unfolded_select_fields[:-1] + r" "  # remove last comma
-
-    database_name = "stock_timedata"
-    # TODO: Rework to sqlalchemy query
-    stocks_query = (
-        r"SELECT "
-        + unfolded_select_fields
-        + r"FROM "
-        + str(database_name)
-        + " WHERE "
-        + r"timestamp >= "
-        + r"'"
-        + str(begin_date)
-        + r"'"
-        + r"and "
-        + r"timestamp <= "
-        + r"'"
-        + str(end_date)
-        + r"'"
-        + r";"
-    )
-    # "SELECT * \
-    # FROM stock_timedata \
-    # WHERE timestamp >= '2002-07-01'::timestamp - interval '5 day' and \
-    # timestamp <= '2002-07-01'::timestamp + interval '5 day';;"
-
-    print("\n" + str(stocks_query) + "\n")
-
-    return stocks_query
 
 
 @flow(task_runner=SequentialTaskRunner())
@@ -159,13 +81,21 @@ def stock_correlation_flow():
     # SQLAlchemy will not turn itself into a pickle from another process. DO NOT PICKLE!
     sql_alchemy_stock_engine = create_engine(stocks_db_conn_string)
 
+    select_fields = ["timestamp", "stock_symbol", "price_close"]
+    database_name = "stock_timedata"
+    date_format = r"%Y-%m-%d"
+
     # construct query
     interval_in_days = 5
-    stocks_query = construct_stocks_query(
-        interval_in_days=interval_in_days
-    ).result()  # defaults to today - 20 years ago
+    DatabaseQuery(
+        select_fields=select_fields,
+        from_database=database_name,
+        interval_in_days=interval_in_days,
+    )
+
     stocks_numeric_col_name = "price_close"  # TODO: cleanup?
 
+    print(stocks_query)
     # get TimeSeries
     stocks_time_series = fetch_stocks_to_TimeSeries(
         sql_alchemy_stock_engine=sql_alchemy_stock_engine,
