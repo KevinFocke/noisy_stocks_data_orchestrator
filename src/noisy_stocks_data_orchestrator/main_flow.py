@@ -83,19 +83,15 @@ def stock_correlation_flow():
 
     select_fields = ["timestamp", "stock_symbol", "price_close"]
     database_name = "stock_timedata"
-    date_format = r"%Y-%m-%d"
-
-    # construct query
     interval_in_days = 5
-    DatabaseQuery(
+    db_query_object = DatabaseQuery(
         select_fields=select_fields,
         from_database=database_name,
         interval_in_days=interval_in_days,
     )
+    stocks_query = db_query_object.to_sql()
+    stocks_numeric_col_name = "price_close"
 
-    stocks_numeric_col_name = "price_close"  # TODO: cleanup?
-
-    print(stocks_query)
     # get TimeSeries
     stocks_time_series = fetch_stocks_to_TimeSeries(
         sql_alchemy_stock_engine=sql_alchemy_stock_engine,
