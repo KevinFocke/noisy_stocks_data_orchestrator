@@ -10,7 +10,8 @@ import customdatastructures
 
 # Correlation is parralellizable! https://docs.dask.org/en/stable/dataframe.html
 
-# TODO: Avoid highest correlation duplicates of the same stock + timerange combination. Append all threads to same olist, then sort, then filter duplicate stocks out of the eventual list.
+# TODO: Avoid highest correlation duplicates of the same stock + timerange combination.
+# Append all threads to same list, then sort, then filter duplicate stocks.
 
 
 @task()
