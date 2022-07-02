@@ -304,3 +304,6 @@ def test_database_query_begin_and_timestamp_scenario4(
         fixt_database_query_begin_and_end_timestamp_scenario_4.output_end_timestamp()
         == "1988-10-26"
     )
+
+    # TODO: test longest_consecutive_days_sequence
+    # use timestamp_index_name

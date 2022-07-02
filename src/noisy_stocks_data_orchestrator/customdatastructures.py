@@ -159,6 +159,8 @@ class DatabaseQuery(BaseModel):
 
 
 class TimeSeries(BaseModel):
+
+    # df assumption: dates are aligned on day at 0:00 UTC
     stock_symbol_name: Optional[str]  # stock symbol
     timestamp_index_name: str  # What is the name of the timestamp column?
     numeric_col_name: str  # What is the name of the numeric column? eg. price_close
@@ -204,9 +206,9 @@ class TimeSeries(BaseModel):
     def calc_longest_consecutive_days_sequence(
         self, treshold: PositiveInt = 20
     ) -> tuple[Timestamp]:
-        """calculate the largest timeseries day sequence without gaps inbetween in the existing df
+        """calculate the largest timeseries day sequence without gaps
 
-        for stocks the treshold should be 1 because
+        Note: for stocks the treshold should be 1 because
         there is only one value per date"""
 
         # group by day & count of group
@@ -286,8 +288,6 @@ class TimeSeries(BaseModel):
 
         return tuple(longest_timestamp_range)  # type:ignore
 
-        # TODO: write test for sat, sun & public holiday
-        # (assumed: max 2 public holidays in a week)
         # TODO: allow user to supply custom DataFrame?
 
     def __validate_schema(self):

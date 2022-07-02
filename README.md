@@ -9,7 +9,7 @@ Published online on [noisystocks.com](noisystocks.com).
 My main goal was to create a Cloud Native architecture (Container-Based + Dynamically-Scalable + Microservice-Oriented). Containers run on Docker. Agent(s) dynamically pick up available work. The microservices are:
 
 * Database service (Timescale; PostgresQL specialized for time series)
-* Analysis service (Custom Python 3, parallellizing Pandas DataFrames using Dask)
+* Analysis service (Custom Python 3, Pandas DataFrames)
 * Publishing service (Custom Python + Static Site Generation using Hugo)
 * Data Orchestrator (Prefect 2.0)
 * Worker agent(s)
@@ -25,8 +25,6 @@ Features:
 * Gracefully recovers from failure to minimize service interruptions
 
 * Integrates back-end & front-end securely using Jamstack architecture
-
-* Observability into every aspect of the architecture
 
 * Strongly typed Python using Pydantic & Pandera to increase reliability
 

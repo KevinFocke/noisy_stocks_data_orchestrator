@@ -1,3 +1,4 @@
+import pickle
 from datetime import datetime, timedelta
 from typing import Optional
 
@@ -8,7 +9,11 @@ from pydantic.types import PositiveInt
 from sqlalchemy import create_engine
 
 from customdatastructures import DatabaseQuery
-from ingress import fetch_stocks_to_TimeSeries
+from ingress import (
+    fetch_stocks_to_TimeSeries,
+    fetch_weather_to_TimeSeries,
+    query_database_to_TimeSeries,
+)
 
 # Convert dates to datetime
 # https://pandas.pydata.org/docs/reference/api/pandas.to_datetime.html
@@ -36,19 +41,23 @@ def stock_correlation_flow():
         "postgresql+psycopg2://postgres:postgres@127.0.0.1:5432/stocks"
     )
     # preferences
-    select_fields = ["timestamp", "stock_symbol", "price_close"]
-    database_name = "stock_timedata"
-    interval_in_days = 5
+    stock_select_fields = ["timestamp", "stock_symbol", "price_close"]
+    stock_database_name = "stock_timedata"
+    stock_interval_in_days = 5
+    stocks_numeric_col_name = "price_close"
+    weather_select_fields = ["timestamp", "longitude", "latitude", "precipitation"]
+    weather_database_name = "weather"
+    weather_numeric_col_name = "precipitation"
+
     # SQLAlchemy will not turn itself into a pickle from another process. DO NOT PICKLE!
     sql_alchemy_stock_engine = create_engine(stocks_db_conn_string)
 
-    db_query_object = DatabaseQuery(
-        select_fields=select_fields,
-        from_database=database_name,
-        interval_in_days=interval_in_days,
+    stocks_db_query_object = DatabaseQuery(
+        select_fields=stock_select_fields,
+        from_database=stock_database_name,
+        interval_in_days=stock_interval_in_days,
     )
-    stocks_query = db_query_object.to_sql()
-    stocks_numeric_col_name = "price_close"
+    stocks_query = stocks_db_query_object.to_sql()
 
     # get TimeSeries
     stocks_time_series = fetch_stocks_to_TimeSeries(
@@ -61,40 +70,50 @@ def stock_correlation_flow():
 
     print(stocks_time_series)
 
-    print(stocks_time_series.calc_longest_consecutive_days_sequence())
+    longest_consecutive_days_sequence = (
+        stocks_time_series.calc_longest_consecutive_days_sequence()
+    )
 
-    # find a valid time series, minimum 4 consecutive days, prefer 5 consecutive days
+    # print(longest_consecutive_days_sequence)
 
-    # from fin_analyze
+    weather_db_query_object = DatabaseQuery(
+        select_fields=weather_select_fields,
+        from_database=weather_database_name,
+        process_begin_and_end_timestamp=(
+            longest_consecutive_days_sequence[0],
+            longest_consecutive_days_sequence[-1],
+        ),
+    )
 
-    # select movers and shakers
+    datasets_db_conn_string = (
+        "postgresql+psycopg2://postgres:postgres@127.0.0.1:5432/datasets"
+    )
 
-    # based on the valid movers & shakers
+    sql_alchemy_datasets_engine = create_engine(datasets_db_conn_string)
 
-    # datasets_db_conn_string = (
-    #     "postgresql+psycopg2://postgres:postgres@127.0.0.1:5432/datasets"
-    # )
+    weather_query = (
+        "SELECT * FROM weather WHERE timestamp between '2002-01-01' and '2002-01-07';"
+    )
 
-    # sql_alchemy_datasets_engine = create_engine(datasets_db_conn_string)
+    # TODO: thin wrapper for weather query_database to its own function
+    weather_time_series = fetch_weather_to_TimeSeries(
+        sql_alchemy_weather_engine=sql_alchemy_datasets_engine,
+        weather_query=weather_query,
+        numeric_col_name=weather_numeric_col_name,
+        timeout=120,
+    ).result()
 
-    # # query datasets
+    print(weather_time_series.time_series_df)
+    print(weather_time_series.time_series_df.memory_usage(deep=True).sum())
 
-    # query_weather = r"SELECT * FROM weather WHERE timestamp >= '2002-07-01'::timestamp - interval '5 day' and timestamp <= '2002-07-01'::timestamp + interval '5 day';"
-
-    # "SELECT timestamp, price_close \
-    #     FROM stock_timedata \
-    #     WHERE stock_symbol = 'GE' and timestamp between '2009-01-01' and '2009-02-01'"
-    # time_series2 = query_database_to_TimeSeries(
-    #     sql_alchemy_engine=sql_alchemy_datasets_engine, query=query_weather, timeout=60
-    # ).result()
-
-    # print(time_series2)
+    # stocks_time_series.drop_except(keep=longest_consecutive_days_sequence)
 
     # # close the db connection
 
     sql_alchemy_stock_engine.dispose()
 
+    # TODO: cleanup orion db files
+
 
 if __name__ == "__main__":
-    # construct_stocks_query(2)
     stock_correlation_flow()
