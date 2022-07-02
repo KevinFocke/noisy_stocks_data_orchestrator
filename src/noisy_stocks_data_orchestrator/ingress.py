@@ -10,22 +10,33 @@ from sqlalchemy import engine
 
 from customdatastructures import TimeSeries, folder_exists
 
-"""Data Inflow Module
+"""Data Inflow Module for data from database
 """
 
-# Best practice: One engine should handle ALL queries
-# https://docs.sqlalchemy.org/en/14/core/connections.html#basic-usage
-# When adding data, upsert table to ignore duplicate entries and make action idempotent
-# If timestamp is already in database for the stock, do not add.
-# https://docs.timescale.com/timescaledb/latest/how-to-guides/write-data/upsert/
+
+# ETL data into database using Talend + Pandas Exploratory research
 
 
-# https://docs.dask.org/en/stable/generated/dask.dataframe.read_csv.html
-
-
-# Ingress data into database using Talend + Pandas Exploratory research
 class Config_Arbitrary_Types_Allowed:
     arbitrary_types_allowed = True
+
+
+@flow(task_runner=SequentialTaskRunner())
+def fetch_stocks_to_TimeSeries(
+    sql_alchemy_stock_engine, stocks_query, numeric_col_name, timeout=60
+):
+    """thin wrapper for query_database_to_TimeSeries for two reasons:
+    1. to apply stock_specific settings
+    2. to differentiate the flows"""
+    # query stocks
+    stocks_time_series = query_database_to_TimeSeries(
+        sql_alchemy_engine=sql_alchemy_stock_engine,
+        query=stocks_query,
+        numeric_col_name=numeric_col_name,
+        timeout=timeout,
+    ).result()
+
+    return stocks_time_series
 
 
 @validate_arguments(config=Config_Arbitrary_Types_Allowed)

@@ -5,8 +5,12 @@ from prefect.flows import flow
 from prefect.task_runners import SequentialTaskRunner
 from prefect.tasks import task
 
-"""Data Outflow Module
+"""Data Outflow Module for exporting to website & database
 """
+
+# When adding data, upsert table to ignore duplicate entries and make action idempotent
+# If timestamp is already in database for the stock, do not add.
+# https://docs.timescale.com/timescaledb/latest/how-to-guides/write-data/upsert/
 
 # TODO: Set pandas backend to plotly https://plotly.com/python/pandas-backend/
 # TODO: Static image export plotly https://plotly.com/python/static-image-export

@@ -13,14 +13,6 @@ import customdatastructures
 # TODO: Avoid highest correlation duplicates of the same stock + timerange combination. Append all threads to same olist, then sort, then filter duplicate stocks out of the eventual list.
 
 
-@flow()
-def normalize_time_series():
-    # Ensure equal time between timestamps
-
-    # Index timestamp based on first value in time series
-    return
-
-
 @task()
 def find_highest_correlation(historical_stock_data):
     # TODO: Skip any timeseries that raises a SchemaError

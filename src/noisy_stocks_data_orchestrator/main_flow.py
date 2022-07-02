@@ -8,7 +8,7 @@ from pydantic.types import PositiveInt
 from sqlalchemy import create_engine
 
 from customdatastructures import DatabaseQuery
-from ingress import query_database_to_TimeSeries
+from ingress import fetch_stocks_to_TimeSeries
 
 # Convert dates to datetime
 # https://pandas.pydata.org/docs/reference/api/pandas.to_datetime.html
@@ -57,24 +57,11 @@ def calc_longest_timeseries_sequence(treshold: PositiveInt = 20):
 
 
 @flow(task_runner=SequentialTaskRunner())
-def fetch_stocks_to_TimeSeries(
-    sql_alchemy_stock_engine, stocks_query, numeric_col_name, timeout=60
-):
-    # query stocks
-    stocks_time_series = query_database_to_TimeSeries(
-        sql_alchemy_engine=sql_alchemy_stock_engine,
-        query=stocks_query,
-        numeric_col_name=numeric_col_name,
-        timeout=timeout,
-    ).result()
-
-    return stocks_time_series
-
-
-@flow(task_runner=SequentialTaskRunner())
 def stock_correlation_flow():
 
-    # create engine; one per database
+    # best practice for creating sqlalchemy engine
+    # one connection per database
+    # https://docs.sqlalchemy.org/en/14/core/connections.html#basic-usage
     stocks_db_conn_string = (
         "postgresql+psycopg2://postgres:postgres@127.0.0.1:5432/stocks"
     )

@@ -21,22 +21,15 @@ from pydantic.types import PositiveInt
 @validate_arguments
 @task
 def file_exists(path: Path):
+    """check if provided Path is a file"""
     return path.is_file()
 
 
 @validate_arguments
 @task
 def folder_exists(path: Path):
+    """check if provided Path is a folder"""
     return path.is_dir()
-
-
-# Schema is always:
-# 1. timestamp column
-# 2. one or more columns that have integer values
-
-# During analysis, two columns are compared
-
-# Make one DataFrame per timestamp column pair
 
 
 class DatabaseQuery(BaseModel):
@@ -46,7 +39,6 @@ class DatabaseQuery(BaseModel):
     3. Based on time.now() - provided days_ago + interval_in_days
     4. Based on time.now() - 20 years ago + interval_in_days"""
 
-    # TODO: create test for each scenario
     select_fields: list[str]
     from_database: str
     interval_in_days: Optional[PositiveInt] = 5
@@ -57,6 +49,7 @@ class DatabaseQuery(BaseModel):
     days_ago: Optional[PositiveInt] = None  # eg 5 means 5 days ago
 
     def to_sql(self):
+        """output sql query"""
         # TODO: Rework to sqlalchemy query
         stocks_query = (
             r"SELECT "
@@ -89,21 +82,25 @@ class DatabaseQuery(BaseModel):
         return self.target_date
 
     def _unfold_select_fields(self):
+        """splat list into comma-seperated string; eg. ["Hello", "There"] becomes "Hello, there]"""
         unfolded_select_fields = ""
         for field in self.select_fields:
             unfolded_select_fields += field + r","
         return unfolded_select_fields[:-1] + r" "  # remove last comma
 
     def _output_date(self, date: datetime, date_output_format: str = r"%Y-%m-%d"):
+        """output a timestamp in string format"""
         output_date = date.strftime(date_output_format)
         return output_date
 
     def output_begin_timestamp(self, date_output_format: str = r"%Y-%m-%d"):
+        """output the begin timestamp in string format"""
         return self._output_date(
             date=self._begin_timestamp, date_output_format=date_output_format
         )
 
     def output_end_timestamp(self, date_output_format: str = r"%Y-%m-%d"):
+        """output the end timestamp in string format"""
         return self._output_date(
             date=self._end_timestamp, date_output_format=date_output_format
         )
