@@ -61,8 +61,8 @@ def stock_correlation_flow():
 
     # get TimeSeries
     stocks_time_series = fetch_stocks_to_TimeSeries(
-        sql_alchemy_stock_engine=sql_alchemy_stock_engine,
-        stocks_query=stocks_query,
+        sql_alchemy_engine=sql_alchemy_stock_engine,
+        query=stocks_query,
         numeric_col_name=stocks_numeric_col_name,
     ).result()
 
@@ -95,10 +95,9 @@ def stock_correlation_flow():
         "SELECT * FROM weather WHERE timestamp between '2002-01-01' and '2002-01-07';"
     )
 
-    # TODO: thin wrapper for weather query_database to its own function
     weather_time_series = fetch_weather_to_TimeSeries(
-        sql_alchemy_weather_engine=sql_alchemy_datasets_engine,
-        weather_query=weather_query,
+        sql_alchemy_engine=sql_alchemy_datasets_engine,
+        query=weather_query,
         numeric_col_name=weather_numeric_col_name,
         timeout=120,
     ).result()

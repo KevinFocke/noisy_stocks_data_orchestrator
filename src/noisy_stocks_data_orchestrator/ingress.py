@@ -22,37 +22,24 @@ class Config_Arbitrary_Types_Allowed:
 
 
 @flow(task_runner=SequentialTaskRunner())
-def fetch_stocks_to_TimeSeries(
-    sql_alchemy_stock_engine, query, numeric_col_name, timeout=60
-):
+def fetch_stocks_to_TimeSeries(*args, **kwargs):
     """thin wrapper for query_database_to_TimeSeries for two reasons:
     1. to apply stock_specific settings
     2. to differentiate the flows"""
     # query stocks
-    time_series = query_database_to_TimeSeries(
-        sql_alchemy_engine=sql_alchemy_stock_engine,
-        query=query,
-        numeric_col_name=numeric_col_name,
-        timeout=timeout,
-    ).result()
+    # TODO: use args with *args and **kwargs instead
+    time_series = query_database_to_TimeSeries(*args, **kwargs).result()
 
     return time_series
 
 
 @flow(task_runner=SequentialTaskRunner())
-def fetch_weather_to_TimeSeries(
-    sql_alchemy_engine, query, numeric_col_name, timeout=60
-):
+def fetch_weather_to_TimeSeries(*args, **kwargs):
     """thin wrapper for query_database_to_TimeSeries for two reasons:
     1. to apply weather specific settings
     2. to differentiate the flows"""
     # query weather
-    time_series = query_database_to_TimeSeries(
-        sql_alchemy_engine=sql_alchemy_engine,
-        query=query,
-        numeric_col_name=numeric_col_name,
-        timeout=timeout,
-    ).result()
+    time_series = query_database_to_TimeSeries(*args, **kwargs).result()
 
     return time_series
 
