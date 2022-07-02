@@ -316,5 +316,7 @@ class TimeSeries(BaseModel):
         # Initialize object with Pydantic type checking
         # Inherit init from superclass
         super().__init__(*args, **kwargs)
+        if self.time_series_df.empty:
+            raise ValueError("Expected non-empty DataFrame")
         self.__create_custom_df_schema()
         self.__data_clean_df()
