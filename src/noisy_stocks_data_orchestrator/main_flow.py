@@ -1,4 +1,3 @@
-import pickle
 from datetime import datetime, timedelta
 from typing import Optional
 
@@ -9,11 +8,7 @@ from pydantic.types import PositiveInt
 from sqlalchemy import create_engine
 
 from customdatastructures import DatabaseQuery
-from ingress import (
-    fetch_stocks_to_TimeSeries,
-    fetch_weather_to_TimeSeries,
-    query_database_to_TimeSeries,
-)
+from ingress import fetch_stocks_to_TimeSeries, fetch_weather_to_TimeSeries
 
 # Convert dates to datetime
 # https://pandas.pydata.org/docs/reference/api/pandas.to_datetime.html
@@ -57,12 +52,11 @@ def stock_correlation_flow():
         from_database=stock_database_name,
         interval_in_days=stock_interval_in_days,
     )
-    stocks_query = stocks_db_query_object.to_sql()
 
     # get TimeSeries
     stocks_time_series = fetch_stocks_to_TimeSeries(
         sql_alchemy_engine=sql_alchemy_stock_engine,
-        query=stocks_query,
+        query=stocks_db_query_object.to_sql(),
         numeric_col_name=stocks_numeric_col_name,
     ).result()
 
@@ -91,13 +85,9 @@ def stock_correlation_flow():
 
     sql_alchemy_datasets_engine = create_engine(datasets_db_conn_string)
 
-    weather_query = (
-        "SELECT * FROM weather WHERE timestamp between '2002-01-01' and '2002-01-07';"
-    )
-
     weather_time_series = fetch_weather_to_TimeSeries(
         sql_alchemy_engine=sql_alchemy_datasets_engine,
-        query=weather_query,
+        query=weather_db_query_object.to_sql(),
         numeric_col_name=weather_numeric_col_name,
         timeout=120,
     ).result()
