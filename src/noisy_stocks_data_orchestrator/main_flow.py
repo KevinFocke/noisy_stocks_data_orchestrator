@@ -26,36 +26,6 @@ def sanity_check():
     return "Module_Found"
 
 
-def calc_longest_timeseries_sequence(treshold: PositiveInt = 20):
-    """calculate the largest timeseries sequence without gaps inbetween"""
-
-    # validate pandera scheme
-    # treshold could be 1 for individual stocks!
-    cur_date_sequence_count = 0
-    df = [5]
-
-    # times_gaps = df.index - df.index.shift(1)
-    for indexes in df:
-        if total_dates_count < treshold:
-            cur_date_sequence_count = 0
-        else:
-            cur_date_sequence_count += 1
-        # df at index, not cur_date_sequence_count
-    # take the max
-    # 20 stocks minimum
-
-    # group by date, count the # of stocks
-    # then index shift
-    # if prev exists,
-
-    # sorted list of counts based on the date
-    # continuous_count = 0
-    # if datapoints_count < treshold
-
-    # times_gaps = df.index - df.index.shift(1)
-    # calculate date interval
-
-
 @flow(task_runner=SequentialTaskRunner())
 def stock_correlation_flow():
 
@@ -90,6 +60,8 @@ def stock_correlation_flow():
     # find continuous
 
     print(stocks_time_series)
+
+    print(stocks_time_series.calc_longest_consecutive_days())
 
     # find a valid time series, minimum 4 consecutive days, prefer 5 consecutive days
 

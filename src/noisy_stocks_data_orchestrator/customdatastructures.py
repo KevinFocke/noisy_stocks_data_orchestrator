@@ -185,6 +185,8 @@ class TimeSeries(BaseModel):
 
         # Remove missing rows
         self.time_series_df.dropna(inplace=True)
+        # Sort index
+        self.time_series_df.sort_index(inplace=True)
         # Validate time series & set
         self.__validate_ts_and_set_df()
 
@@ -195,6 +197,78 @@ class TimeSeries(BaseModel):
             JSON
         """
         return self.json()
+
+    def calc_longest_consecutive_days(
+        self, treshold: PositiveInt = 20, min_consecutive_days: PositiveInt = 3
+    ):
+        """calculate the largest timeseries sequence without gaps inbetween in the existing df
+
+        for stocks treshold should be 1"""
+
+        # group by day & count of group
+        grouped_dates_df = (
+            self.time_series_df.groupby(self.timestamp_index_name)
+            .size()
+            .to_frame("size")
+        )
+        # filter based on threshold
+        grouped_dates_df = grouped_dates_df[grouped_dates_df["size"] >= treshold]
+
+        # prepare adding missing dates
+        # sort dates in asc order
+        grouped_dates_df = grouped_dates_df.sort_index(ascending=True)
+
+        # get start & end date of df
+        start_date = grouped_dates_df.index[0]
+        end_date = grouped_dates_df.index[-1]
+
+        # create date range to include missing dates
+
+        date_range_including_missing = pd.date_range(
+            start=start_date, end=end_date, freq="D"
+        )
+
+        # add missing dates
+        grouped_dates_df = grouped_dates_df.reindex(date_range_including_missing, fill_value=0)  # type: ignore
+
+        # sort dates in desc order
+
+        # we go through the reversed dates
+        # legend: x is a value > threshold
+        # leftwise is the smallest date, right is biggest date
+        # x-xx-x
+        #      ^
+        # increase cur_seq_count by one
+        # save cur value to pd dataframe
+        # x-xx-x
+        #     ^
+        # reset cur_seq_count
+        # save cur value to pd dataframe
+
+        grouped_dates_df = grouped_dates_df.sort_index(ascending=False)
+
+        cur_seq_count = 0
+        for df_index, df_row in grouped_dates_df.iterrows():
+            if df_row[0] < treshold:
+                cur_seq_count = 0
+            else:
+                cur_seq_count += 1
+            grouped_dates_df.loc[df_index, "consecutive_days_sequence"] = cur_seq_count
+
+        # filter based on threshold
+        grouped_dates_df = grouped_dates_df[
+            grouped_dates_df["consecutive_days_sequence"] >= min_consecutive_days
+        ]
+
+        valid_indexes = []
+
+        for df_index, df_row in grouped_dates_df.iterrows():
+            valid_indexes.append(df_index)
+
+        # TODO: define return type tuple of Timestamps
+        # TODO: write test
+        # TODO: allow user to supply custom DataFrame?
+        return tuple(valid_indexes)
 
     def __validate_schema(self):
         """Validate pandera df schema"""
