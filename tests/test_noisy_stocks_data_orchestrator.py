@@ -10,13 +10,9 @@ from noisy_stocks_data_orchestrator.customdatastructures import TimeSeries
 from noisy_stocks_data_orchestrator.ingress import create_folder, folder_exists
 from pandera.errors import SchemaError
 from prefect.flows import flow
-from prefect.testing.utilities import prefect_test_harness
+from prefect.testing.utilities import prefect_test_harness  # for testing flows
 
-from tests.conftest import (
-    fixt_database_query,
-    stock_with_negative_closing_price,
-    stock_with_unequal_rows,
-)
+from tests.conftest import stock_with_negative_closing_price, stock_with_unequal_rows
 
 # For typechecking use isinstance()
 # Start every test with test_
@@ -305,5 +301,20 @@ def test_database_query_begin_and_timestamp_scenario4(
         == "1988-10-26"
     )
 
-    # TODO: test longest_consecutive_days_sequence
-    # use timestamp_index_name
+
+def test_longest_consecutive_days_sequence(fixt_time_series_ordinary):
+    dates = ["2002-07-05", "2002-07-06", "2002-07-07", "2002-07-08", "2002-7-09"]
+    dates = [pd.Timestamp(el_date, tz=None) for el_date in dates]
+    time_series = fixt_time_series_ordinary.calc_longest_consecutive_days_sequence(
+        treshold=2
+    )  # only 2 stocks contained
+    assert time_series == tuple(dates)
+
+
+def test_longest_consecutive_days_sequence_missing(fixt_time_series_date_missing):
+    dates = ["2002-07-07", "2002-07-08", "2002-7-09"]
+    dates = [pd.Timestamp(el_date, tz=None) for el_date in dates]
+    time_series = fixt_time_series_date_missing.calc_longest_consecutive_days_sequence(
+        treshold=2
+    )  # only 2 stocks contained
+    assert time_series == tuple(dates)

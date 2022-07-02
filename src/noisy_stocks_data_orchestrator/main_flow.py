@@ -1,4 +1,3 @@
-from datetime import datetime, timedelta
 from typing import Optional
 
 from prefect.flows import flow
@@ -68,6 +67,8 @@ def stock_correlation_flow():
         stocks_time_series.calc_longest_consecutive_days_sequence()
     )
 
+    # stocks_time_series.drop_except(keep=longest_consecutive_days_sequence)
+    # TODO: write test for drop_except
     # print(longest_consecutive_days_sequence)
 
     weather_db_query_object = DatabaseQuery(
@@ -94,8 +95,6 @@ def stock_correlation_flow():
 
     print(weather_time_series.time_series_df)
     print(weather_time_series.time_series_df.memory_usage(deep=True).sum())
-
-    # stocks_time_series.drop_except(keep=longest_consecutive_days_sequence)
 
     # # close the db connection
 

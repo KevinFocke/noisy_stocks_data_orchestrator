@@ -7,7 +7,7 @@ from typing import Optional
 
 import pandas as pd
 import pandera as pa
-from pandas import DatetimeIndex
+from pandas import DataFrame, DatetimeIndex
 from pandera import Index
 from pandera.dtypes import Timestamp
 from prefect.tasks import task
@@ -204,25 +204,34 @@ class TimeSeries(BaseModel):
         return self.json()
 
     def calc_longest_consecutive_days_sequence(
-        self, treshold: PositiveInt = 20
+        self,
+        treshold: PositiveInt = 20,
+        provided_time_series_df: Optional[DataFrame] = None,
     ) -> tuple[Timestamp]:
         """calculate the largest timeseries day sequence without gaps
 
+        if no time time_series_df is provided, takes the self.time_series_df
         Note: for stocks the treshold should be 1 because
         there is only one value per date"""
 
         # group by day & count of group
+        if provided_time_series_df is None:  # df not provided
+            grouped_dates_df = self.time_series_df
+        else:
+            grouped_dates_df = provided_time_series_df
+
         grouped_dates_df = (
             self.time_series_df.groupby(self.timestamp_index_name)
             .size()
             .to_frame("size")
         )
+
         # filter based on threshold
         grouped_dates_df = grouped_dates_df[grouped_dates_df["size"] >= treshold]
 
         # sort dates in asc order
         grouped_dates_df = grouped_dates_df.sort_index(ascending=True)
-
+        print(grouped_dates_df)
         # get start & end date of df
         start_date = grouped_dates_df.index[0]
         end_date = grouped_dates_df.index[-1]

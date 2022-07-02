@@ -317,7 +317,7 @@ def fixt_database_query_min_args_fakedate():
         return DatabaseQuery(
             select_fields=select_fields,
             from_database=database_name,
-            interval_in_days=interval_in_days
+            interval_in_days=interval_in_days,
         )
 
 
@@ -384,6 +384,60 @@ def fixt_database_query_begin_and_end_timestamp_scenario_4():
             from_database=database_name,
             interval_in_days=interval_in_days,
         )
+
+
+@pytest.fixture
+def fixt_time_series_ordinary():
+    df = pd.DataFrame(
+        data=[
+            ["2002-07-05", "A", 16.1680],
+            ["2002-07-06", "A", 20],
+            ["2002-07-07", "A", 21.6170],
+            ["2002-07-08", "A", 18.2880],
+            ["2002-07-09", "A", 19],
+            ["2002-07-05", "B", 20.1680],
+            ["2002-07-06", "B", 11],
+            ["2002-07-07", "B", 14.6170],
+            ["2002-07-08", "B", 12.2880],
+            ["2002-07-09", "B", 8],
+        ],
+        columns=["timestamp", "stock_symbol", "close_price"],
+    )
+
+    pd.to_datetime(df.timestamp, format=r"%Y-%m-%d")
+    df.set_index("timestamp", inplace=True)
+
+    return TimeSeries(
+        numeric_col_name="close_price",
+        timestamp_index_name="timestamp",
+        time_series_df=df,
+    )
+
+
+@pytest.fixture
+def fixt_time_series_date_missing():
+    df = pd.DataFrame(
+        data=[
+            ["2002-07-05", "A", 16.1680],
+            ["2002-07-07", "A", 21.6170],
+            ["2002-07-08", "A", 18.2880],
+            ["2002-07-09", "A", 19],
+            ["2002-07-05", "B", 20.1680],
+            ["2002-07-07", "B", 14.6170],
+            ["2002-07-08", "B", 12.2880],
+            ["2002-07-09", "B", 8],
+        ],
+        columns=["timestamp", "stock_symbol", "close_price"],
+    )
+
+    pd.to_datetime(df.timestamp, format=r"%Y-%m-%d")
+    df.set_index("timestamp", inplace=True)
+
+    return TimeSeries(
+        numeric_col_name="close_price",
+        timestamp_index_name="timestamp",
+        time_series_df=df,
+    )
 
 
 # add test for custom data structure
