@@ -84,24 +84,40 @@ class DatabaseQuery(BaseModel):
         return self.target_date
 
     def _unfold_select_fields(self):
-        """splat list into comma-seperated string; eg. ["Hello", "There"] becomes "Hello, there]"""
+        """splat list into comma-seperated string; eg. ["Hello", "There"]
+        becomes "Hello, there]"""
         unfolded_select_fields = ""
         for field in self.select_fields:
             unfolded_select_fields += field + r","
         return unfolded_select_fields[:-1] + r" "  # remove last comma
 
-    def _output_date(self, date: datetime, date_output_format: str = r"%Y-%m-%d"):
-        """output a timestamp in string format"""
-        output_date = date.strftime(date_output_format)
+    def _output_date(
+        self,
+        date: datetime,
+        date_output_format: str = r"%Y-%m-%d",
+        as_string: bool = True,
+    ):
+        """output a timestamp
+        if as_string == 1 then output a string format else output datetime"""
+        if as_string is True:
+            output_date = date.strftime(date_output_format)
+        else:
+            output_date = date
         return output_date
 
-    def output_begin_timestamp(self, date_output_format: str = r"%Y-%m-%d"):
+    def output_begin_timestamp(
+        self,
+        date_output_format: str = r"%Y-%m-%d",
+        as_string: bool = True,
+    ):
         """output the begin timestamp in string format"""
         return self._output_date(
             date=self._begin_timestamp, date_output_format=date_output_format
         )
 
-    def output_end_timestamp(self, date_output_format: str = r"%Y-%m-%d"):
+    def output_end_timestamp(
+        self, date_output_format: str = r"%Y-%m-%d", as_string: bool = True
+    ):
         """output the end timestamp in string format"""
         return self._output_date(
             date=self._end_timestamp, date_output_format=date_output_format

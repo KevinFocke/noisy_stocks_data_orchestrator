@@ -93,6 +93,8 @@ def stock_correlation_flow():
 
     # find a valid time series, minimum 4 consecutive days, prefer 5 consecutive days
 
+    # from fin_analyze
+
     # select movers and shakers
 
     # based on the valid movers & shakers
