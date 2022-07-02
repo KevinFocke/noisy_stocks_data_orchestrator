@@ -100,10 +100,9 @@ class DatabaseQuery(BaseModel):
         """output a timestamp
         if as_string == 1 then output a string format else output datetime"""
         if as_string is True:
-            output_date = date.strftime(date_output_format)
+            return date.strftime(date_output_format)
         else:
-            output_date = date
-        return output_date
+            return date  # TODO: add test
 
     def output_begin_timestamp(
         self,
@@ -112,7 +111,9 @@ class DatabaseQuery(BaseModel):
     ):
         """output the begin timestamp in string format"""
         return self._output_date(
-            date=self._begin_timestamp, date_output_format=date_output_format
+            date=self._begin_timestamp,
+            date_output_format=date_output_format,
+            as_string=as_string,
         )
 
     def output_end_timestamp(
@@ -120,7 +121,9 @@ class DatabaseQuery(BaseModel):
     ):
         """output the end timestamp in string format"""
         return self._output_date(
-            date=self._end_timestamp, date_output_format=date_output_format
+            date=self._end_timestamp,
+            date_output_format=date_output_format,
+            as_string=as_string,
         )
 
     def calculate_date_interval(
@@ -159,7 +162,7 @@ class TimeSeries(BaseModel):
     stock_symbol_name: Optional[str]  # stock symbol
     timestamp_index_name: str  # What is the name of the timestamp column?
     numeric_col_name: str  # What is the name of the numeric column? eg. price_close
-    time_series_df: pd.DataFrame  # Check if type is DataFrame
+    time_series_df: pd.DataFrame  # DataFrame with timestamp as index, sorted DESC
     _time_series_df_schema: pa.DataFrameSchema = PrivateAttr()
     _longest_timeseries_sequence_start: DatetimeIndex = PrivateAttr()
     _longest_timeseries_sequence_end: DatetimeIndex = PrivateAttr()
@@ -186,7 +189,7 @@ class TimeSeries(BaseModel):
         # Remove missing rows
         self.time_series_df.dropna(inplace=True)
         # Sort index
-        self.time_series_df.sort_index(inplace=True)
+        self.time_series_df.sort_index(ascending=False, inplace=True)
         # Validate time series & set
         self.__validate_ts_and_set_df()
 
@@ -198,12 +201,13 @@ class TimeSeries(BaseModel):
         """
         return self.json()
 
-    def calc_longest_consecutive_days(
-        self, treshold: PositiveInt = 20, min_consecutive_days: PositiveInt = 3
-    ):
-        """calculate the largest timeseries sequence without gaps inbetween in the existing df
+    def calc_longest_consecutive_days_sequence(
+        self, treshold: PositiveInt = 20
+    ) -> tuple[Timestamp]:
+        """calculate the largest timeseries day sequence without gaps inbetween in the existing df
 
-        for stocks treshold should be 1"""
+        for stocks the treshold should be 1 because
+        there is only one value per date"""
 
         # group by day & count of group
         grouped_dates_df = (
@@ -214,7 +218,6 @@ class TimeSeries(BaseModel):
         # filter based on threshold
         grouped_dates_df = grouped_dates_df[grouped_dates_df["size"] >= treshold]
 
-        # prepare adding missing dates
         # sort dates in asc order
         grouped_dates_df = grouped_dates_df.sort_index(ascending=True)
 
@@ -231,11 +234,9 @@ class TimeSeries(BaseModel):
         # add missing dates
         grouped_dates_df = grouped_dates_df.reindex(date_range_including_missing, fill_value=0)  # type: ignore
 
-        # sort dates in desc order
-
-        # we go through the reversed dates
+        # algo
         # legend: x is a value > threshold
-        # leftwise is the smallest date, right is biggest date
+        # leftwise is the oldest date, right is newest date
         # x-xx-x
         #      ^
         # increase cur_seq_count by one
@@ -245,7 +246,10 @@ class TimeSeries(BaseModel):
         # reset cur_seq_count
         # save cur value to pd dataframe
 
+        # sort by desc to itterows in reverse order
         grouped_dates_df = grouped_dates_df.sort_index(ascending=False)
+
+        seq_count_col_name = "consecutive_days_sequence"
 
         cur_seq_count = 0
         for df_index, df_row in grouped_dates_df.iterrows():
@@ -253,22 +257,38 @@ class TimeSeries(BaseModel):
                 cur_seq_count = 0
             else:
                 cur_seq_count += 1
-            grouped_dates_df.loc[df_index, "consecutive_days_sequence"] = cur_seq_count
+            grouped_dates_df.loc[df_index, seq_count_col_name] = cur_seq_count
 
-        # filter based on threshold
-        grouped_dates_df = grouped_dates_df[
-            grouped_dates_df["consecutive_days_sequence"] >= min_consecutive_days
+        # reset index
+        grouped_dates_df.reset_index(inplace=True)  # maintains sorting
+        # timestamp is renamed to index !
+        grouped_dates_df = grouped_dates_df.rename(
+            columns={"index": self.timestamp_index_name}
+        )
+
+        # grouped_dates_df now looks like (timestamp DESC)
+        #   timestamp  size  consecutive_days_sequence
+        # 0 2002-07-05   357                        1.0
+        # 1 2002-07-04     0                        0.0
+
+        max_seq_start_date_index = grouped_dates_df[seq_count_col_name].idxmax()
+        max_seq_value = int(
+            grouped_dates_df[seq_count_col_name].iloc[max_seq_start_date_index]
+        )
+
+        longest_timestamp_range = [
+            grouped_dates_df[self.timestamp_index_name].iloc[
+                max_seq_start_date_index - offset_from_max_seq_start_date_index
+            ]
+            for offset_from_max_seq_start_date_index in range(max_seq_value)
         ]
+        # range upper bound not incl
 
-        valid_indexes = []
+        return tuple(longest_timestamp_range)  # type:ignore
 
-        for df_index, df_row in grouped_dates_df.iterrows():
-            valid_indexes.append(df_index)
-
-        # TODO: define return type tuple of Timestamps
-        # TODO: write test
+        # TODO: write test for sat, sun & public holiday
+        # (assumed: max 2 public holidays in a week)
         # TODO: allow user to supply custom DataFrame?
-        return tuple(valid_indexes)
 
     def __validate_schema(self):
         """Validate pandera df schema"""

@@ -61,7 +61,7 @@ def stock_correlation_flow():
 
     print(stocks_time_series)
 
-    print(stocks_time_series.calc_longest_consecutive_days())
+    print(stocks_time_series.calc_longest_consecutive_days_sequence())
 
     # find a valid time series, minimum 4 consecutive days, prefer 5 consecutive days
 
