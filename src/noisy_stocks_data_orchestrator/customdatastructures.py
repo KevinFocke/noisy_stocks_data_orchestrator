@@ -33,7 +33,9 @@ def folder_exists(path: Path):
 
 
 class DatabaseQuery(BaseModel):
-    """values and variables related to analysis ingestion stage. Upon initialization creates begin and end timestamps in matter of priority:
+    """values and variables related to analysis ingestion stage.
+
+    Upon initialization creates begin and end timestamps in matter of priority:
     1. Based on process_begin_and_end_timestamp (begin, end)
     2. Based on target_date + interval_in_days
     3. Based on time.now() - provided days_ago + interval_in_days
@@ -61,7 +63,7 @@ class DatabaseQuery(BaseModel):
             + r"'"
             + str(self._begin_timestamp.date())
             + r"'"
-            + r"and "
+            + r" and "
             + r"timestamp <= "
             + r"'"
             + str(self._end_timestamp.date())

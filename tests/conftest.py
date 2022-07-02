@@ -308,15 +308,17 @@ def fixt_database_query():
     )
 
 
-@freeze_time("2012-01-14")
 @pytest.fixture
 def fixt_database_query_min_args_fakedate():
     select_fields = ["timestamp", "stock_symbol", "price_close"]
     database_name = "stock_timedata"
-    return DatabaseQuery(
-        select_fields=select_fields,
-        from_database=database_name,
-    )
+    interval_in_days = 10
+    with freeze_time("2012-01-14"):
+        return DatabaseQuery(
+            select_fields=select_fields,
+            from_database=database_name,
+            interval_in_days=interval_in_days
+        )
 
 
 @pytest.fixture

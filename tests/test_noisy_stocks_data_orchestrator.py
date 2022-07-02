@@ -233,7 +233,7 @@ def test_calculate_date_interval_same_day(fixt_database_query):
 def test_calculate_stock_query_creation(fixt_database_query_min_args_fakedate):
     assert (
         fixt_database_query_min_args_fakedate.to_sql()
-        == r"SELECT timestamp,stock_symbol,price_close FROM stock_timedata WHERE timestamp >= '2002-06-26'and timestamp <= '2002-07-06';"
+        == r"SELECT timestamp,stock_symbol,price_close FROM stock_timedata WHERE timestamp >= '1992-01-04' and timestamp <= '1992-01-24';"
     )
 
 
