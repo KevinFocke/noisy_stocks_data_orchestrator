@@ -69,6 +69,8 @@ def stock_correlation_flow():
 
     # stocks_time_series.drop_except(keep=longest_consecutive_days_sequence)
     # TODO: write test for drop_except
+    # TODO: drop except should raise an error if dataframe is empty
+    # if df.empty: Raise ValueError
     # print(longest_consecutive_days_sequence)
 
     weather_db_query_object = DatabaseQuery(
