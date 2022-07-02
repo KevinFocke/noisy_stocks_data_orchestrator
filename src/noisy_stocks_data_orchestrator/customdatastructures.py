@@ -297,8 +297,6 @@ class TimeSeries(BaseModel):
 
         return tuple(longest_timestamp_range)  # type:ignore
 
-        # TODO: allow user to supply custom DataFrame?
-
     def __validate_schema(self):
         """Validate pandera df schema"""
         time_series_df_schema = self._time_series_df_schema
