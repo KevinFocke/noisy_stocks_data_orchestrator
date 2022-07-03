@@ -6,13 +6,16 @@ Published online on [noisystocks.com](noisystocks.com).
 
 ## General information
 
-My main goal was to create a Cloud Native architecture (Container-Based + Dynamically-Scalable + Microservice-Oriented). Containers run on Docker. Agent(s) dynamically pick up available work. The microservices are:
+My main goal was to create a Cloud Native architecture (Container-Based + Dynamically-Scalable + Microservice-Oriented). Containers run on Docker. An agent dynamically picks up available work. The services are:
 
-* Database service (Timescale; PostgresQL specialized for time series)
-* Analysis service (Custom Python 3, Pandas DataFrames)
-* Publishing service (Custom Python + Static Site Generation using Hugo)
-* Data Orchestrator (Prefect 2.0)
-* Worker agent(s)
+
+* Analysis service (Custom Python 3 using Pandas DataFrames)
+* Publishing service (Custom Python 3)
+* Static Site Generation service (Hugo)
+* Data Pipeline Orchestrator (Prefect 2.0)
+* Worker agents
+
+Each service has a separate database. (Timescale; PostgresQL specialized for time series).
 
 Features:
 
@@ -22,9 +25,7 @@ Features:
 	- more than 870 million weather & 14 million stock datapoints
 	- 90+% compression rate
 
-* Gracefully recovers from failure to minimize service interruptions
-
-* Integrates back-end & front-end securely using Jamstack architecture
+* Decouples back-end & front-end securely using Jamstack architecture.
 
 * Strongly typed Python using Pydantic & Pandera to increase reliability
 
@@ -36,8 +37,10 @@ Features:
 
 Considerations:
 
-* During development I became fascinated with the potential of Kubernetes. However, for this particular application, Kubernetes was not the best fit; the resource overhead & intrinsic complexity outweighs the benefits. In the future I do intend to explore Kubernetes more.
+* During development I became fascinated with the potential of Kubernetes. However, high availability architectures, such as provided by Kubernetes, add complexity & resource overhead. In my case, high availability is not a critical requirement for the back-end services. Why? Because the uptime of the website is NOT impacted by downtime of the back-end services. If the back-end services are down it will only affect the freshness of the content.
 
-Planned for version 1.5:
+In the future I do intend to explore Kubernetes more.
 
-* Add Content Management System (CMS) using a custom CLI interface
+Reflection:
+
+* It is challenging to decide on the _right_ size of a microservice.
