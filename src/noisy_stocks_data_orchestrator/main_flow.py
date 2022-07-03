@@ -25,7 +25,7 @@ def sanity_check():
     return "Module_Found"
 
 
-@flow(task_runner=SequentialTaskRunner())
+@flow(task_runner=SequentialTaskRunner(), name="stock_correlation_flow")
 def stock_correlation_flow():
 
     # best practice for creating sqlalchemy engine
