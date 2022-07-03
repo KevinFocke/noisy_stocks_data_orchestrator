@@ -6,7 +6,7 @@ Published online on [noisystocks.com](noisystocks.com).
 
 ## General information
 
-My main goal was to create a Cloud Native architecture (Container-Based + Dynamically-Scalable + Microservice-Oriented). Containers run on Docker. An agent dynamically picks up available work. The services are:
+My main goal was to create a Cloud Native architecture (Container-Based + Dynamically-Scalable + Microservice-Oriented). Containers run on Docker. Agents dynamically pick up available work. The services are:
 
 
 * Analysis service (Custom Python 3 using Pandas DataFrames)
@@ -15,7 +15,7 @@ My main goal was to create a Cloud Native architecture (Container-Based + Dynami
 * Data Pipeline Orchestrator (Prefect 2.0)
 * Worker agents
 
-Each service has a separate database. (Timescale; PostgresQL specialized for time series).
+Databases are PostgresQL specialized for time series (Timescale)
 
 Features:
 
