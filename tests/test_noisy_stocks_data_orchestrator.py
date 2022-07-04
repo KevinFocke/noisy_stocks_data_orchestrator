@@ -7,7 +7,10 @@ import pandas.testing
 import pytest
 from freezegun import freeze_time
 from noisy_stocks_data_orchestrator import __version__, main_flow
-from noisy_stocks_data_orchestrator.customdatastructures import TimeSeries
+from noisy_stocks_data_orchestrator.customdatastructures import (
+    StockTimeSeries,
+    TimeSeries,
+)
 from noisy_stocks_data_orchestrator.ingress import create_folder, folder_exists
 from pandera.errors import SchemaError
 from prefect.flows import flow
@@ -48,7 +51,7 @@ def test_fixture_input_via_conftest(sanity_check_fixture):
 
 def test_create_stock(stock_with_date_nan):
     stock = stock_with_date_nan
-    assert isinstance(stock, TimeSeries)
+    assert isinstance(stock, StockTimeSeries)
     assert isinstance(stock.time_series_df, pd.DataFrame)
 
 

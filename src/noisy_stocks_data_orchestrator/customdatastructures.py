@@ -331,3 +331,7 @@ class TimeSeries(BaseModel):
             raise ValueError("Expected non-empty DataFrame")
         self.__create_custom_df_schema()
         self.__data_clean_df()
+
+
+class StockTimeSeries(TimeSeries):
+    pass

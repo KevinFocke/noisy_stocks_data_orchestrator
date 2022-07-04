@@ -7,7 +7,7 @@ import pytest
 from freezegun import freeze_time
 from noisy_stocks_data_orchestrator.customdatastructures import (
     DatabaseQuery,
-    TimeSeries,
+    StockTimeSeries,
 )
 
 """
@@ -46,7 +46,7 @@ def stock_with_date_nan():
             "close_price": [1.3, 1.4, 0, 1, 5],
         }
     )
-    return TimeSeries(
+    return StockTimeSeries(
         numeric_col_name="close_price",
         timestamp_index_name="timestamp",
         time_series_df=df,
@@ -63,7 +63,7 @@ def stock_with_unequal_rows():
             "close_price": [1.3, 1.4, 0],
         }
     )
-    return TimeSeries(
+    return StockTimeSeries(
         numeric_col_name="close_price",
         timestamp_index_name="timestamp",
         time_series_df=df,
@@ -77,7 +77,7 @@ def stock_with_negative_closing_price():
             "close_price": [-1.3, 1.4, -5],
         }
     )
-    return TimeSeries(
+    return StockTimeSeries(
         numeric_col_name="close_price",
         timestamp_index_name="timestamp",
         time_series_df=df,
@@ -91,7 +91,7 @@ def stock_with_duplicate_dates():
             "close_price": [1.3, 1.4, 5],
         }
     )
-    return TimeSeries(
+    return StockTimeSeries(
         numeric_col_name="close_price",
         timestamp_index_name="timestamp",
         time_series_df=df,
@@ -105,7 +105,7 @@ def stock_with_unordered_dates():
             "close_price": [1.3, 1.4, 5],
         }
     )
-    return TimeSeries(
+    return StockTimeSeries(
         numeric_col_name="close_price",
         timestamp_index_name="timestamp",
         time_series_df=df,
@@ -402,7 +402,7 @@ def fixt_time_series_ordinary():
     pd.to_datetime(df.timestamp, format=r"%Y-%m-%d")
     df.set_index("timestamp", inplace=True)
 
-    return TimeSeries(
+    return StockTimeSeries(
         numeric_col_name="close_price",
         timestamp_index_name="timestamp",
         time_series_df=df,
@@ -428,7 +428,7 @@ def fixt_time_series_date_missing():
     pd.to_datetime(df.timestamp, format=r"%Y-%m-%d")
     df.set_index("timestamp", inplace=True)
 
-    return TimeSeries(
+    return StockTimeSeries(
         numeric_col_name="close_price",
         timestamp_index_name="timestamp",
         time_series_df=df,
@@ -453,7 +453,7 @@ def fixt_time_series_date_missing_filtered():
     pd.to_datetime(df.timestamp, format=r"%Y-%m-%d")
     df.set_index("timestamp", inplace=True)
 
-    return TimeSeries(
+    return StockTimeSeries(
         numeric_col_name="close_price",
         timestamp_index_name="timestamp",
         time_series_df=df,
