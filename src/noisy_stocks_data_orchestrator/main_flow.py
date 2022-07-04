@@ -115,20 +115,28 @@ def stock_correlation_flow():
     print(weather_time_series.time_series_df)
     print(weather_time_series.time_series_df.memory_usage(deep=True).sum())
 
+    # TODO: pair long & latitude as a string lon_lat
     weather_time_series.pivot_rows_to_cols(
         index="timestamp", columns=["longitude", "latitude"], values="precipitation"
     )
-    # weather_time_series.convert_lon_lat_to_points()  # type: ignore
-    # # close the db connection
-    corr = 
 
-    print(weather_time_series.time_series_df.memory_usage(deep=True).sum())
+    # # close the db connection
 
     # weather_time_series.pivot_rows_to_cols(
     # index="timestamp", columns="geometry", values="precipitation"
     # )
 
+    print(stocks_time_series.time_series_df)
     print(weather_time_series.time_series_df)
+    # do this for every stock!
+    corr_matrix = weather_time_series.time_series_df.corrwith(
+        stocks_time_series.time_series_df["FLEX"], axis=0, drop=False, method="pearson"
+    )  # axis 1 for row-wise calculation
+    print(corr_matrix)
+
+    # for every stock:
+    # correlate the column
+    # multi index giving problems?
 
     sql_alchemy_stock_engine.dispose()
 
