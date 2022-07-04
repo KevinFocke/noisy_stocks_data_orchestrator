@@ -115,7 +115,20 @@ def stock_correlation_flow():
     print(weather_time_series.time_series_df)
     print(weather_time_series.time_series_df.memory_usage(deep=True).sum())
 
+    weather_time_series.pivot_rows_to_cols(
+        index="timestamp", columns=["longitude", "latitude"], values="precipitation"
+    )
+    # weather_time_series.convert_lon_lat_to_points()  # type: ignore
     # # close the db connection
+    corr = 
+
+    print(weather_time_series.time_series_df.memory_usage(deep=True).sum())
+
+    # weather_time_series.pivot_rows_to_cols(
+    # index="timestamp", columns="geometry", values="precipitation"
+    # )
+
+    print(weather_time_series.time_series_df)
 
     sql_alchemy_stock_engine.dispose()
 
