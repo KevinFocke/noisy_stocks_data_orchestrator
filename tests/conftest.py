@@ -440,4 +440,29 @@ def fixt_time_series_date_missing():
     )
 
 
+@pytest.fixture
+def fixt_time_series_date_missing_filtered():
+    """time_series filtered on longest consecutive days"""
+    df = pd.DataFrame(
+        data=[
+            ["2002-07-07", "A", 21.6170],
+            ["2002-07-08", "A", 18.2880],
+            ["2002-07-09", "A", 19],
+            ["2002-07-07", "B", 14.6170],
+            ["2002-07-08", "B", 12.2880],
+            ["2002-07-09", "B", 8],
+        ],
+        columns=["timestamp", "stock_symbol", "close_price"],
+    )
+
+    pd.to_datetime(df.timestamp, format=r"%Y-%m-%d")
+    df.set_index("timestamp", inplace=True)
+
+    return TimeSeries(
+        numeric_col_name="close_price",
+        timestamp_index_name="timestamp",
+        time_series_df=df,
+    )
+
+
 # add test for custom data structure

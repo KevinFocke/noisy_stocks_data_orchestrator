@@ -68,6 +68,10 @@ def stock_correlation_flow():
     )
 
     # stocks_time_series.drop_except(keep=longest_consecutive_days_sequence)
+
+    stocks_time_series.drop_except(longest_consecutive_days_sequence)
+
+    print(stocks_time_series.time_series_df)
     # TODO: write test for drop_except
     # TODO: drop except should raise an error if dataframe is empty
     # if df.empty: Raise ValueError

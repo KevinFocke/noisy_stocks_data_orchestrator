@@ -203,6 +203,18 @@ class TimeSeries(BaseModel):
         """
         return self.json()
 
+    def drop_except(self, keep_list):
+        """drop every row not within date range"""
+        self.time_series_df = self.time_series_df[
+            self.time_series_df.index.isin(keep_list)
+        ]
+
+    def pivot_rows_to_cols(self):
+        """converts a long df into a wide df"""
+        # pivot here based on date
+
+        # drop cols with a null value
+
     def calc_longest_consecutive_days_sequence(
         self,
         treshold: PositiveInt = 20,
