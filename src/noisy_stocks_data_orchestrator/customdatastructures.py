@@ -312,6 +312,11 @@ class TimeSeries(BaseModel):
 
         return tuple(longest_timestamp_range)  # type:ignore
 
+    def correlate(self):
+        # Correlation is parralellizable! https://docs.dask.org/en/stable/dataframe.html
+        # SPEED: dask correlation?
+        pass
+
     def __validate_schema(self):
         """Validate pandera df schema"""
         time_series_df_schema = self._time_series_df_schema

@@ -11,7 +11,6 @@ import customdatastructures
 
 # TODO: Ensure timestamps align
 
-# Correlation is parralellizable! https://docs.dask.org/en/stable/dataframe.html
 
 # Append all threads to same list, then sort, then filter duplicate stocks.
 
