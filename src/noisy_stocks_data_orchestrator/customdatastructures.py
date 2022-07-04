@@ -161,7 +161,6 @@ class DatabaseQuery(BaseModel):
 class TimeSeries(BaseModel):
 
     # df assumption: dates are aligned on day at 0:00 UTC
-    stock_symbol_name: Optional[str]  # stock symbol
     timestamp_index_name: str  # What is the name of the timestamp column?
     numeric_col_name: str  # What is the name of the numeric column? eg. price_close
     time_series_df: pd.DataFrame  # DataFrame with timestamp as index, sorted DESC

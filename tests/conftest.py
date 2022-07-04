@@ -47,7 +47,6 @@ def stock_with_date_nan():
         }
     )
     return TimeSeries(
-        stock_symbol_name="AAPL",
         numeric_col_name="close_price",
         timestamp_index_name="timestamp",
         time_series_df=df,
@@ -65,7 +64,6 @@ def stock_with_unequal_rows():
         }
     )
     return TimeSeries(
-        stock_symbol_name="AAPL",
         numeric_col_name="close_price",
         timestamp_index_name="timestamp",
         time_series_df=df,
@@ -80,7 +78,6 @@ def stock_with_negative_closing_price():
         }
     )
     return TimeSeries(
-        stock_symbol_name="AAPL",
         numeric_col_name="close_price",
         timestamp_index_name="timestamp",
         time_series_df=df,
@@ -95,7 +92,6 @@ def stock_with_duplicate_dates():
         }
     )
     return TimeSeries(
-        stock_symbol_name="AAPL",
         numeric_col_name="close_price",
         timestamp_index_name="timestamp",
         time_series_df=df,
@@ -110,7 +106,6 @@ def stock_with_unordered_dates():
         }
     )
     return TimeSeries(
-        stock_symbol_name="AAPL",
         numeric_col_name="close_price",
         timestamp_index_name="timestamp",
         time_series_df=df,

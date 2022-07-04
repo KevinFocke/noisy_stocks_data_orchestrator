@@ -49,7 +49,6 @@ def test_fixture_input_via_conftest(sanity_check_fixture):
 def test_create_stock(stock_with_date_nan):
     stock = stock_with_date_nan
     assert isinstance(stock, TimeSeries)
-    assert isinstance(stock.stock_symbol_name, str)
     assert isinstance(stock.time_series_df, pd.DataFrame)
 
 
