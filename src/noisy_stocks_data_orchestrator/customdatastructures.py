@@ -200,6 +200,10 @@ class TimeSeries(BaseModel):
             self.time_series_df.index.isin(keep_list)
         ]
 
+    def drop_col_except(self, keep_list: list[str]):
+        """drop every col not within keep_list"""
+        self.time_series_df = self.time_series_df.filter(keep_list)
+
     def pivot_rows_to_cols(self, index, columns, values):
         """converts a long df into a wide df"""
         # pivot here based on date
@@ -360,7 +364,9 @@ class StockTimeSeries(TimeSeries):
         # check min amount of stocks
         # expects pivot table with DateTimeIndex
         if min_stocks_output > max_stocks_output:
-            raise ValueError("arg min_stocks_output cannot be bigger than max_stocks_output")
+            raise ValueError(
+                "arg min_stocks_output cannot be bigger than max_stocks_output"
+            )
 
         if self.time_series_df.shape[1] < min_stocks_output:
             raise ValueError("Not enough stocks in df")

@@ -84,12 +84,11 @@ def stock_correlation_flow():
         start_date=longest_consecutive_days_sequence[0],
         end_date=longest_consecutive_days_sequence[-1],
     )
+    # splat into collections then select first
 
-    # TODO: drop cols except
+    stocks_time_series.drop_col_except([el[0] for el in largest_stocks])
 
-    print(largest_stocks)
-
-    #
+    print(stocks_time_series)
 
     # # close the db connection
 
