@@ -77,6 +77,14 @@ def stock_correlation_flow():
     # if df.empty: Raise ValueError
     # #really it's just df.empty #very nice!
     # print(longest_consecutive_days_sequence)
+    # index="timestamp",
+    # columns="stock_symbol",
+    # values="price_close",
+    stocks_time_series.pivot_rows_to_cols(
+        index="timestamp", columns="stock_symbol", values="price_close"
+    )
+
+    print(stocks_time_series.time_series_df)
 
     weather_db_query_object = DatabaseQuery(
         select_fields=weather_select_fields,

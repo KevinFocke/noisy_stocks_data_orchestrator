@@ -465,4 +465,24 @@ def fixt_time_series_date_missing_filtered():
     )
 
 
+@pytest.fixture
+def fixt_dataframe_date_missing_filtered_and_pivoted():
+    """time_series filtered on longest consecutive days"""
+    df = pd.DataFrame(
+        data=[
+            ["2002-07-07", 21.6170, 14.6170],
+            ["2002-07-08", 18.2880, 12.2880],
+            ["2002-07-09", 19, 8],
+        ],
+        columns=["timestamp", "A", "B"],
+    )
+
+    df["timestamp"] = pd.to_datetime(df.timestamp, format=r"%Y-%m-%d")
+    df.set_index("timestamp", inplace=True)
+    df.columns = df.columns.set_names("stock_symbol")  # set col index name
+    # clarification: a pivot table includes the original name of the col
+
+    return df
+
+
 # add test for custom data structure

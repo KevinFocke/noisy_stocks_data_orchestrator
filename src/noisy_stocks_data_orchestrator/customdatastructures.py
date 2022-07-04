@@ -209,11 +209,18 @@ class TimeSeries(BaseModel):
             self.time_series_df.index.isin(keep_list)
         ]
 
-    def pivot_rows_to_cols(self):
+    def pivot_rows_to_cols(self, index, columns, values):
         """converts a long df into a wide df"""
         # pivot here based on date
+        self.time_series_df = pd.pivot_table(
+            data=self.time_series_df,
+            index=index,
+            columns=columns,
+            values=values,
+        )
 
         # drop cols with a null value
+        self.time_series_df.dropna(axis=1, inplace=True)  # axis 1 means cols
 
     def calc_longest_consecutive_days_sequence(
         self,

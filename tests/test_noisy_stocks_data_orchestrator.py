@@ -333,3 +333,16 @@ def test_drop_except(
         left=fixt_time_series_date_missing.time_series_df,
         right=fixt_time_series_date_missing_filtered.time_series_df,
     )
+
+
+def test_pivot_rows_to_cols(
+    fixt_time_series_date_missing_filtered,
+    fixt_dataframe_date_missing_filtered_and_pivoted,
+):
+    fixt_time_series_date_missing_filtered.pivot_rows_to_cols(
+        index="timestamp", columns="stock_symbol", values="close_price"
+    )
+    pandas.testing.assert_frame_equal(
+        left=fixt_time_series_date_missing_filtered.time_series_df,
+        right=fixt_dataframe_date_missing_filtered_and_pivoted,
+    )
