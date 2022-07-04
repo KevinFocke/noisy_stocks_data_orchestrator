@@ -195,14 +195,6 @@ class TimeSeries(BaseModel):
         # Validate time series & set
         self.__validate_ts_and_set_df()
 
-    def stock_to_JSON(self):
-        """create JSON
-
-        Returns:
-            JSON
-        """
-        return self.json()
-
     def drop_except(self, keep_list):
         """drop every row not within date range"""
         self.time_series_df = self.time_series_df[
@@ -233,6 +225,7 @@ class TimeSeries(BaseModel):
         Note: for stocks the treshold should be 1 because
         there is only one value per date"""
 
+        # TODO: Refactor
         # group by day & count of group
         if provided_time_series_df is None:  # df not provided
             grouped_dates_df = self.time_series_df
