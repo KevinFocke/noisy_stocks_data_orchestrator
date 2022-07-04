@@ -15,6 +15,7 @@ from noisy_stocks_data_orchestrator.ingress import create_folder, folder_exists
 from pandera.errors import SchemaError
 from prefect.flows import flow
 from prefect.testing.utilities import prefect_test_harness  # for testing flows
+from pytest import approx
 
 from tests.conftest import stock_with_negative_closing_price, stock_with_unequal_rows
 
@@ -329,7 +330,7 @@ def test_drop_except(
 
     dates = ["2002-07-07", "2002-07-08", "2002-7-09"]
     dates = [pd.Timestamp(el_date, tz=None) for el_date in dates]
-    fixt_time_series_date_missing.drop_except(dates)
+    fixt_time_series_date_missing.drop_row_except(dates)
 
     pandas.testing.assert_frame_equal(
         left=fixt_time_series_date_missing.time_series_df,
@@ -347,4 +348,79 @@ def test_pivot_rows_to_cols(
     pandas.testing.assert_frame_equal(
         left=fixt_time_series_date_missing_filtered.time_series_df,
         right=fixt_dataframe_date_missing_filtered_and_pivoted,
+    )
+
+
+def test_find_movers_and_shakers(fixt_time_series_date_missing_filtered):
+    fixt_time_series_date_missing_filtered.pivot_rows_to_cols(
+        index="timestamp", columns="stock_symbol", values="close_price"
+    )
+    dates = ["2002-07-07", "2002-07-09"]
+    dates = [pd.Timestamp(el_date, tz=None) for el_date in dates]
+    movers_and_shakers = fixt_time_series_date_missing_filtered.find_movers_and_shakers(
+        start_date=dates[0],
+        end_date=dates[-1],
+        min_stocks_output=2,
+        max_stocks_output=2,
+    )
+    assert movers_and_shakers == (
+        ("B", approx(0.45269207087637686)),
+        ("A", approx(0.12106212702965258)),
+    )
+
+
+def test_find_movers_and_shakers_min_error(fixt_time_series_date_missing_filtered):
+    fixt_time_series_date_missing_filtered.pivot_rows_to_cols(
+        index="timestamp", columns="stock_symbol", values="close_price"
+    )
+    dates = ["2002-07-07", "2002-07-09"]
+    dates = [pd.Timestamp(el_date, tz=None) for el_date in dates]
+
+    with pytest.raises(ValueError) as exc:
+        fixt_time_series_date_missing_filtered.find_movers_and_shakers(
+            start_date=dates[0],
+            end_date=dates[-1],
+            min_stocks_output=3,
+            max_stocks_output=5,
+        )
+    assert str(exc.value) == "Not enough stocks in df"
+
+
+def test_find_movers_and_shakers_min_bigger_than_max_error(
+    fixt_time_series_date_missing_filtered,
+):
+    fixt_time_series_date_missing_filtered.pivot_rows_to_cols(
+        index="timestamp", columns="stock_symbol", values="close_price"
+    )
+    dates = ["2002-07-07", "2002-07-09"]
+    dates = [pd.Timestamp(el_date, tz=None) for el_date in dates]
+
+    with pytest.raises(ValueError) as exc:
+        fixt_time_series_date_missing_filtered.find_movers_and_shakers(
+            start_date=dates[0],
+            end_date=dates[-1],
+            min_stocks_output=2,
+            max_stocks_output=1,
+        )
+    assert (
+        str(exc.value)
+        == "arg min_stocks_output cannot be bigger than max_stocks_output"
+    )
+
+
+def test_find_movers_and_shakers_max_cutoff(fixt_time_series_date_missing_filtered):
+    fixt_time_series_date_missing_filtered.pivot_rows_to_cols(
+        index="timestamp", columns="stock_symbol", values="close_price"
+    )
+    dates = ["2002-07-07", "2002-07-09"]
+    dates = [pd.Timestamp(el_date, tz=None) for el_date in dates]
+    movers_and_shakers = fixt_time_series_date_missing_filtered.find_movers_and_shakers(
+        start_date=dates[0],
+        end_date=dates[-1],
+        min_stocks_output=2,
+        max_stocks_output=10000,
+    )
+    assert movers_and_shakers == (
+        ("B", approx(0.45269207087637686)),
+        ("A", approx(0.12106212702965258)),
     )

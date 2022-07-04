@@ -194,7 +194,7 @@ class TimeSeries(BaseModel):
         # Validate time series & set
         self.__validate_ts_and_set_df()
 
-    def drop_except(self, keep_list):
+    def drop_row_except(self, keep_list: tuple[Timestamp]):
         """drop every row not within date range"""
         self.time_series_df = self.time_series_df[
             self.time_series_df.index.isin(keep_list)
@@ -334,4 +334,67 @@ class TimeSeries(BaseModel):
 
 
 class StockTimeSeries(TimeSeries):
-    pass
+    def find_movers_and_shakers(
+        self,
+        start_date: Timestamp,
+        end_date: Timestamp,
+        min_stocks_output=5,
+        max_stocks_output=20,
+    ) -> tuple[tuple[str, float]]:
+        """calculates the biggest absolute difference between start date and end date
+
+        input: expects a TimeSeries already processed by pivot_rows_to_cols
+
+        output: ((stock_symbol_str, percentage_move_in_float))
+
+        arg explanation:
+        value_threshold # what should the minimum value difference be
+        eg. 10 means the start date value will be 10 higher or lower than the end date value.
+
+        min_stocks_output # how many stocks should the result contain at a minimum?
+
+        max_stocks_output # how many stocks should the result contain at a maximum?
+        eg. 20 means it will return 20 stocks at most.
+        """
+
+        # check min amount of stocks
+        # expects pivot table with DateTimeIndex
+        if min_stocks_output > max_stocks_output:
+            raise ValueError("arg min_stocks_output cannot be bigger than max_stocks_output")
+
+        if self.time_series_df.shape[1] < min_stocks_output:
+            raise ValueError("Not enough stocks in df")
+
+        start_date_index = self.time_series_df.index.get_loc(start_date)
+        end_date_index = self.time_series_df.index.get_loc(end_date)
+
+        start_series = self.time_series_df.iloc[start_date_index]
+        end_series = self.time_series_df.iloc[end_date_index]
+
+        # normalize based on start_series to find biggest % increase
+
+        end_series = end_series.div(  # type: ignore
+            start_series
+        )  # calc end_series first otherwise we div by 1
+
+        start_series = start_series.div(start_series)  # type: ignore
+
+        abs_delta = start_series.sub(end_series).abs()
+
+        abs_delta = abs_delta.sort_values(ascending=False)
+
+        # -> list[tuple[str, PositiveInt]]
+        abs_delta_df = abs_delta.to_frame()
+
+        if abs_delta_df.shape[0] < max_stocks_output:
+            pass  # no need for slicing
+        else:
+            abs_delta_df = abs_delta_df[:20]  # slice first 20 rows
+        # get highest corr
+
+        tuples_stock_and_rel_change = tuple(
+            abs_delta_df.itertuples(index=True, name=None)
+        )
+        # tuple_list = tuple(abs_delta_df.reset_index().values.tolist())
+
+        return tuples_stock_and_rel_change

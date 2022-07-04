@@ -478,6 +478,3 @@ def fixt_dataframe_date_missing_filtered_and_pivoted():
     # clarification: a pivot table includes the original name of the col
 
     return df
-
-
-# add test for custom data structure

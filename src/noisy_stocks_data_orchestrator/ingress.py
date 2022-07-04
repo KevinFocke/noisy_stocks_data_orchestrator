@@ -8,7 +8,7 @@ from prefect.tasks import task
 from pydantic import validate_arguments
 from sqlalchemy import engine
 
-from customdatastructures import TimeSeries, folder_exists
+from customdatastructures import StockTimeSeries, TimeSeries, folder_exists
 
 """Data Inflow Module for data from database
 """
@@ -28,7 +28,7 @@ def fetch_stocks_to_TimeSeries(*args, **kwargs):
     2. to differentiate the flows"""
     # query stocks
     # TODO: use args with *args and **kwargs instead
-    time_series = query_database_to_TimeSeries(*args, **kwargs).result()
+    time_series = query_database_to_TimeSeries(is_stock=True, *args, **kwargs).result()
 
     return time_series
 
@@ -73,8 +73,8 @@ def query_database_to_TimeSeries(
     query,
     numeric_col_name,
     timestamp_index_name="timestamp",
-    stock_symbol_name=None,
     timeout=10,
+    is_stock: bool = False,  # is it a stock?
 ):
 
     # get Prefect Future
@@ -87,12 +87,18 @@ def query_database_to_TimeSeries(
     # normalize date
     df = normalize_timestamp(df=prefect_result_df).result()
 
-    return TimeSeries(
-        stock_symbol_name=stock_symbol_name,
-        timestamp_index_name=timestamp_index_name,
-        numeric_col_name=numeric_col_name,
-        time_series_df=df,
-    )
+    if is_stock:
+        return StockTimeSeries(
+            timestamp_index_name=timestamp_index_name,
+            numeric_col_name=numeric_col_name,
+            time_series_df=df,
+        )
+    else:
+        return TimeSeries(
+            timestamp_index_name=timestamp_index_name,
+            numeric_col_name=numeric_col_name,
+            time_series_df=df,
+        )
 
 
 @validate_arguments
