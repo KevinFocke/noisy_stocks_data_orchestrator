@@ -5,7 +5,6 @@ from prefect.task_runners import SequentialTaskRunner
 from prefect.tasks import task
 from pydantic.types import PositiveInt
 from sqlalchemy import create_engine
-
 from customdatastructures import DatabaseQuery
 from ingress import fetch_stocks_to_TimeSeries, fetch_weather_to_TimeSeries
 
@@ -130,7 +129,7 @@ def stock_correlation_flow():
     print(weather_time_series.time_series_df)
     # do this for every stock!
     corr_matrix = weather_time_series.time_series_df.corrwith(
-        stocks_time_series.time_series_df["FLEX"], axis=0, drop=False, method="pearson"
+        stocks_time_series.time_series_df["TIF"], axis=0, drop=False, method="pearson"
     )  # axis 1 for row-wise calculation
     print(corr_matrix)
 

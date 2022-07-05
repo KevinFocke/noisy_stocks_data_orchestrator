@@ -165,9 +165,6 @@ class TimeSeries(BaseModel):
     numeric_col_name: str  # What is the name of the numeric column? eg. price_close
     time_series_df: pd.DataFrame  # DataFrame with timestamp as index, sorted DESC
     _time_series_df_schema: pa.DataFrameSchema = PrivateAttr()
-    _longest_timeseries_sequence_start: DatetimeIndex = PrivateAttr()
-    _longest_timeseries_sequence_end: DatetimeIndex = PrivateAttr()
-    _longest_timeseries_sequence_length: PositiveInt = PrivateAttr()
 
     class Config:  # Pydantic configuration
         arbitrary_types_allowed = True
