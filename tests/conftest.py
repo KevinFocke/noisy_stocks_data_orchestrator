@@ -43,7 +43,7 @@ def stock_with_date_nan():
                 "1950-02-07",
                 pd.NaT,
             ],
-            "close_price": [1.3, 1.4, 0, 1, 5],
+            "close_price": [1.3, 1.4, 8, 1, 5],
         }
     )
     return StockTimeSeries(

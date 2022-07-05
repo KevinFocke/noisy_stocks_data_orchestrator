@@ -2,7 +2,6 @@ from math import sqrt
 from typing import Optional
 
 import numpy as np
-from numba import njit
 from prefect.flows import flow
 from prefect.task_runners import SequentialTaskRunner
 from prefect.tasks import task
@@ -36,6 +35,7 @@ def np_stdev_per_row(np_array):
     return np_array.std(axis=0)  # stdev flattens first, then calculates
 
 
+# SPEED: update using njit
 def pearson_corr(stocks_array, dataset_array):
     (
         stocks_array_row_count,

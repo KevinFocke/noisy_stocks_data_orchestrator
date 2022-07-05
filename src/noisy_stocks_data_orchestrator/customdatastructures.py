@@ -185,9 +185,9 @@ class TimeSeries(BaseModel):
         """Clean the dataframe"""
 
         # Remove missing rows
-        self.time_series_df.dropna(inplace=True)
+        self.time_series_df = self.time_series_df.dropna()
         # Sort index
-        self.time_series_df.sort_index(ascending=False, inplace=True)
+        self.time_series_df = self.time_series_df.sort_index(ascending=False)
         # Validate time series & set
         self.__validate_ts_and_set_df()
 
