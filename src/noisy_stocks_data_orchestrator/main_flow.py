@@ -1,10 +1,14 @@
+from math import sqrt
 from typing import Optional
 
+import numpy as np
+from numba import njit
 from prefect.flows import flow
 from prefect.task_runners import SequentialTaskRunner
 from prefect.tasks import task
 from pydantic.types import PositiveInt
 from sqlalchemy import create_engine
+
 from customdatastructures import DatabaseQuery
 from ingress import fetch_stocks_to_TimeSeries, fetch_weather_to_TimeSeries
 
@@ -22,6 +26,60 @@ def sanity_check():
         string: "Module_Found"
     """
     return "Module_Found"
+
+
+def np_mean_per_col(np_array):
+    return np_array.mean(axis=0)  # axis 0 is over rows
+
+
+def np_stdev_per_row(np_array):
+    return np_array.std(axis=0)  # stdev flattens first, then calculates
+
+
+def pearson_corr(stocks_array, dataset_array):
+    (
+        stocks_array_row_count,
+        stocks_array_col_count,
+    ) = stocks_array.shape  # how many cols?
+    dataset_array_row_count, dataset_array_col_count = dataset_array.shape
+
+    # sanity check, are there an equal amount of rows?
+    if stocks_array_row_count != dataset_array_row_count:
+        raise ValueError("rows should be of equal size")
+
+    # the means nor stdevs are not calculated correctly!!!!!!
+    stocks_means = np_mean_per_col(stocks_array)
+    stocks_stdevs = np_stdev_per_row(stocks_array)
+    dataset_means = np_mean_per_col(dataset_array)
+    dataset_stdevs = np_stdev_per_row(dataset_array)
+
+    # one numpy array per stock
+    # parallelize calculations per core with ray
+    for stock_col_index in range(stocks_array_col_count):
+        # many iterations here thus use njit
+        datapoint_correlation = np.empty(dataset_array_col_count)
+        # one wide series
+        cur_stock_mean = stocks_means[stock_col_index]
+        cur_stock_array = stocks_array[
+            :, stock_col_index
+        ]  # all rows, first col; in other words: current stock
+        cur_stock_stdev = stocks_stdevs[stock_col_index]
+        for datapoint_col_index in range(dataset_array_col_count):
+            cur_datapoint_array = dataset_array[
+                :, datapoint_col_index
+            ]  # array is empty?
+            cur_datapoint_mean = dataset_means[datapoint_col_index]
+            cur_datapoint_stdev = dataset_stdevs[datapoint_col_index]
+            numerator = np.cov(cur_datapoint_array, cur_stock_array, bias=True)[0][
+                1
+            ]  # bias True measn normalize by N
+            # result is a long array
+            denominator = cur_stock_stdev * cur_datapoint_stdev
+            datapoint_correlation[datapoint_col_index] = numerator / denominator
+
+        print(datapoint_correlation)
+        print(datapoint_correlation.shape)
+        # calc correlation
 
 
 @flow(task_runner=SequentialTaskRunner(), name="stock_correlation_flow")
@@ -128,10 +186,43 @@ def stock_correlation_flow():
     print(stocks_time_series.time_series_df)
     print(weather_time_series.time_series_df)
     # do this for every stock!
-    corr_matrix = weather_time_series.time_series_df.corrwith(
-        stocks_time_series.time_series_df["TIF"], axis=0, drop=False, method="pearson"
-    )  # axis 1 for row-wise calculation
-    print(corr_matrix)
+
+    (weather_x, weather_y) = weather_time_series.time_series_df.shape
+
+    # gives an error; merging between different levels is deprecated
+
+    # ideally, the lon+lat would be stored in a POINT variable with Geopandas
+    # however modin does not support Geopandas
+
+    weather_col_list = list(weather_time_series.time_series_df.columns)
+    stock_col_list = list(stocks_time_series.time_series_df.columns)
+
+    weather_numpy_array = weather_time_series.time_series_df.to_numpy()
+    stock_numpy_array = stocks_time_series.time_series_df.to_numpy()
+    print(weather_numpy_array)
+    print(weather_numpy_array.shape)
+
+    print(len(weather_numpy_array))
+    first_stock = stock_numpy_array[1]
+
+    print(
+        weather_numpy_array[:, 0]
+    )  # all rows, first col, in other words: first weather
+    print(weather_numpy_array[:, 0].shape)
+    print(
+        stock_numpy_array[:, 0]
+    )  # all rows, first col, in other words: the first stock
+    print(stock_numpy_array[:, 0].shape)
+
+    pearson_corr(stocks_array=stock_numpy_array, dataset_array=weather_numpy_array)
+    # TODO: move out of its column
+
+    # print(corr_matrix)
+
+    #    corr_matrix = weather_time_series.time_series_df.corrwith(
+    #        stocks_time_series.time_series_df["TIF"], axis=0, drop=False, method="pearson"
+    #    )  # axis 1 for row-wise calculation
+    #    print(corr_matrix)
 
     # for every stock:
     # correlate the column

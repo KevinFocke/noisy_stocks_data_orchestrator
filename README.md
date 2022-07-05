@@ -44,3 +44,8 @@ In the future I do intend to explore Kubernetes more.
 Reflection:
 
 * It is challenging to decide on the _right_ size of a microservice.
+
+# Troubleshoot
+
+Might need Python dev tools installed for the correct version
+sudo apt-get install python3.10-dev

@@ -335,6 +335,10 @@ class TimeSeries(BaseModel):
         super().__init__(*args, **kwargs)
         if self.time_series_df.empty:
             raise ValueError("Expected non-empty DataFrame")
+        # drop row containing 0
+        self.time_series_df = self.time_series_df[
+            self.time_series_df[self.numeric_col_name] != 0
+        ]
         self.__create_custom_df_schema()
         self.__data_clean_df()
 
