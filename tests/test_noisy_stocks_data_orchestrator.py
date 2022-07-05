@@ -14,7 +14,6 @@ from noisy_stocks_data_orchestrator.customdatastructures import (
 from noisy_stocks_data_orchestrator.ingress import create_folder, folder_exists
 from pandera.errors import SchemaError
 from prefect.flows import flow
-from prefect.testing.utilities import prefect_test_harness  # for testing flows
 from pytest import approx
 
 from tests.conftest import stock_with_negative_closing_price, stock_with_unequal_rows
