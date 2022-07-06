@@ -14,12 +14,6 @@ from sqlalchemy import create_engine
 from customdatastructures import DatabaseQuery
 from ingress import fetch_stocks_to_TimeSeries, fetch_weather_to_TimeSeries
 
-# Convert dates to datetime
-# https://pandas.pydata.org/docs/reference/api/pandas.to_datetime.html
-
-
-# Worfklows contain tasks but no logic. Tasks do the work.
-
 
 def sanity_check():
     """Can pytest find the module?
@@ -35,13 +29,9 @@ def np_mean_per_col(np_array):
 
 
 def np_stdev_per_row(np_array):
-    return NumbaList(
-        np_array.std(axis=0).tolist()
-    )  # stdev flattens first, then calculates
+    return NumbaList(np_array.std(axis=0).tolist())
+    # axis 0 is over rows
     # numba requires specific type list https://numba.readthedocs.io/en/stable/reference/deprecation.html#deprecation-of-reflection-for-list-and-set-types
-
-
-# SPEED: update using njit
 
 
 @jit(nopython=True)
@@ -63,9 +53,7 @@ def pearson_corr(
     if stocks_array_row_count != dataset_array_row_count:
         raise ValueError("rows should be of equal size")
 
-    # stocks_means = np_mean_per_col(stocks_array)
-
-    # one numpy array per stock
+    # iterate over stocks
     for stock_col_index in range(stocks_array_col_count):
         # many iterations here thus use njit
         datapoint_correlation = np.empty(dataset_array_col_count)
@@ -92,6 +80,7 @@ def pearson_corr(
         print(datapoint_correlation.shape)
         # calc correlation
 
+def correlate():
 
 @flow(task_runner=SequentialTaskRunner(), name="stock_correlation_flow")
 def stock_correlation_flow():
@@ -127,10 +116,6 @@ def stock_correlation_flow():
         numeric_col_name=stocks_numeric_col_name,
     ).result()
 
-    # find continuous
-
-    print(stocks_time_series)
-
     longest_consecutive_days_sequence = (
         stocks_time_series.calc_longest_consecutive_days_sequence()
     )
@@ -145,18 +130,15 @@ def stock_correlation_flow():
         index="timestamp", columns="stock_symbol", values="price_close"
     )
 
-    # SPEED: change order of find_movers_and_shakers and pivot_rows_to_col
+    # SPEED, minor: change order of find_movers_and_shakers and pivot_rows_to_col
     # (requires refactor)
 
     largest_stocks = stocks_time_series.find_movers_and_shakers(  # type: ignore
         start_date=longest_consecutive_days_sequence[0],
         end_date=longest_consecutive_days_sequence[-1],
     )
-    # splat into collections then select first
 
-    stocks_time_series.drop_col_except([el[0] for el in largest_stocks])
-
-    print(stocks_time_series)
+    stocks_time_series.drop_col_except([stock[0] for stock in largest_stocks])
 
     weather_db_query_object = DatabaseQuery(
         select_fields=weather_select_fields,
@@ -180,52 +162,21 @@ def stock_correlation_flow():
         timeout=120,
     ).result()
 
-    print(weather_time_series.time_series_df)
-    print(weather_time_series.time_series_df.memory_usage(deep=True).sum())
-
-    # TODO: pair long & latitude as a string lon_lat
+    # TODO: pair long & latitude in single datatype instead of multi-index
+    # ideally, the lon+lat would be stored in a POINT variable with Geopandas
+    # however Geopandas x to y conversion worked dreadfully slow 1+ min
     weather_time_series.pivot_rows_to_cols(
         index="timestamp", columns=["longitude", "latitude"], values="precipitation"
     )
-
-    # # close the db connection
-
-    # weather_time_series.pivot_rows_to_cols(
-    # index="timestamp", columns="geometry", values="precipitation"
-    # )
-
     print(stocks_time_series.time_series_df)
     print(weather_time_series.time_series_df)
-    # do this for every stock!
 
-    (weather_x, weather_y) = weather_time_series.time_series_df.shape
-
-    # gives an error; merging between different levels is deprecated
-
-    # ideally, the lon+lat would be stored in a POINT variable with Geopandas
-    # however modin does not support Geopandas
-
-    weather_col_list = list(weather_time_series.time_series_df.columns)
     stock_col_list = list(stocks_time_series.time_series_df.columns)
 
     weather_numpy_array = weather_time_series.time_series_df.to_numpy()
     stocks_numpy_array = stocks_time_series.time_series_df.to_numpy()
     print(weather_numpy_array)
     print(weather_numpy_array.shape)
-
-    print(len(weather_numpy_array))
-    first_stock = stocks_numpy_array[1]
-
-    print(
-        weather_numpy_array[:, 0]
-    )  # all rows, first col, in other words: first weather
-    print(weather_numpy_array[:, 0].shape)
-    print(
-        stocks_numpy_array[:, 0]
-    )  # all rows, first col, in other words: the first stock
-    print(stocks_numpy_array[:, 0].shape)
-
-    rowsize = 0
 
     if stocks_numpy_array.shape[0] != weather_numpy_array.shape[0]:
         raise ValueError("rows must be equal size!!")
