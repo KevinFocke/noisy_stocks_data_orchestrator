@@ -3,7 +3,8 @@ from typing import Optional
 
 import numpy as np
 import numpy.typing as npt
-from numba import njit
+from numba import jit
+from numba.typed import List as NumbaList
 from prefect.flows import flow
 from prefect.task_runners import SequentialTaskRunner
 from prefect.tasks import task
@@ -30,24 +31,28 @@ def sanity_check():
 
 
 def np_mean_per_col(np_array):
-    return np_array.mean(axis=0).tolist()  # axis 0 is over rows
+    return NumbaList(np_array.mean(axis=0).tolist())  # axis 0 is over rows
 
 
 def np_stdev_per_row(np_array):
-    return np_array.std(axis=0).tolist()  # stdev flattens first, then calculates
-    # numba does not support arguments
+    return NumbaList(
+        np_array.std(axis=0).tolist()
+    )  # stdev flattens first, then calculates
+    # numba requires specific type list https://numba.readthedocs.io/en/stable/reference/deprecation.html#deprecation-of-reflection-for-list-and-set-types
 
 
 # SPEED: update using njit
 
 
-@njit
+@jit(nopython=True)
 def pearson_corr(
     dataset_stdevs,
     stocks_stdevs,
     stocks_array=np.array([[]]),
     dataset_array=np.array([[]]),
 ):
+    # TODO: can I cleanup types?
+
     (
         stocks_array_row_count,
         stocks_array_col_count,
