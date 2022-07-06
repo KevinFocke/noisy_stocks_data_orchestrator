@@ -34,23 +34,6 @@ def np_stdev_per_row(np_array):
     # numba requires specific type list https://numba.readthedocs.io/en/stable/reference/deprecation.html#deprecation-of-reflection-for-list-and-set-types
 
 
-@flow
-def correlate_datasets(stocks_time_series_df, dataset_time_series_df):
-
-    stocks_np_array = stocks_time_series_df.to_numpy()
-    dataset_np_array = dataset_time_series_df.to_numpy()
-    stocks_stdevs = np_stdev_per_row(stocks_np_array)
-    dataset_stdevs = np_stdev_per_row(dataset_np_array)
-
-    pearson_corr(
-        stocks_np_array=stocks_np_array,
-        dataset_np_array=dataset_np_array,
-        stocks_stdevs=stocks_stdevs,
-        dataset_stdevs=dataset_stdevs,
-    )
-
-
-@task
 @jit(nopython=True)
 def pearson_corr(
     dataset_stdevs,
@@ -192,15 +175,12 @@ def stock_correlation_flow():
 
     stock_col_list = list(stocks_time_series.time_series_df.columns)
 
-    correlate_datasets(
-        stocks_time_series.time_series_df, weather_time_series.time_series_df
+    pearson_corr(
+        stocks_np_array=stocks_time_series.time_series_df.to_numpy(),
+        stocks_stdevs=np_stdev_per_row(stocks_time_series.time_series_df.to_numpy()),
+        dataset_stdevs=np_stdev_per_row(weather_time_series.time_series_df.to_numpy()),
+        dataset_np_array=weather_time_series.time_series_df.to_numpy(),
     )
-    # correlate_datasets(
-    #     stocks_np_array=stocks_time_series.time_series_df.to_numpy(),
-    #     stocks_stdevs=np_stdev_per_row(stocks_time_series.time_series_df.to_numpy()),
-    #     dataset_stdevs=np_stdev_per_row(weather_time_series.time_series_df.to_numpy()),
-    #     dataset_np_array=weather_time_series.time_series_df.to_numpy(),
-    # )
     # TODO: move out of its column
 
     # print(corr_matrix)

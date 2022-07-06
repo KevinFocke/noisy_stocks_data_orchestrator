@@ -243,8 +243,7 @@ class TimeSeries(BaseModel):
 
         # sort dates in asc order
         grouped_dates_df = grouped_dates_df.sort_index(ascending=True)
-
-        # print(grouped_dates_df)
+        print(grouped_dates_df)
         # get start & end date of df
         start_date = grouped_dates_df.index[0]
         end_date = grouped_dates_df.index[-1]
@@ -309,6 +308,11 @@ class TimeSeries(BaseModel):
         # range upper bound not incl
 
         return tuple(longest_timestamp_range)  # type:ignore
+
+    def correlate(self):
+        # Correlation is parralellizable! https://docs.dask.org/en/stable/dataframe.html
+        # SPEED: dask correlation?
+        pass
 
     def __validate_schema(self):
         """Validate pandera df schema"""
