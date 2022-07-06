@@ -2,6 +2,8 @@ from math import sqrt
 from typing import Optional
 
 import numpy as np
+import numpy.typing as npt
+from numba import njit
 from prefect.flows import flow
 from prefect.task_runners import SequentialTaskRunner
 from prefect.tasks import task
@@ -28,15 +30,24 @@ def sanity_check():
 
 
 def np_mean_per_col(np_array):
-    return np_array.mean(axis=0)  # axis 0 is over rows
+    return np_array.mean(axis=0).tolist()  # axis 0 is over rows
 
 
 def np_stdev_per_row(np_array):
-    return np_array.std(axis=0)  # stdev flattens first, then calculates
+    return np_array.std(axis=0).tolist()  # stdev flattens first, then calculates
+    # numba does not support arguments
 
 
 # SPEED: update using njit
-def pearson_corr(stocks_array, dataset_array):
+
+
+@njit
+def pearson_corr(
+    dataset_stdevs,
+    stocks_stdevs,
+    stocks_array=np.array([[]]),
+    dataset_array=np.array([[]]),
+):
     (
         stocks_array_row_count,
         stocks_array_col_count,
@@ -47,28 +58,23 @@ def pearson_corr(stocks_array, dataset_array):
     if stocks_array_row_count != dataset_array_row_count:
         raise ValueError("rows should be of equal size")
 
-    # the means nor stdevs are not calculated correctly!!!!!!
-    stocks_means = np_mean_per_col(stocks_array)
-    stocks_stdevs = np_stdev_per_row(stocks_array)
-    dataset_means = np_mean_per_col(dataset_array)
-    dataset_stdevs = np_stdev_per_row(dataset_array)
+    # stocks_means = np_mean_per_col(stocks_array)
 
     # one numpy array per stock
-    # parallelize calculations per core with ray
     for stock_col_index in range(stocks_array_col_count):
         # many iterations here thus use njit
         datapoint_correlation = np.empty(dataset_array_col_count)
         # one wide series
-        cur_stock_mean = stocks_means[stock_col_index]
+        # cur_stock_mean = stocks_means[stock_col_index]
         cur_stock_array = stocks_array[
-            :, stock_col_index
+            0:, stock_col_index
         ]  # all rows, first col; in other words: current stock
         cur_stock_stdev = stocks_stdevs[stock_col_index]
         for datapoint_col_index in range(dataset_array_col_count):
             cur_datapoint_array = dataset_array[
-                :, datapoint_col_index
+                0:, datapoint_col_index
             ]  # array is empty?
-            cur_datapoint_mean = dataset_means[datapoint_col_index]
+            # cur_datapoint_mean = dataset_means[datapoint_col_index]
             cur_datapoint_stdev = dataset_stdevs[datapoint_col_index]
             numerator = np.cov(cur_datapoint_array, cur_stock_array, bias=True)[0][
                 1
@@ -198,23 +204,38 @@ def stock_correlation_flow():
     stock_col_list = list(stocks_time_series.time_series_df.columns)
 
     weather_numpy_array = weather_time_series.time_series_df.to_numpy()
-    stock_numpy_array = stocks_time_series.time_series_df.to_numpy()
+    stocks_numpy_array = stocks_time_series.time_series_df.to_numpy()
     print(weather_numpy_array)
     print(weather_numpy_array.shape)
 
     print(len(weather_numpy_array))
-    first_stock = stock_numpy_array[1]
+    first_stock = stocks_numpy_array[1]
 
     print(
         weather_numpy_array[:, 0]
     )  # all rows, first col, in other words: first weather
     print(weather_numpy_array[:, 0].shape)
     print(
-        stock_numpy_array[:, 0]
+        stocks_numpy_array[:, 0]
     )  # all rows, first col, in other words: the first stock
-    print(stock_numpy_array[:, 0].shape)
+    print(stocks_numpy_array[:, 0].shape)
 
-    pearson_corr(stocks_array=stock_numpy_array, dataset_array=weather_numpy_array)
+    rowsize = 0
+
+    if stocks_numpy_array.shape[0] != weather_numpy_array.shape[0]:
+        raise ValueError("rows must be equal size!!")
+    else:
+        rowsize = stocks_numpy_array.shape[0]
+
+    stocks_stdevs = np_stdev_per_row(stocks_numpy_array)
+    # dataset_means = np_mean_per_col(dataset_array)
+    dataset_stdevs = np_stdev_per_row(weather_numpy_array)
+    pearson_corr(
+        stocks_array=stocks_numpy_array,
+        stocks_stdevs=stocks_stdevs,
+        dataset_stdevs=dataset_stdevs,
+        dataset_array=weather_numpy_array,
+    )
     # TODO: move out of its column
 
     # print(corr_matrix)
@@ -223,10 +244,6 @@ def stock_correlation_flow():
     #        stocks_time_series.time_series_df["TIF"], axis=0, drop=False, method="pearson"
     #    )  # axis 1 for row-wise calculation
     #    print(corr_matrix)
-
-    # for every stock:
-    # correlate the column
-    # multi index giving problems?
 
     sql_alchemy_stock_engine.dispose()
 
