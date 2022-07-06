@@ -38,16 +38,19 @@ def np_stdev_per_row(np_array):
 def pearson_corr(
     dataset_stdevs,
     stocks_stdevs,
-    stocks_array=np.array([[]]),
-    dataset_array=np.array([[]]),
+    stocks_np_array=np.array([[]]),
+    dataset_np_array=np.array([[]]),
 ):
     # TODO: can I cleanup types?
+
+    if stocks_np_array.shape[0] != dataset_np_array.shape[0]:
+        raise ValueError("rows must be equal size!!")
 
     (
         stocks_array_row_count,
         stocks_array_col_count,
-    ) = stocks_array.shape  # how many cols?
-    dataset_array_row_count, dataset_array_col_count = dataset_array.shape
+    ) = stocks_np_array.shape  # how many cols?
+    dataset_array_row_count, dataset_array_col_count = dataset_np_array.shape
 
     # sanity check, are there an equal amount of rows?
     if stocks_array_row_count != dataset_array_row_count:
@@ -59,12 +62,12 @@ def pearson_corr(
         datapoint_correlation = np.empty(dataset_array_col_count)
         # one wide series
         # cur_stock_mean = stocks_means[stock_col_index]
-        cur_stock_array = stocks_array[
+        cur_stock_array = stocks_np_array[
             0:, stock_col_index
         ]  # all rows, first col; in other words: current stock
         cur_stock_stdev = stocks_stdevs[stock_col_index]
         for datapoint_col_index in range(dataset_array_col_count):
-            cur_datapoint_array = dataset_array[
+            cur_datapoint_array = dataset_np_array[
                 0:, datapoint_col_index
             ]  # array is empty?
             # cur_datapoint_mean = dataset_means[datapoint_col_index]
@@ -80,7 +83,6 @@ def pearson_corr(
         print(datapoint_correlation.shape)
         # calc correlation
 
-def correlate():
 
 @flow(task_runner=SequentialTaskRunner(), name="stock_correlation_flow")
 def stock_correlation_flow():
@@ -173,24 +175,11 @@ def stock_correlation_flow():
 
     stock_col_list = list(stocks_time_series.time_series_df.columns)
 
-    weather_numpy_array = weather_time_series.time_series_df.to_numpy()
-    stocks_numpy_array = stocks_time_series.time_series_df.to_numpy()
-    print(weather_numpy_array)
-    print(weather_numpy_array.shape)
-
-    if stocks_numpy_array.shape[0] != weather_numpy_array.shape[0]:
-        raise ValueError("rows must be equal size!!")
-    else:
-        rowsize = stocks_numpy_array.shape[0]
-
-    stocks_stdevs = np_stdev_per_row(stocks_numpy_array)
-    # dataset_means = np_mean_per_col(dataset_array)
-    dataset_stdevs = np_stdev_per_row(weather_numpy_array)
     pearson_corr(
-        stocks_array=stocks_numpy_array,
-        stocks_stdevs=stocks_stdevs,
-        dataset_stdevs=dataset_stdevs,
-        dataset_array=weather_numpy_array,
+        stocks_np_array=stocks_time_series.time_series_df.to_numpy(),
+        stocks_stdevs=np_stdev_per_row(stocks_time_series.time_series_df.to_numpy()),
+        dataset_stdevs=np_stdev_per_row(weather_time_series.time_series_df.to_numpy()),
+        dataset_np_array=weather_time_series.time_series_df.to_numpy(),
     )
     # TODO: move out of its column
 
