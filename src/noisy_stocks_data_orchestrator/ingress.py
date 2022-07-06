@@ -49,6 +49,7 @@ def fetch_weather_to_TimeSeries(*args, **kwargs):
 def query_database(sql_alchemy_engine: engine.base.Engine, query: str) -> DataFrame:
     connection = sql_alchemy_engine.connect()  # Connect to the database
     return pd.read_sql(query, connection)  # Run query and convert into pd DataFrame
+    # SPEED, major: parallelize read into sql
     # TODO: Change into dask read_sql (but it doesn't want to connect :/)
 
 

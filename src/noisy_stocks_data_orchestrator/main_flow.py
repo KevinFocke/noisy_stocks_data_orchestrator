@@ -57,9 +57,10 @@ def pearson_corr(
         raise ValueError("rows should be of equal size")
 
     # iterate over stocks
+    correlations = NumbaList()
     for stock_col_index in range(stocks_array_col_count):
         # many iterations here thus use njit
-        datapoint_correlation = np.empty(dataset_array_col_count)
+        corr_to_stock = np.empty(dataset_array_col_count)
         # one wide series
         # cur_stock_mean = stocks_means[stock_col_index]
         cur_stock_array = stocks_np_array[
@@ -77,11 +78,20 @@ def pearson_corr(
             ]  # bias True measn normalize by N
             # result is a long array
             denominator = cur_stock_stdev * cur_datapoint_stdev
-            datapoint_correlation[datapoint_col_index] = numerator / denominator
+            corr_to_stock[datapoint_col_index] = numerator / denominator
 
-        print(datapoint_correlation)
-        print(datapoint_correlation.shape)
-        # calc correlation
+        print(corr_to_stock)
+        print(corr_to_stock.shape)
+        correlations.append(corr_to_stock)
+    return correlations  # list containing correlations per stock
+    # calc correlation
+
+
+@flow(task_runner=SequentialTaskRunner())
+def correlate_datasets(*args, **kwargs):
+    return list(
+        pearson_corr(*args, **kwargs)
+    )  # convert back from NumbaList to regular Python list
 
 
 @flow(task_runner=SequentialTaskRunner(), name="stock_correlation_flow")
@@ -175,14 +185,16 @@ def stock_correlation_flow():
 
     stock_col_list = list(stocks_time_series.time_series_df.columns)
 
-    pearson_corr(
+    correlations = correlate_datasets(
         stocks_np_array=stocks_time_series.time_series_df.to_numpy(),
         stocks_stdevs=np_stdev_per_row(stocks_time_series.time_series_df.to_numpy()),
         dataset_stdevs=np_stdev_per_row(weather_time_series.time_series_df.to_numpy()),
         dataset_np_array=weather_time_series.time_series_df.to_numpy(),
-    )
-    # TODO: move out of its column
+    ).result()
 
+    print(len(correlations))
+
+    # argmax
     # print(corr_matrix)
 
     #    corr_matrix = weather_time_series.time_series_df.corrwith(
