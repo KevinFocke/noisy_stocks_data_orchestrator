@@ -1,3 +1,7 @@
+import pickle
+from datetime import datetime
+from pathlib import Path
+
 import numpy as np
 from numba import jit
 from numba.typed import List as NumbaList
@@ -7,7 +11,7 @@ from prefect.task_runners import SequentialTaskRunner
 from pytest import approx
 from sqlalchemy import create_engine
 
-from customdatastructures import DatabaseQuery
+from customdatastructures import DatabaseQuery, folder_exists
 from ingress import fetch_stocks_to_TimeSeries, fetch_weather_to_TimeSeries
 
 
@@ -78,8 +82,8 @@ def pearson_corr(
             denominator = cur_stock_stdev * cur_datapoint_stdev
             corr_to_stock[datapoint_col_index] = numerator / denominator
 
-        print(corr_to_stock)
-        print(corr_to_stock.shape)
+        # print(corr_to_stock)
+        # print(corr_to_stock.shape)
         correlations.append(corr_to_stock)
     return correlations  # list containing correlations per stock
     # calc correlation
@@ -92,8 +96,19 @@ def correlate_datasets(*args, **kwargs):
     )  # convert back from NumbaList to regular Python list
 
 
+def write_pickle_to_path(object, folder_path: Path):
+    """input: object, folderPath, the filename will be the current datetime"""
+    today = datetime.now()
+    folder_exists(folder_path)
+    filepath = folder_path / today.strftime(r"%Y_%m_%d_%H_%M_%S")
+    with filepath.open("wb") as fp:  # wb to write binary
+        pickle.dump(object, fp)
+
+
 @flow(task_runner=SequentialTaskRunner(), name="stock_correlation_flow")
-def stock_correlation_flow():
+def stock_correlation_flow(
+    corr_dict_pickle_storage_path=r"/home/kevin/coding_projects/noisy_stocks/persistent_data/corr_dicts",
+):
 
     # TODO: refactor preferences to arguments of func
     # best practice for creating sqlalchemy engine
@@ -173,20 +188,16 @@ def stock_correlation_flow():
         timeout=120,
     ).result()
 
-    # TODO: pair long & latitude in single datatype instead of multi-index
-    # ideally, the lon+lat would be stored in a POINT variable with Geopandas
-    # however Geopandas x to y conversion worked dreadfully slow 1+ min
     weather_time_series.pivot_rows_to_cols(
         index="timestamp", columns=["longitude", "latitude"], values="precipitation"
     )
-    print(stocks_time_series.time_series_df)
-    print(weather_time_series.time_series_df)
+    #   print(stocks_time_series.time_series_df)
+    #   print(weather_time_series.time_series_df)
 
     stock_col_list = list(stocks_time_series.time_series_df.columns)
     weather_col_list = list(weather_time_series.time_series_df.columns)
 
-    # get stock correlations; list containing numpy arrays
-    # per stock, one numpy array
+    # get stock correlations; list containing numpy arrays per stock, one numpy array
 
     correlations = correlate_datasets(
         stocks_np_array=stocks_time_series.time_series_df.to_numpy(),
@@ -232,23 +243,11 @@ def stock_correlation_flow():
 
         stock_index += 1
 
-    # Website: These correlations are ridiculous, are you sure they're correct?
-    # You can check it out yourself, here's the data. I did a Pearson Correlation on it.
-    # Your result might differ slightly because of number rounding.
+    write_pickle_to_path(corr_dict, folder_path=Path(corr_dict_pickle_storage_path))
     print(corr_dict)
     print("looking good!")
 
-    # argmax, to find highest corr per stock
-    # print(corr_matrix)
-
-    #    corr_matrix = weather_time_series.time_series_df.corrwith(
-    #        stocks_time_series.time_series_df["TIF"], axis=0, drop=False, method="pearson"
-    #    )  # axis 1 for row-wise calculation
-    #    print(corr_matrix)
-
     sql_alchemy_stock_engine.dispose()
-
-    # TODO: cleanup orion db files
 
 
 if __name__ == "__main__":
