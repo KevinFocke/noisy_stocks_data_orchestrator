@@ -228,16 +228,18 @@ def stock_correlation_flow(
         stock = stock_col_list[stock_index]
         corr_dict[stock] = {
             "highest_corr": highest_corr,
-            "stock_df": stocks_time_series.time_series_df[stock],
+            "stock_pd_series": stocks_time_series.time_series_df[stock],
             "stock_num_col": stocks_time_series.numeric_col_name,
             "dataset_uid": dataset_uid,  # eg. (lon, lat)
-            "dataset_df": dataset_time_series.time_series_df[dataset_uid],
-            "dataset_num_col": dataset_time_series.time_series_df[dataset_uid],
+            "dataset_pd_series": dataset_time_series.time_series_df[dataset_uid],
+            "dataset_num_col": dataset_time_series.numeric_col_name,
         }
-        assert isinstance(corr_dict[stock]["dataset_df"], Series)
-        assert isinstance(corr_dict[stock]["stock_df"], Series)
+        assert isinstance(corr_dict[stock]["stock_pd_series"], Series)
+        assert isinstance(corr_dict[stock]["dataset_pd_series"], Series)
 
-        corr_pd = corr_dict[stock]["dataset_df"].corr(corr_dict[stock]["stock_df"])
+        corr_pd = corr_dict[stock]["stock_pd_series"].corr(
+            corr_dict[stock]["dataset_pd_series"]
+        )
         assert corr_pd == approx(corr_dict[stock]["highest_corr"])
 
         # corr_dict fields:
