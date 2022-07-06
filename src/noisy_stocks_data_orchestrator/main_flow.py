@@ -96,13 +96,18 @@ def correlate_datasets(*args, **kwargs):
     )  # convert back from NumbaList to regular Python list
 
 
-def write_pickle_to_path(object, folder_path: Path):
+def write_object_to_path(object_to_save, folder_path: Path):
     """input: object, folderPath, the filename will be the current datetime"""
     today = datetime.now()
     folder_exists(folder_path)
-    filepath = folder_path / today.strftime(r"%Y_%m_%d_%H_%M_%S")
+    filepath = folder_path / (today.strftime(r"%Y_%m_%d_%H_%M_%S") + r".pickle")
     with filepath.open("wb") as fp:  # wb to write binary
-        pickle.dump(object, fp)
+        pickle.dump(object_to_save, fp)
+
+
+@flow(task_runner=SequentialTaskRunner(), name="trigger_me")
+def sample_flow():
+    print("hello")
 
 
 @flow(task_runner=SequentialTaskRunner(), name="stock_correlation_flow")
@@ -122,9 +127,9 @@ def stock_correlation_flow(
     stock_database_name = "stock_timedata"
     stock_interval_in_days = 5
     stocks_numeric_col_name = "price_close"
-    weather_select_fields = ["timestamp", "longitude", "latitude", "precipitation"]
-    weather_database_name = "weather"
-    weather_numeric_col_name = "precipitation"
+    dataset_select_fields = ["timestamp", "longitude", "latitude", "precipitation"]
+    dataset_database_name = "weather"
+    dataset_numeric_col_name = "precipitation"
 
     # SQLAlchemy will not turn itself into a pickle from another process. DO NOT PICKLE!
     sql_alchemy_stock_engine = create_engine(stocks_db_conn_string)
@@ -166,9 +171,9 @@ def stock_correlation_flow(
 
     stocks_time_series.drop_col_except([stock[0] for stock in largest_stocks])
 
-    weather_db_query_object = DatabaseQuery(
-        select_fields=weather_select_fields,
-        from_database=weather_database_name,
+    dataset_db_query_object = DatabaseQuery(
+        select_fields=dataset_select_fields,
+        from_database=dataset_database_name,
         process_begin_and_end_timestamp=(
             longest_consecutive_days_sequence[0],  # first el
             longest_consecutive_days_sequence[-1],  # last el
@@ -181,29 +186,28 @@ def stock_correlation_flow(
 
     sql_alchemy_datasets_engine = create_engine(datasets_db_conn_string)
 
-    weather_time_series = fetch_weather_to_TimeSeries(
+    dataset_time_series = fetch_weather_to_TimeSeries(
         sql_alchemy_engine=sql_alchemy_datasets_engine,
-        query=weather_db_query_object.to_sql(),
-        numeric_col_name=weather_numeric_col_name,
+        query=dataset_db_query_object.to_sql(),
+        numeric_col_name=dataset_numeric_col_name,
         timeout=120,
     ).result()
 
-    weather_time_series.pivot_rows_to_cols(
+    dataset_time_series.pivot_rows_to_cols(
         index="timestamp", columns=["longitude", "latitude"], values="precipitation"
     )
     #   print(stocks_time_series.time_series_df)
-    #   print(weather_time_series.time_series_df)
 
     stock_col_list = list(stocks_time_series.time_series_df.columns)
-    weather_col_list = list(weather_time_series.time_series_df.columns)
+    dataset_col_list = list(dataset_time_series.time_series_df.columns)
 
     # get stock correlations; list containing numpy arrays per stock, one numpy array
 
     correlations = correlate_datasets(
         stocks_np_array=stocks_time_series.time_series_df.to_numpy(),
         stocks_stdevs=np_stdev_per_row(stocks_time_series.time_series_df.to_numpy()),
-        dataset_stdevs=np_stdev_per_row(weather_time_series.time_series_df.to_numpy()),
-        dataset_np_array=weather_time_series.time_series_df.to_numpy(),
+        dataset_stdevs=np_stdev_per_row(dataset_time_series.time_series_df.to_numpy()),
+        dataset_np_array=dataset_time_series.time_series_df.to_numpy(),
     ).result()
 
     print(correlations)
@@ -216,22 +220,24 @@ def stock_correlation_flow(
     # get highest correlations
     for stock_corr in correlations:
         # sanity check
-        assert len(stock_corr) == len(weather_col_list)
+        assert len(stock_corr) == len(dataset_col_list)
         # grab index of highest abs correlation
         max_corr_index = np.argmax(np.abs(stock_corr))
         highest_corr = stock_corr[max_corr_index]
-        dataset_uid = weather_col_list[max_corr_index]
+        dataset_uid = dataset_col_list[max_corr_index]
         stock = stock_col_list[stock_index]
         corr_dict[stock] = {
             "highest_corr": highest_corr,
-            "dataset_uid": dataset_uid,  # eg. (lon, lat)
             "stock_df": stocks_time_series.time_series_df[stock],
-            "weather_df": weather_time_series.time_series_df[dataset_uid],
+            "stock_num_col": stocks_time_series.numeric_col_name,
+            "dataset_uid": dataset_uid,  # eg. (lon, lat)
+            "dataset_df": dataset_time_series.time_series_df[dataset_uid],
+            "dataset_num_col": dataset_time_series.time_series_df[dataset_uid],
         }
-        assert isinstance(corr_dict[stock]["weather_df"], Series)
+        assert isinstance(corr_dict[stock]["dataset_df"], Series)
         assert isinstance(corr_dict[stock]["stock_df"], Series)
 
-        corr_pd = corr_dict[stock]["weather_df"].corr(corr_dict[stock]["stock_df"])
+        corr_pd = corr_dict[stock]["dataset_df"].corr(corr_dict[stock]["stock_df"])
         assert corr_pd == approx(corr_dict[stock]["highest_corr"])
 
         # corr_dict fields:
@@ -243,10 +249,10 @@ def stock_correlation_flow(
 
         stock_index += 1
 
-    write_pickle_to_path(corr_dict, folder_path=Path(corr_dict_pickle_storage_path))
-    print(corr_dict)
-    print("looking good!")
+    write_object_to_path(corr_dict, folder_path=Path(corr_dict_pickle_storage_path))
+    # print(corr_dict)
 
+    # TODO: once Orion is out of beta, create a dependency flow https://github.com/PrefectHQ/prefect/blob/b9503001f5de642d48d7d5248436d1e8861cffed/docs/core/idioms/flow-to-flow.md
     sql_alchemy_stock_engine.dispose()
 
 
