@@ -1,14 +1,10 @@
-from math import sqrt
-from typing import Optional
-
 import numpy as np
-import numpy.typing as npt
 from numba import jit
 from numba.typed import List as NumbaList
+from pandas import Series
 from prefect.flows import flow
 from prefect.task_runners import SequentialTaskRunner
-from prefect.tasks import task
-from pydantic.types import PositiveInt
+from pytest import approx
 from sqlalchemy import create_engine
 
 from customdatastructures import DatabaseQuery
@@ -34,6 +30,8 @@ def np_stdev_per_row(np_array):
     # numba requires specific type list https://numba.readthedocs.io/en/stable/reference/deprecation.html#deprecation-of-reflection-for-list-and-set-types
 
 
+# BUG: Cannot assign @task to it, or will receive error
+# TypeError: cannot pickle '_nrt_python._MemInfo' object
 @jit(nopython=True)
 def pearson_corr(
     dataset_stdevs,
@@ -97,6 +95,7 @@ def correlate_datasets(*args, **kwargs):
 @flow(task_runner=SequentialTaskRunner(), name="stock_correlation_flow")
 def stock_correlation_flow():
 
+    # TODO: refactor preferences to arguments of func
     # best practice for creating sqlalchemy engine
     # one connection per database
     # https://docs.sqlalchemy.org/en/14/core/connections.html#basic-usage
@@ -184,6 +183,10 @@ def stock_correlation_flow():
     print(weather_time_series.time_series_df)
 
     stock_col_list = list(stocks_time_series.time_series_df.columns)
+    weather_col_list = list(weather_time_series.time_series_df.columns)
+
+    # get stock correlations; list containing numpy arrays
+    # per stock, one numpy array
 
     correlations = correlate_datasets(
         stocks_np_array=stocks_time_series.time_series_df.to_numpy(),
@@ -192,9 +195,50 @@ def stock_correlation_flow():
         dataset_np_array=weather_time_series.time_series_df.to_numpy(),
     ).result()
 
-    print(len(correlations))
+    print(correlations)
 
-    # argmax
+    # sanity check
+    assert len(correlations) == len(stock_col_list)
+
+    stock_index = 0
+    corr_dict = {}
+    # get highest correlations
+    for stock_corr in correlations:
+        # sanity check
+        assert len(stock_corr) == len(weather_col_list)
+        # grab index of highest abs correlation
+        max_corr_index = np.argmax(np.abs(stock_corr))
+        highest_corr = stock_corr[max_corr_index]
+        dataset_uid = weather_col_list[max_corr_index]
+        stock = stock_col_list[stock_index]
+        corr_dict[stock] = {
+            "highest_corr": highest_corr,
+            "dataset_uid": dataset_uid,  # eg. (lon, lat)
+            "stock_df": stocks_time_series.time_series_df[stock],
+            "weather_df": weather_time_series.time_series_df[dataset_uid],
+        }
+        assert isinstance(corr_dict[stock]["weather_df"], Series)
+        assert isinstance(corr_dict[stock]["stock_df"], Series)
+
+        corr_pd = corr_dict[stock]["weather_df"].corr(corr_dict[stock]["stock_df"])
+        assert corr_pd == approx(corr_dict[stock]["highest_corr"])
+
+        # corr_dict fields:
+        # dict of dicts,
+        # first layer keys are stocks (APPL, AMZN)
+        # second layer keys are
+
+        # add begindate and enddate, stock_data, geo_points_data
+
+        stock_index += 1
+
+    # Website: These correlations are ridiculous, are you sure they're correct?
+    # You can check it out yourself, here's the data. I did a Pearson Correlation on it.
+    # Your result might differ slightly because of number rounding.
+    print(corr_dict)
+    print("looking good!")
+
+    # argmax, to find highest corr per stock
     # print(corr_matrix)
 
     #    corr_matrix = weather_time_series.time_series_df.corrwith(

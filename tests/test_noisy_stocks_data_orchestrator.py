@@ -7,10 +7,7 @@ import pandas.testing
 import pytest
 from freezegun import freeze_time
 from noisy_stocks_data_orchestrator import __version__, main_flow
-from noisy_stocks_data_orchestrator.customdatastructures import (
-    StockTimeSeries,
-    TimeSeries,
-)
+from noisy_stocks_data_orchestrator.customdatastructures import StockTimeSeries
 from noisy_stocks_data_orchestrator.ingress import create_folder, folder_exists
 from pandera.errors import SchemaError
 from prefect.flows import flow
