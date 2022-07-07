@@ -35,12 +35,51 @@ def write_object_to_path(object_to_save, folder_path: Path):
         pickle.dump(object_to_save, fp)
 
 
-def corr_dict_to_db():
+def upsert_corr_dict(
+    filepath, connection, corr_dict, cols_not_represented_in_content_db, website_table
+):
+    for stock_symbol in corr_dict:
+
+        unfolded_indexes = dict(
+            zip(
+                corr_dict[stock_symbol]["dataset_uid_col_name_list"],
+                corr_dict[stock_symbol]["dataset_uid"],
+            )
+        )
+        stock_symbol_dict = {"stock_symbol": stock_symbol}
+        pickle_name_dict = {
+            "ingested_pickle_name": filepath.name
+        }  # TODO: add hash to verify integrity
+        merged_dict = {
+            **stock_symbol_dict,
+            **pickle_name_dict,
+            **unfolded_indexes,
+            **corr_dict[stock_symbol],
+        }
+        for key_to_remove in cols_not_represented_in_content_db:
+            merged_dict.pop(key_to_remove)
+
+        insert_query = insert(website_table).values(merged_dict)
+        # do nothing if duplicate value
+        upsert_query = insert_query.on_conflict_do_nothing(
+            index_elements=["stock_symbol", "requested_publish_date"]
+        )  # upserts, inserts a date if there is no entry for the (composite) key
+        connection.execute(upsert_query)
+
+
+def corr_dict_pickle_to_db():
     """post uid is composite key of stock symbol +"""
+    # preferences
+    # TODO: refactor into function args
     content_db_conn_string = (
         "postgresql+psycopg2://postgres:postgres@127.0.0.1:5432/content"
     )
-    # preferences
+    cols_not_represented_in_content_db = [
+        "dataset_pd_series",
+        "stock_pd_series",
+        "dataset_uid_col_name_list",
+        "dataset_uid",
+    ]  # these columns do not exist in the content db
     sql_alchemy_content_engine = db.create_engine(content_db_conn_string)
     connection = sql_alchemy_content_engine.connect()
     metadata = db.MetaData()
@@ -54,44 +93,26 @@ def corr_dict_to_db():
     resultset = resultproxy.fetchall()
     print(resultset)
 
-    corr_dict = load_object_from_file_path(
-        Path(
-            r"/home/kevin/coding_projects/noisy_stocks/persistent_data/corr_dicts/2022_07_07_17_42_55.pickle"
+    corr_dict_pickle_folder_path = Path(
+        (r"/home/kevin/coding_projects/noisy_stocks/persistent_data/corr_dicts/")
+    )
+
+    corr_dict_pickle_file_paths = list(corr_dict_pickle_folder_path.glob("*.pickle"))
+
+    for corr_dict_file_path in corr_dict_pickle_file_paths:
+        corr_dict = load_object_from_file_path(corr_dict_file_path).result()
+        print(corr_dict)
+        upsert_corr_dict(
+            filepath=corr_dict_file_path,
+            connection=connection,
+            corr_dict=corr_dict,
+            cols_not_represented_in_content_db=cols_not_represented_in_content_db,
+            website_table=website_table,
         )
-    ).result()
-    print(corr_dict)
-    # unfolded indexes ; eg a composite pair of long , lat becomes lon : 80, lat:20
 
-    drop_from_dict = [
-        "dataset_pd_series",
-        "stock_pd_series",
-        "dataset_uid_col_name_list",
-        "dataset_uid",
-    ]  # these columns are not represented in the database
+        # unfolded indexes ; eg a composite pair of long , lat becomes lon : 80, lat:20
 
-    for stock_symbol in corr_dict:
-
-        unfolded_indexes = dict(
-            zip(
-                corr_dict[stock_symbol]["dataset_uid_col_name_list"],
-                corr_dict[stock_symbol]["dataset_uid"],
-            )
-        )
-        stock_symbol_dict = {"stock_symbol": stock_symbol}
-        merged_dict = {
-            **stock_symbol_dict,
-            **unfolded_indexes,
-            **corr_dict[stock_symbol],
-        }
-        for key_to_remove in drop_from_dict:
-            merged_dict.pop(key_to_remove)
-
-        insert_query = insert(website_table).values(merged_dict)
-        # do nothing if duplicate value
-        upsert_query = insert_query.on_conflict_do_nothing(
-            index_elements=["stock_symbol", "requested_publish_date"]
-        )  # upserts, inserts a date if there is no entry for the (composite) key
-        connection.execute(upsert_query)
+    # move pickle to processed folder
 
 
 def reverse_geocoder(coordinates):
@@ -163,7 +184,7 @@ def publish():
 
 
 if __name__ == "__main__":
-    corr_dict_to_db()
+    corr_dict_pickle_to_db()
 
     coordinates = ((51.5214588, -0.1729636),)
     results = reverse_geocoder(coordinates=coordinates)
