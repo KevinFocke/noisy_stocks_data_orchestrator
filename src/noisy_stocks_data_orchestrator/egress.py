@@ -34,14 +34,13 @@ def write_object_to_path(object_to_save, folder_path: Path):
 
 
 def corr_dict_to_db():
-    stocks_db_conn_string = (
+    """post uid is composite key of stock symbol +"""
+    content_db_conn_string = (
         "postgresql+psycopg2://postgres:postgres@127.0.0.1:5432/content"
     )
     # preferences
-    stock_select_fields = ["timestamp", "stock_symbol", "price_close"]
     stock_database_name = "stock_timedata"
-    stock_interval_in_days = 5
-    sql_alchemy_stock_engine = create_engine(stocks_db_conn_string)
+    sql_alchemy_stock_engine = create_engine(content_db_conn_string)
 
 
 def reverse_geocoder(coordinates):
@@ -52,17 +51,13 @@ def reverse_geocoder(coordinates):
     geo = rg.RGeocoder(
         mode=1,  # 1 = single processor, 2 = multi-processor
         verbose=True,
-        stream=io.StringIO(open("egress_geonames_cities.csv", encoding="utf-8").read()),
+        stream=io.StringIO(
+            open(r"egress_geonames_cities.csv", encoding="utf-8").read()
+        ),
     )
     results = geo.query(coordinates)
 
     return results
-
-
-coordinates = ((51.5214588, -0.1729636),)
-results = reverse_geocoder(coordinates=coordinates)
-# TODO: Add country code lookup based on Geocities
-print(results)
 
 
 @task()
@@ -124,3 +119,7 @@ if __name__ == "__main__":
     ).result()
     print(corr_dict)
     print(len(corr_dict))
+    coordinates = ((51.5214588, -0.1729636),)
+    results = reverse_geocoder(coordinates=coordinates)
+    # TODO: Add country code lookup based on Geocities
+    print(results)
