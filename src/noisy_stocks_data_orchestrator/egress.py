@@ -98,6 +98,8 @@ def corr_dict_pickle_to_db(
     for corr_dict_file_path in corr_dict_pickle_file_paths:
         corr_dict = load_object_from_file_path(corr_dict_file_path).result()
 
+        # TODO: refactor when Prefect 2.0 out of beta
+        # the normal prefect library sqlalchemy works alright
         for stock_symbol in corr_dict:
 
             unfolded_indexes = dict(
@@ -107,7 +109,9 @@ def corr_dict_pickle_to_db(
                 )
             )
 
-            file_hash = hash_file(filepath=corr_dict_file_path, algo_name="sha256")
+            file_hash = hash_file(
+                filepath=corr_dict_file_path, algo_name="sha256"
+            ).result()
 
             stock_symbol_dict = {"stock_symbol": stock_symbol}
             pickle_name_dict = {
