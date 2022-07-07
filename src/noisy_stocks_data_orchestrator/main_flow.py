@@ -1,5 +1,3 @@
-import pickle
-from datetime import datetime
 from pathlib import Path
 
 import numpy as np
@@ -11,7 +9,8 @@ from prefect.task_runners import SequentialTaskRunner
 from pytest import approx
 from sqlalchemy import create_engine
 
-from customdatastructures import DatabaseQuery, file_exists, folder_exists
+from customdatastructures import Ingress_Corr_DatabaseQuery
+from egress import write_object_to_path
 from ingress import fetch_stocks_to_TimeSeries, fetch_weather_to_TimeSeries
 
 
@@ -96,27 +95,6 @@ def correlate_datasets(*args, **kwargs):
     )  # convert back from NumbaList to regular Python list
 
 
-@flow(task_runner=SequentialTaskRunner())
-def write_object_to_path(object_to_save, folder_path: Path):
-    """input: object, folderPath, the filename will be the current datetime"""
-    today = datetime.now()
-    folder_exists(folder_path)
-    file_path = folder_path / (today.strftime(r"%Y_%m_%d_%H_%M_%S") + r".pickle")
-    with file_path.open("wb") as fp:  # wb to write binary
-        pickle.dump(object_to_save, fp)
-
-
-# TODO: finish load function
-@flow(task_runner=SequentialTaskRunner())
-def load_object_from_file_path(file_path: Path):
-    """input: object, folderPath, the filename will be the current datetime"""
-    file_exists(file_path)
-    with file_path.open("rb") as fp:  # wb to write binary
-        loaded_object = pickle.load(fp)
-        print(loaded_object)
-        return loaded_object
-
-
 @flow(task_runner=SequentialTaskRunner(), name="trigger_me")
 def sample_flow():
     print("hello")
@@ -146,7 +124,7 @@ def stock_correlation_flow(
     # SQLAlchemy will not turn itself into a pickle from another process. DO NOT PICKLE!
     sql_alchemy_stock_engine = create_engine(stocks_db_conn_string)
 
-    stocks_db_query_object = DatabaseQuery(
+    stocks_db_query_object = Ingress_Corr_DatabaseQuery(
         select_fields=stock_select_fields,
         from_database=stock_database_name,
         interval_in_days=stock_interval_in_days,
@@ -183,7 +161,7 @@ def stock_correlation_flow(
 
     stocks_time_series.drop_col_except([stock[0] for stock in largest_stocks])
 
-    dataset_db_query_object = DatabaseQuery(
+    dataset_db_query_object = Ingress_Corr_DatabaseQuery(
         select_fields=dataset_select_fields,
         from_database=dataset_database_name,
         process_begin_and_end_timestamp=(
@@ -272,12 +250,4 @@ def stock_correlation_flow(
 
 if __name__ == "__main__":
 
-    # stock_correlation_flow()
-
-    corr_dict = load_object_from_file_path(
-        Path(
-            r"/home/kevin/coding_projects/noisy_stocks/persistent_data/corr_dicts/2022_07_07_11_58_42.pickle"
-        )
-    ).result()
-    print(corr_dict)
-    print(len(corr_dict))
+    stock_correlation_flow()

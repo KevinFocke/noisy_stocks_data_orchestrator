@@ -7,8 +7,10 @@ import reverse_geocoder as rg  # Might need to be installed locally via pip
 from prefect.flows import flow
 from prefect.task_runners import SequentialTaskRunner
 from prefect.tasks import task
+from sqlalchemy import create_engine
 
-from ingress import file_exists
+from customdatastructures import folder_exists
+from ingress import load_object_from_file_path
 
 """Data Outflow Module for exporting to website & database
 """
@@ -21,6 +23,14 @@ from ingress import file_exists
 # TODO: Static image export plotly https://plotly.com/python/static-image-export
 
 
+@flow(task_runner=SequentialTaskRunner())
+def write_object_to_path(object_to_save, folder_path: Path):
+    """input: object, folderPath, the filename will be the current datetime"""
+    today = datetime.now()
+    folder_exists(folder_path)
+    file_path = folder_path / (today.strftime(r"%Y_%m_%d_%H_%M_%S") + r".pickle")
+    with file_path.open("wb") as fp:  # wb to write binary
+        pickle.dump(object_to_save, fp)
 
 
 def corr_dict_to_db():
@@ -63,39 +73,39 @@ def create_visualization():
     # Thumbnail is 640 x 360 , should be saved in .webp
     # Main image is 1600 x 900, should be saved in .webp
 
-    return
+    pass
 
 
 @task()
 def create_markdown_files(visualization):
-    return
+    pass
 
 
 @task()
 def export_markdown(markdown):
-
+    pass
 
     # date format: year-month-dayThour:min:sec+tz_offset
-    # eg. 2021-09-15T11:30:03+00:00 
+    # eg. 2021-09-15T11:30:03+00:00
     # // +00:00 means 00:00 offset from UTC, thus UTC itself
 
     # sample post
-    #title: "Why did APPL go up? 📈"
-    #date: 2020-09-15T11:30:03+00:00
-    #categories: ["stock goes up📈"]
-    #description: "Desc Text."
-    #canonicalURL: "https://noisystocks.com/$pretty-date/$page-title"
-    #cover:
-        #image: "graph-APPL-rainfall-2002-05-30.jpg"
-        #alt: "chart showing the correlation between APPL and rainfall on " # alt for image
-        #caption: "test" # display caption under cover
+    # title: "Why did APPL go up? 📈"
+    # date: 2020-09-15T11:30:03+00:00
+    # categories: ["stock goes up📈"]
+    # description: "Desc Text."
+    # canonicalURL: "https://noisystocks.com/$pretty-date/$page-title"
+    # cover:
+    # image: "graph-APPL-rainfall-2002-05-30.jpg"
+    # alt: "chart showing the correlation between APPL and rainfall on " # alt for image
+    # caption: "test" # display caption under cover
     # ---
     # Today, $yearcount years ago, the chart for $stock went $direction. What could have caused it? There could be a billion good reasons. We at NoisyStocks have no idea what those reasons are. Perhaps it was the weather, the phase of the moon, or the stance of the planets. We calculated our chart using a special "throw-spaghetti-at-a-wall-and-see-what-sticks" algorithm. Our tried-and-failed approach takes random variables and makes wildly spurious correlations.
 
 
 @flow(task_runner=SequentialTaskRunner())
 def publish():
-
+    pass
     # load correlation from database
 
     # load defaults from website
@@ -105,3 +115,12 @@ def publish():
     # Precipitation data from ...
     # Stock data from ...
 
+
+if __name__ == "__main__":
+    corr_dict = load_object_from_file_path(
+        Path(
+            r"/home/kevin/coding_projects/noisy_stocks/persistent_data/corr_dicts/2022_07_07_11_58_42.pickle"
+        )
+    ).result()
+    print(corr_dict)
+    print(len(corr_dict))

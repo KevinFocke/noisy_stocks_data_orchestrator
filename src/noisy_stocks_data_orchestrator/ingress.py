@@ -1,3 +1,4 @@
+import pickle
 from pathlib import Path
 
 import pandas as pd
@@ -8,7 +9,7 @@ from prefect.tasks import task
 from pydantic import validate_arguments
 from sqlalchemy import engine
 
-from customdatastructures import StockTimeSeries, TimeSeries, folder_exists
+from customdatastructures import StockTimeSeries, TimeSeries, file_exists, folder_exists
 
 """Data Inflow Module for data from database
 """
@@ -19,6 +20,16 @@ from customdatastructures import StockTimeSeries, TimeSeries, folder_exists
 
 class Config_Arbitrary_Types_Allowed:
     arbitrary_types_allowed = True
+
+
+@flow(task_runner=SequentialTaskRunner())
+def load_object_from_file_path(file_path: Path):
+    """input: object, folderPath, the filename will be the current datetime"""
+    file_exists(file_path)
+    with file_path.open("rb") as fp:  # wb to write binary
+        loaded_object = pickle.load(fp)
+        print(loaded_object)
+        return loaded_object
 
 
 @flow(task_runner=SequentialTaskRunner())

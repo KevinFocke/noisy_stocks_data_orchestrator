@@ -6,7 +6,7 @@ import pandas as pd
 import pytest
 from freezegun import freeze_time
 from noisy_stocks_data_orchestrator.customdatastructures import (
-    DatabaseQuery,
+    Ingress_Corr_DatabaseQuery,
     StockTimeSeries,
 )
 
@@ -296,7 +296,7 @@ def fixt_database_query():
     begin_date = datetime.strptime("2022-06-29", date_format)
     end_date = datetime.strptime("2022-07-03", date_format)
 
-    return DatabaseQuery(
+    return Ingress_Corr_DatabaseQuery(
         select_fields=select_fields,
         from_database=database_name,
         process_begin_and_end_timestamp=(begin_date, end_date),
@@ -309,7 +309,7 @@ def fixt_database_query_min_args_fakedate():
     database_name = "stock_timedata"
     interval_in_days = 10
     with freeze_time("2012-01-14"):
-        return DatabaseQuery(
+        return Ingress_Corr_DatabaseQuery(
             select_fields=select_fields,
             from_database=database_name,
             interval_in_days=interval_in_days,
@@ -325,7 +325,7 @@ def fixt_database_query_begin_and_end_timestamp_scenario_1():
     begin_date = datetime.strptime("2022-06-29", date_format)
     end_date = datetime.strptime("2022-07-03", date_format)
 
-    return DatabaseQuery(
+    return Ingress_Corr_DatabaseQuery(
         select_fields=select_fields,
         from_database=database_name,
         process_begin_and_end_timestamp=(begin_date, end_date),
@@ -341,7 +341,7 @@ def fixt_database_query_begin_and_end_timestamp_scenario_2():
     target_date = datetime.strptime("2022-03-15", date_format)
     interval_in_days = 10
 
-    return DatabaseQuery(
+    return Ingress_Corr_DatabaseQuery(
         select_fields=select_fields,
         from_database=database_name,
         target_date=target_date,
@@ -358,7 +358,7 @@ def fixt_database_query_begin_and_end_timestamp_scenario_3():
     interval_in_days = 7
 
     with freeze_time("2008-10-23"):
-        return DatabaseQuery(
+        return Ingress_Corr_DatabaseQuery(
             select_fields=select_fields,
             from_database=database_name,
             days_ago=days_ago,
@@ -374,7 +374,7 @@ def fixt_database_query_begin_and_end_timestamp_scenario_4():
     interval_in_days = 3
 
     with freeze_time("2008-10-23"):
-        return DatabaseQuery(
+        return Ingress_Corr_DatabaseQuery(
             select_fields=select_fields,
             from_database=database_name,
             interval_in_days=interval_in_days,

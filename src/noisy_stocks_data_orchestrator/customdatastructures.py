@@ -7,7 +7,7 @@ from typing import Optional
 
 import pandas as pd
 import pandera as pa
-from pandas import DataFrame, DatetimeIndex
+from pandas import DataFrame
 from pandera import Index
 from pandera.dtypes import Timestamp
 from prefect.tasks import task
