@@ -9,8 +9,8 @@ import sqlalchemy as db
 from prefect.flows import flow
 from prefect.task_runners import SequentialTaskRunner
 from prefect.tasks import task
+from pydantic import validate_arguments
 from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy.orm import sessionmaker
 
 from customdatastructures import folder_exists
 from ingress import load_object_from_file_path
@@ -26,6 +26,20 @@ from ingress import load_object_from_file_path
 # TODO: Static image export plotly https://plotly.com/python/static-image-export
 
 
+@flow
+def create_folder(folder_url: Path):
+    if not folder_exists(folder_url).result():
+        # print(f"Folder {folder_url} does not exist, creating it.")
+        Path.mkdir(folder_url, parents=True)
+        if folder_exists(folder_url).result():
+            return True  # Folder created
+        else:
+            raise ValueError("Folder should have been created, but was not.")
+    else:
+        print("Folder already exists")
+        return False  # No folder created
+
+
 @flow(task_runner=SequentialTaskRunner())
 def write_object_to_path(object_to_save, folder_path: Path):
     """input: object, folderPath, the filename will be the current datetime"""
@@ -36,6 +50,7 @@ def write_object_to_path(object_to_save, folder_path: Path):
         pickle.dump(object_to_save, fp)
 
 
+@flow
 def hash_file(filepath: Path, algo_name: str = "sha256"):
     """input : Path to file
     output: hexadecimal hash string"""
@@ -44,6 +59,7 @@ def hash_file(filepath: Path, algo_name: str = "sha256"):
         return hashlib.new(name=algo_name, data=binary_data).hexdigest()
 
 
+@flow
 def upsert_corr_dict(
     filepath, connection, corr_dict, cols_not_represented_in_content_db, website_table
 ):
@@ -83,14 +99,18 @@ def upsert_corr_dict(
         connection.execute(upsert_query)
 
 
-def move_file_to_subfolder(file_path: Path, sub_folder_name: str):
+@flow
+def move_file_to_subfolder(file_to_move: Path, sub_folder_name: str):
+    """moves file to subfolder, creates the subfolder if not exists"""
     processed_folder = (
-        file_path.parents[0] / sub_folder_name
+        file_to_move.parents[0] / sub_folder_name
     )  # parents[0] accesses the parent folder path,
     # in other words, everything except the filename
-    file_path.rename(processed_folder / file_path.name)
+    create_folder(processed_folder)
+    file_to_move.rename(processed_folder / file_to_move.name)
 
 
+@flow
 def corr_dict_pickle_to_db(
     content_db_conn_string: str = "postgresql+psycopg2://postgres:postgres@127.0.0.1:5432/content",
     cols_not_represented_in_content_db: list[str] = [
@@ -103,14 +123,17 @@ def corr_dict_pickle_to_db(
         r"/home/kevin/coding_projects/noisy_stocks/persistent_data/corr_dicts/"
     ),
 ):
+    corr_dict_pickle_file_paths = list(corr_dict_pickle_folder_path.glob("*.pickle"))
+    if not corr_dict_pickle_file_paths:  # if there are no file paths
+        return  # nothing to do
+
+    # create sql_alchemy engine
     sql_alchemy_content_engine = db.create_engine(content_db_conn_string)
     connection = sql_alchemy_content_engine.connect()
     metadata = db.MetaData()
     website_table = db.Table(
         "website", metadata, autoload=True, autoload_with=sql_alchemy_content_engine
     )
-
-    corr_dict_pickle_file_paths = list(corr_dict_pickle_folder_path.glob("*.pickle"))
 
     for corr_dict_file_path in corr_dict_pickle_file_paths:
         corr_dict = load_object_from_file_path(corr_dict_file_path).result()
@@ -121,7 +144,9 @@ def corr_dict_pickle_to_db(
             cols_not_represented_in_content_db=cols_not_represented_in_content_db,
             website_table=website_table,
         )
-        mark_corr_dict_as_success(corr_dict_file_path)  # moves to processed folder
+
+        move_file_to_subfolder(corr_dict_file_path, "processed")
+        # moves to processed folder
 
 
 def reverse_geocoder(coordinates):

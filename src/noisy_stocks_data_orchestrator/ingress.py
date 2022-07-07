@@ -9,7 +9,7 @@ from prefect.tasks import task
 from pydantic import validate_arguments
 from sqlalchemy import engine
 
-from customdatastructures import StockTimeSeries, TimeSeries, file_exists, folder_exists
+from customdatastructures import StockTimeSeries, TimeSeries, file_exists
 
 """Data Inflow Module for data from database
 """
@@ -111,18 +111,3 @@ def query_database_to_TimeSeries(
             numeric_col_name=numeric_col_name,
             time_series_df=df,
         )
-
-
-@validate_arguments
-@task
-def create_folder(folder_url: Path):
-    if not folder_exists(folder_url):
-        print(f"Folder {folder_url} does not exist, creating it.")
-        Path.mkdir(folder_url, parents=True)
-        if folder_exists(folder_url):
-            return True  # Folder created
-        else:
-            raise ValueError("Folder should have been created, but was not.")
-    else:
-        print("Folder already exists")
-        return False  # No folder created
