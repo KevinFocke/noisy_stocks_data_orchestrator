@@ -60,46 +60,6 @@ def hash_file(filepath: Path, algo_name: str = "sha256"):
 
 
 @flow
-def upsert_corr_dict(
-    filepath, connection, corr_dict, cols_not_represented_in_content_db, website_table
-):
-    for stock_symbol in corr_dict:
-
-        unfolded_indexes = dict(
-            zip(
-                corr_dict[stock_symbol]["dataset_uid_col_name_list"],
-                corr_dict[stock_symbol]["dataset_uid"],
-            )
-        )
-
-        file_hash = hash_file(filepath=filepath, algo_name="sha256")
-
-        stock_symbol_dict = {"stock_symbol": stock_symbol}
-        pickle_name_dict = {
-            "ingested_pickle_name": filepath.name,
-            "ingested_pickle_name_hash": file_hash,
-        }  # note: pickle is not guaranteed to run deterministically
-        # however, this is not required for this particular use case
-        # the only purpose it to ensure the exact same pickle is found
-
-        merged_dict = {
-            **stock_symbol_dict,
-            **pickle_name_dict,
-            **unfolded_indexes,
-            **corr_dict[stock_symbol],
-        }
-        for key_to_remove in cols_not_represented_in_content_db:
-            merged_dict.pop(key_to_remove)
-
-        insert_query = insert(website_table).values(merged_dict)
-        # do nothing if duplicate value
-        upsert_query = insert_query.on_conflict_do_nothing(
-            index_elements=["stock_symbol", "requested_publish_date"]
-        )  # upserts, inserts a date if there is no entry for the (composite) key
-        connection.execute(upsert_query)
-
-
-@flow
 def move_file_to_subfolder(file_to_move: Path, sub_folder_name: str):
     """moves file to subfolder, creates the subfolder if not exists"""
     processed_folder = (
@@ -137,13 +97,41 @@ def corr_dict_pickle_to_db(
 
     for corr_dict_file_path in corr_dict_pickle_file_paths:
         corr_dict = load_object_from_file_path(corr_dict_file_path).result()
-        upsert_corr_dict(
-            filepath=corr_dict_file_path,
-            connection=connection,
-            corr_dict=corr_dict,
-            cols_not_represented_in_content_db=cols_not_represented_in_content_db,
-            website_table=website_table,
-        )
+
+        for stock_symbol in corr_dict:
+
+            unfolded_indexes = dict(
+                zip(
+                    corr_dict[stock_symbol]["dataset_uid_col_name_list"],
+                    corr_dict[stock_symbol]["dataset_uid"],
+                )
+            )
+
+            file_hash = hash_file(filepath=corr_dict_file_path, algo_name="sha256")
+
+            stock_symbol_dict = {"stock_symbol": stock_symbol}
+            pickle_name_dict = {
+                "ingested_pickle_name": corr_dict_file_path.name,
+                "ingested_pickle_name_hash": file_hash,
+            }  # note: pickle is not guaranteed to run deterministically
+            # however, this is not required for this particular use case
+            # the only purpose it to ensure the exact same pickle is found
+
+            merged_dict = {
+                **stock_symbol_dict,
+                **pickle_name_dict,
+                **unfolded_indexes,
+                **corr_dict[stock_symbol],
+            }
+            for key_to_remove in cols_not_represented_in_content_db:
+                merged_dict.pop(key_to_remove)
+
+            insert_query = insert(website_table).values(merged_dict)
+            # do nothing if duplicate value
+            upsert_query = insert_query.on_conflict_do_nothing(
+                index_elements=["stock_symbol", "requested_publish_date"]
+            )  # upserts, inserts a date if there is no entry for the (composite) key
+            connection.execute(upsert_query)
 
         move_file_to_subfolder(corr_dict_file_path, "processed")
         # moves to processed folder
