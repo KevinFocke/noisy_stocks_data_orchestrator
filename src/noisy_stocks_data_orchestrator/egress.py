@@ -1,3 +1,4 @@
+import hashlib
 import io
 import pickle
 from datetime import datetime
@@ -35,6 +36,14 @@ def write_object_to_path(object_to_save, folder_path: Path):
         pickle.dump(object_to_save, fp)
 
 
+def hash_file(filepath: Path, algo_name: str = "sha256"):
+    """input : Path to file
+    output: hexadecimal hash string"""
+    with filepath.open("rb") as fp:
+        binary_data = fp.read()
+        return hashlib.new(name=algo_name, data=binary_data).hexdigest()
+
+
 def upsert_corr_dict(
     filepath, connection, corr_dict, cols_not_represented_in_content_db, website_table
 ):
@@ -46,10 +55,17 @@ def upsert_corr_dict(
                 corr_dict[stock_symbol]["dataset_uid"],
             )
         )
+
+        file_hash = hash_file(filepath=filepath, algo_name="sha256")
+
         stock_symbol_dict = {"stock_symbol": stock_symbol}
         pickle_name_dict = {
-            "ingested_pickle_name": filepath.name
-        }  # TODO: add hash to verify file integrity
+            "ingested_pickle_name": filepath.name,
+            "ingested_pickle_name_hash": file_hash,
+        }  # note: pickle is not guaranteed to run deterministically
+        # however, this is not required for this particular use case
+        # the only purpose it to ensure the exact same pickle is found
+
         merged_dict = {
             **stock_symbol_dict,
             **pickle_name_dict,
@@ -67,12 +83,12 @@ def upsert_corr_dict(
         connection.execute(upsert_query)
 
 
-def mark_corr_dict_as_processed(corr_dict_file_path: Path):
+def move_file_to_subfolder(file_path: Path, sub_folder_name: str):
     processed_folder = (
-        corr_dict_file_path.parents[0] / "processed"
+        file_path.parents[0] / sub_folder_name
     )  # parents[0] accesses the parent folder path,
     # in other words, everything except the filename
-    corr_dict_file_path.rename(processed_folder / corr_dict_file_path.name)
+    file_path.rename(processed_folder / file_path.name)
 
 
 def corr_dict_pickle_to_db(
@@ -105,7 +121,7 @@ def corr_dict_pickle_to_db(
             cols_not_represented_in_content_db=cols_not_represented_in_content_db,
             website_table=website_table,
         )
-        mark_corr_dict_as_processed(corr_dict_file_path)  # moves to processed folder
+        mark_corr_dict_as_success(corr_dict_file_path)  # moves to processed folder
 
 
 def reverse_geocoder(coordinates):
