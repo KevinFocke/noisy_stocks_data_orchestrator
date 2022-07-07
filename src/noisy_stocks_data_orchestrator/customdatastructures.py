@@ -401,7 +401,7 @@ class StockTimeSeries(TimeSeries):
         if abs_delta_df.shape[0] < max_stocks_output:
             pass  # no need for slicing
         else:
-            abs_delta_df = abs_delta_df[:20]  # slice first 20 rows
+            abs_delta_df = abs_delta_df[:max_stocks_output]  # slice first 20 rows
         # get highest corr
 
         tuples_stock_and_rel_change = tuple(
