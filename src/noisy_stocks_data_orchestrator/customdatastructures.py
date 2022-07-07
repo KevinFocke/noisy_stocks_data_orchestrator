@@ -32,7 +32,7 @@ def folder_exists(path: Path):
     return path.is_dir()
 
 
-# TODO: refactor to make it DatabaseQuery more versatile
+# TODO: refactor to make more versatile?
 class CorrDatabaseQuery(BaseModel):
     """values and variables related to analysis ingestion stage.
 

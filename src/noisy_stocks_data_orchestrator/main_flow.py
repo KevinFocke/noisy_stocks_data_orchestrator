@@ -1,3 +1,4 @@
+from datetime import datetime
 from pathlib import Path
 
 import numpy as np
@@ -95,14 +96,10 @@ def correlate_datasets(*args, **kwargs):
     )  # convert back from NumbaList to regular Python list
 
 
-@flow(task_runner=SequentialTaskRunner(), name="trigger_me")
-def sample_flow():
-    print("hello")
-
-
 @flow(task_runner=SequentialTaskRunner(), name="stock_correlation_flow")
 def stock_correlation_flow(
     corr_dict_pickle_storage_path=r"/home/kevin/coding_projects/noisy_stocks/persistent_data/corr_dicts",
+    publish_date=datetime.now().date(),
 ):
 
     # TODO: refactor preferences to arguments of func
@@ -147,6 +144,9 @@ def stock_correlation_flow(
     # if df.empty: Raise ValueError
     # #really it's just df.empty #very nice!
 
+    # consideration: pivot_rows_to_cols works destructively on existing df,
+    # but it is space efficient
+
     stocks_time_series.pivot_rows_to_cols(
         index="timestamp", columns="stock_symbol", values="price_close"
     )
@@ -183,6 +183,7 @@ def stock_correlation_flow(
         timeout=120,
     ).result()
 
+    # should be seperate function; works too
     dataset_time_series.pivot_rows_to_cols(
         index="timestamp", columns=["longitude", "latitude"], values="precipitation"
     )
@@ -208,6 +209,7 @@ def stock_correlation_flow(
     stock_index = 0
     corr_dict = {}
     # get highest correlations
+    # TODO: refactor into own function
     for stock_corr in correlations:
         # sanity check
         assert len(stock_corr) == len(dataset_col_list)
@@ -217,12 +219,15 @@ def stock_correlation_flow(
         dataset_uid = dataset_col_list[max_corr_index]
         stock = stock_col_list[stock_index]
         corr_dict[stock] = {
+            "publish_date": publish_date,
             "highest_corr": highest_corr,
+            "stock_database_name": stock_database_name,
             "stock_pd_series": stocks_time_series.time_series_df[stock],
-            "stock_num_col": stocks_time_series.numeric_col_name,
+            "stock_num_col": stocks_time_series.numeric_col_name,  # contains timestamps + values
+            "dataset_database_name": dataset_database_name,
             "dataset_uid": dataset_uid,  # eg. (lon, lat)
             "dataset_pd_series": dataset_time_series.time_series_df[dataset_uid],
-            "dataset_num_col": dataset_time_series.numeric_col_name,
+            "dataset_num_col": dataset_time_series.numeric_col_name,  # contains timestamps + values
         }
         assert isinstance(corr_dict[stock]["stock_pd_series"], Series)
         assert isinstance(corr_dict[stock]["dataset_pd_series"], Series)
@@ -235,10 +240,7 @@ def stock_correlation_flow(
         # corr_dict fields:
         # dict of dicts,
         # first layer keys are stocks (APPL, AMZN)
-        # second layer keys are
-
         # add begindate and enddate, stock_data, geo_points_data
-
         stock_index += 1
 
     write_object_to_path(corr_dict, folder_path=Path(corr_dict_pickle_storage_path))
