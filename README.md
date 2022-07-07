@@ -37,9 +37,15 @@ Features:
 
 Considerations:
 
+* To keep the performance of queries reasonable, there should be one table per Big Data dataset. Each table requires a minimum of 3 fields:
+	* timestamp with timezone
+	* uid (eg. composite key made of longitude + latitude)
+	* float value to correlate
+
 * During development I became fascinated with the potential of Kubernetes. However, high availability architectures, such as provided by Kubernetes, add complexity & resource overhead. In my case, high availability is not a critical requirement for the back-end services. Why? Because the uptime of the website is NOT impacted by downtime of the back-end services. If the back-end services are down it will only affect the freshness of the content.
 
 In the future I do intend to explore Kubernetes more.
+
 
 Reflection:
 
