@@ -1,9 +1,14 @@
 import io
+import pickle
+from datetime import datetime
+from pathlib import Path
 
 import reverse_geocoder as rg  # Might need to be installed locally via pip
 from prefect.flows import flow
 from prefect.task_runners import SequentialTaskRunner
 from prefect.tasks import task
+
+from ingress import file_exists
 
 """Data Outflow Module for exporting to website & database
 """
@@ -14,6 +19,19 @@ from prefect.tasks import task
 
 # TODO: Set pandas backend to plotly https://plotly.com/python/pandas-backend/
 # TODO: Static image export plotly https://plotly.com/python/static-image-export
+
+
+
+
+def corr_dict_to_db():
+    stocks_db_conn_string = (
+        "postgresql+psycopg2://postgres:postgres@127.0.0.1:5432/content"
+    )
+    # preferences
+    stock_select_fields = ["timestamp", "stock_symbol", "price_close"]
+    stock_database_name = "stock_timedata"
+    stock_interval_in_days = 5
+    sql_alchemy_stock_engine = create_engine(stocks_db_conn_string)
 
 
 def reverse_geocoder(coordinates):
@@ -54,24 +72,36 @@ def create_markdown_files(visualization):
 
 
 @task()
-def save_files(markdown):
-    return
+def export_markdown(markdown):
+
+
+    # date format: year-month-dayThour:min:sec+tz_offset
+    # eg. 2021-09-15T11:30:03+00:00 
+    # // +00:00 means 00:00 offset from UTC, thus UTC itself
+
+    # sample post
+    #title: "Why did APPL go up? 📈"
+    #date: 2020-09-15T11:30:03+00:00
+    #categories: ["stock goes up📈"]
+    #description: "Desc Text."
+    #canonicalURL: "https://noisystocks.com/$pretty-date/$page-title"
+    #cover:
+        #image: "graph-APPL-rainfall-2002-05-30.jpg"
+        #alt: "chart showing the correlation between APPL and rainfall on " # alt for image
+        #caption: "test" # display caption under cover
+    # ---
+    # Today, $yearcount years ago, the chart for $stock went $direction. What could have caused it? There could be a billion good reasons. We at NoisyStocks have no idea what those reasons are. Perhaps it was the weather, the phase of the moon, or the stance of the planets. We calculated our chart using a special "throw-spaghetti-at-a-wall-and-see-what-sticks" algorithm. Our tried-and-failed approach takes random variables and makes wildly spurious correlations.
 
 
 @flow(task_runner=SequentialTaskRunner())
-def publish(historical_stock_data, best_fit):
+def publish():
 
+    # load correlation from database
+
+    # load defaults from website
     # Create visualization
-    visualization = create_visualization()
-
-    # Create files for export
-    markdown = create_markdown_files(visualization)
 
     # Credit: Cities database from Geocities
     # Precipitation data from ...
     # Stock data from ...
 
-    # Save files to disk
-    save_files(markdown)
-
-    return

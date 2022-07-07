@@ -11,7 +11,7 @@ from prefect.task_runners import SequentialTaskRunner
 from pytest import approx
 from sqlalchemy import create_engine
 
-from customdatastructures import DatabaseQuery, folder_exists
+from customdatastructures import DatabaseQuery, file_exists, folder_exists
 from ingress import fetch_stocks_to_TimeSeries, fetch_weather_to_TimeSeries
 
 
@@ -96,13 +96,25 @@ def correlate_datasets(*args, **kwargs):
     )  # convert back from NumbaList to regular Python list
 
 
+@flow(task_runner=SequentialTaskRunner())
 def write_object_to_path(object_to_save, folder_path: Path):
     """input: object, folderPath, the filename will be the current datetime"""
     today = datetime.now()
     folder_exists(folder_path)
-    filepath = folder_path / (today.strftime(r"%Y_%m_%d_%H_%M_%S") + r".pickle")
-    with filepath.open("wb") as fp:  # wb to write binary
+    file_path = folder_path / (today.strftime(r"%Y_%m_%d_%H_%M_%S") + r".pickle")
+    with file_path.open("wb") as fp:  # wb to write binary
         pickle.dump(object_to_save, fp)
+
+
+# TODO: finish load function
+@flow(task_runner=SequentialTaskRunner())
+def load_object_from_file_path(file_path: Path):
+    """input: object, folderPath, the filename will be the current datetime"""
+    file_exists(file_path)
+    with file_path.open("rb") as fp:  # wb to write binary
+        loaded_object = pickle.load(fp)
+        print(loaded_object)
+        return loaded_object
 
 
 @flow(task_runner=SequentialTaskRunner(), name="trigger_me")
@@ -210,7 +222,7 @@ def stock_correlation_flow(
         dataset_np_array=dataset_time_series.time_series_df.to_numpy(),
     ).result()
 
-    print(correlations)
+    # print(correlations)
 
     # sanity check
     assert len(correlations) == len(stock_col_list)
@@ -259,4 +271,13 @@ def stock_correlation_flow(
 
 
 if __name__ == "__main__":
-    stock_correlation_flow()
+
+    # stock_correlation_flow()
+
+    corr_dict = load_object_from_file_path(
+        Path(
+            r"/home/kevin/coding_projects/noisy_stocks/persistent_data/corr_dicts/2022_07_07_11_58_42.pickle"
+        )
+    ).result()
+    print(corr_dict)
+    print(len(corr_dict))
