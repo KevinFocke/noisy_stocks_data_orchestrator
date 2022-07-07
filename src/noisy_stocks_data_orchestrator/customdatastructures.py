@@ -349,7 +349,7 @@ class StockTimeSeries(TimeSeries):
         start_date: Timestamp,
         end_date: Timestamp,
         min_stocks_output=5,
-        max_stocks_output=20,
+        max_stocks_output=10,  # TODO: add as args to main_flow
     ) -> tuple[tuple[str, float]]:
         """calculates the biggest absolute difference between start date and end date
 
