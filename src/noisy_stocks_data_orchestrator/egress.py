@@ -49,7 +49,7 @@ def upsert_corr_dict(
         stock_symbol_dict = {"stock_symbol": stock_symbol}
         pickle_name_dict = {
             "ingested_pickle_name": filepath.name
-        }  # TODO: add hash to verify integrity
+        }  # TODO: add hash to verify file integrity
         merged_dict = {
             **stock_symbol_dict,
             **pickle_name_dict,
@@ -75,34 +75,23 @@ def mark_corr_dict_as_processed(corr_dict_file_path: Path):
     corr_dict_file_path.rename(processed_folder / corr_dict_file_path.name)
 
 
-def corr_dict_pickle_to_db():
-    """post uid is composite key of stock symbol +"""
-    # preferences
-    # TODO: refactor into function args
-    content_db_conn_string = (
-        "postgresql+psycopg2://postgres:postgres@127.0.0.1:5432/content"
-    )
-    cols_not_represented_in_content_db = [
+def corr_dict_pickle_to_db(
+    content_db_conn_string: str = "postgresql+psycopg2://postgres:postgres@127.0.0.1:5432/content",
+    cols_not_represented_in_content_db: list[str] = [
         "dataset_pd_series",
         "stock_pd_series",
         "dataset_uid_col_name_list",
         "dataset_uid",
-    ]  # these columns do not exist in the content db
+    ],
+    corr_dict_pickle_folder_path: Path = Path(
+        r"/home/kevin/coding_projects/noisy_stocks/persistent_data/corr_dicts/"
+    ),
+):
     sql_alchemy_content_engine = db.create_engine(content_db_conn_string)
     connection = sql_alchemy_content_engine.connect()
     metadata = db.MetaData()
     website_table = db.Table(
         "website", metadata, autoload=True, autoload_with=sql_alchemy_content_engine
-    )
-
-    #
-    query = db.select([website_table])
-    resultproxy = connection.execute(query)
-    resultset = resultproxy.fetchall()
-    print(resultset)
-
-    corr_dict_pickle_folder_path = Path(
-        (r"/home/kevin/coding_projects/noisy_stocks/persistent_data/corr_dicts/")
     )
 
     corr_dict_pickle_file_paths = list(corr_dict_pickle_folder_path.glob("*.pickle"))
@@ -117,10 +106,6 @@ def corr_dict_pickle_to_db():
             website_table=website_table,
         )
         mark_corr_dict_as_processed(corr_dict_file_path)  # moves to processed folder
-
-        # unfolded indexes ; eg a composite pair of long , lat becomes lon : 80, lat:20
-
-    # move pickle to processed folder
 
 
 def reverse_geocoder(coordinates):
