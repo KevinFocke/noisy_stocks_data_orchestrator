@@ -32,7 +32,8 @@ def folder_exists(path: Path):
     return path.is_dir()
 
 
-class DatabaseQuery(BaseModel):
+# TODO: refactor to make it DatabaseQuery more versatile
+class CorrDatabaseQuery(BaseModel):
     """values and variables related to analysis ingestion stage.
 
     Upon initialization creates begin and end timestamps in matter of priority:

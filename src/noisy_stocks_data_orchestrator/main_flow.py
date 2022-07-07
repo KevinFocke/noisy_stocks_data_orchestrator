@@ -9,7 +9,7 @@ from prefect.task_runners import SequentialTaskRunner
 from pytest import approx
 from sqlalchemy import create_engine
 
-from customdatastructures import Ingress_Corr_DatabaseQuery
+from customdatastructures import CorrDatabaseQuery
 from egress import write_object_to_path
 from ingress import fetch_stocks_to_TimeSeries, fetch_weather_to_TimeSeries
 
@@ -124,7 +124,7 @@ def stock_correlation_flow(
     # SQLAlchemy will not turn itself into a pickle from another process. DO NOT PICKLE!
     sql_alchemy_stock_engine = create_engine(stocks_db_conn_string)
 
-    stocks_db_query_object = Ingress_Corr_DatabaseQuery(
+    stocks_db_query_object = CorrDatabaseQuery(
         select_fields=stock_select_fields,
         from_database=stock_database_name,
         interval_in_days=stock_interval_in_days,
@@ -161,7 +161,7 @@ def stock_correlation_flow(
 
     stocks_time_series.drop_col_except([stock[0] for stock in largest_stocks])
 
-    dataset_db_query_object = Ingress_Corr_DatabaseQuery(
+    dataset_db_query_object = CorrDatabaseQuery(
         select_fields=dataset_select_fields,
         from_database=dataset_database_name,
         process_begin_and_end_timestamp=(
