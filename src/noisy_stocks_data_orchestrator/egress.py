@@ -67,6 +67,14 @@ def upsert_corr_dict(
         connection.execute(upsert_query)
 
 
+def mark_corr_dict_as_processed(corr_dict_file_path: Path):
+    processed_folder = (
+        corr_dict_file_path.parents[0] / "processed"
+    )  # parents[0] accesses the parent folder path,
+    # in other words, everything except the filename
+    corr_dict_file_path.rename(processed_folder / corr_dict_file_path.name)
+
+
 def corr_dict_pickle_to_db():
     """post uid is composite key of stock symbol +"""
     # preferences
@@ -101,7 +109,6 @@ def corr_dict_pickle_to_db():
 
     for corr_dict_file_path in corr_dict_pickle_file_paths:
         corr_dict = load_object_from_file_path(corr_dict_file_path).result()
-        print(corr_dict)
         upsert_corr_dict(
             filepath=corr_dict_file_path,
             connection=connection,
@@ -109,6 +116,7 @@ def corr_dict_pickle_to_db():
             cols_not_represented_in_content_db=cols_not_represented_in_content_db,
             website_table=website_table,
         )
+        mark_corr_dict_as_processed(corr_dict_file_path)  # moves to processed folder
 
         # unfolded indexes ; eg a composite pair of long , lat becomes lon : 80, lat:20
 
