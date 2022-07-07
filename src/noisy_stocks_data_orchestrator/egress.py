@@ -4,10 +4,12 @@ from datetime import datetime
 from pathlib import Path
 
 import reverse_geocoder as rg  # Might need to be installed locally via pip
+import sqlalchemy as db
 from prefect.flows import flow
 from prefect.task_runners import SequentialTaskRunner
 from prefect.tasks import task
-from sqlalchemy import create_engine
+from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy.orm import sessionmaker
 
 from customdatastructures import folder_exists
 from ingress import load_object_from_file_path
@@ -39,8 +41,57 @@ def corr_dict_to_db():
         "postgresql+psycopg2://postgres:postgres@127.0.0.1:5432/content"
     )
     # preferences
-    stock_database_name = "stock_timedata"
-    sql_alchemy_stock_engine = create_engine(content_db_conn_string)
+    sql_alchemy_content_engine = db.create_engine(content_db_conn_string)
+    connection = sql_alchemy_content_engine.connect()
+    metadata = db.MetaData()
+    website_table = db.Table(
+        "website", metadata, autoload=True, autoload_with=sql_alchemy_content_engine
+    )
+
+    #
+    query = db.select([website_table])
+    resultproxy = connection.execute(query)
+    resultset = resultproxy.fetchall()
+    print(resultset)
+
+    corr_dict = load_object_from_file_path(
+        Path(
+            r"/home/kevin/coding_projects/noisy_stocks/persistent_data/corr_dicts/2022_07_07_17_42_55.pickle"
+        )
+    ).result()
+    print(corr_dict)
+    # unfolded indexes ; eg a composite pair of long , lat becomes lon : 80, lat:20
+
+    drop_from_dict = [
+        "dataset_pd_series",
+        "stock_pd_series",
+        "dataset_uid_col_name_list",
+        "dataset_uid",
+    ]  # these columns are not represented in the database
+
+    for stock_symbol in corr_dict:
+
+        unfolded_indexes = dict(
+            zip(
+                corr_dict[stock_symbol]["dataset_uid_col_name_list"],
+                corr_dict[stock_symbol]["dataset_uid"],
+            )
+        )
+        stock_symbol_dict = {"stock_symbol": stock_symbol}
+        merged_dict = {
+            **stock_symbol_dict,
+            **unfolded_indexes,
+            **corr_dict[stock_symbol],
+        }
+        for key_to_remove in drop_from_dict:
+            merged_dict.pop(key_to_remove)
+
+        insert_query = insert(website_table).values(merged_dict)
+        # do nothing if duplicate value
+        upsert_query = insert_query.on_conflict_do_nothing(
+            index_elements=["stock_symbol", "requested_publish_date"]
+        )  # upserts, inserts a date if there is no entry for the (composite) key
+        connection.execute(upsert_query)
 
 
 def reverse_geocoder(coordinates):
@@ -112,13 +163,8 @@ def publish():
 
 
 if __name__ == "__main__":
-    corr_dict = load_object_from_file_path(
-        Path(
-            r"/home/kevin/coding_projects/noisy_stocks/persistent_data/corr_dicts/2022_07_07_11_58_42.pickle"
-        )
-    ).result()
-    print(corr_dict)
-    print(len(corr_dict))
+    corr_dict_to_db()
+
     coordinates = ((51.5214588, -0.1729636),)
     results = reverse_geocoder(coordinates=coordinates)
     # TODO: Add country code lookup based on Geocities

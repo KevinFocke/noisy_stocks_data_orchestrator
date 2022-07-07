@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
 
 import numpy as np
@@ -99,7 +99,11 @@ def correlate_datasets(*args, **kwargs):
 @flow(task_runner=SequentialTaskRunner(), name="stock_correlation_flow")
 def stock_correlation_flow(
     corr_dict_pickle_storage_path=r"/home/kevin/coding_projects/noisy_stocks/persistent_data/corr_dicts",
-    publish_date=datetime.now().date(),
+    requested_publish_date: date = datetime.now().date(),
+    dataset_uid_col_name_list=[
+        "longitude",
+        "latitude",
+    ],  # one or more values that uniquely identify a datapoint
 ):
 
     # TODO: refactor preferences to arguments of func
@@ -185,7 +189,7 @@ def stock_correlation_flow(
 
     # should be seperate function; works too
     dataset_time_series.pivot_rows_to_cols(
-        index="timestamp", columns=["longitude", "latitude"], values="precipitation"
+        index="timestamp", columns=dataset_uid_col_name_list, values="precipitation"
     )
     #   print(stocks_time_series.time_series_df)
 
@@ -219,13 +223,14 @@ def stock_correlation_flow(
         dataset_uid = dataset_col_list[max_corr_index]
         stock = stock_col_list[stock_index]
         corr_dict[stock] = {
-            "publish_date": publish_date,
+            "requested_publish_date": requested_publish_date,
             "highest_corr": highest_corr,
             "stock_database_name": stock_database_name,
             "stock_pd_series": stocks_time_series.time_series_df[stock],
             "stock_num_col": stocks_time_series.numeric_col_name,  # contains timestamps + values
             "dataset_database_name": dataset_database_name,
-            "dataset_uid": dataset_uid,  # eg. (lon, lat)
+            "dataset_uid": dataset_uid,
+            "dataset_uid_col_name_list": dataset_uid_col_name_list,  # eg. (lon, lat)
             "dataset_pd_series": dataset_time_series.time_series_df[dataset_uid],
             "dataset_num_col": dataset_time_series.numeric_col_name,  # contains timestamps + values
         }
