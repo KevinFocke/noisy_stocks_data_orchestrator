@@ -224,6 +224,11 @@ def stock_correlation_flow(
     corr_dict = {}
     # get highest correlations
     # TODO: refactor into own function
+    # TODO: limit posts per day. Might be a thorny problem because
+    # longest_consecutive_days_sequence will cause overlapping periods
+    # BUG: Ingesting new stocks to the stock database might publish more posts than requested; the upsert of export assumes the exact same stocks will be upserted each time
+    # WORKAROUND: if the stock dataset ever changes, wait until all remaining posts are published.
+    # deleting those posts is not a workaround because you woulnd't be able to determinstically build up the same database from the existing pickles
     for stock_corr in correlations:
         # sanity check
         assert len(stock_corr) == len(dataset_col_list)
