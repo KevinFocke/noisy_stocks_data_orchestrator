@@ -121,19 +121,24 @@ def corr_dict_pickle_to_db(
             # however, this is not required for this particular use case
             # the only purpose it to ensure the exact same pickle is found
 
-            merged_dict = {
+            keys_to_remove = {
                 **stock_symbol_dict,
                 **pickle_name_dict,
                 **unfolded_indexes,
                 **corr_dict[stock_symbol],
             }
             for key_to_remove in cols_not_represented_in_content_db:
-                merged_dict.pop(key_to_remove)
+                keys_to_remove.pop(key_to_remove)
 
-            insert_query = insert(website_table).values(merged_dict)
+            insert_query = insert(website_table).values(keys_to_remove)
             # do nothing if duplicate value
             upsert_query = insert_query.on_conflict_do_nothing(
-                index_elements=["stock_symbol", "requested_publish_date"]
+                index_elements=[
+                    "stock_symbol",
+                    "begin_date",
+                    "end_date",
+                    "dataset_database_name",
+                ]
             )  # upserts, inserts a date if there is no entry for the (composite) key
             connection.execute(upsert_query)
 
