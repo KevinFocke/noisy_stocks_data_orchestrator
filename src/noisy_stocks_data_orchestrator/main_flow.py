@@ -12,7 +12,7 @@ from pytest import approx
 from sqlalchemy import create_engine
 
 from customdatastructures import CorrDatabaseQuery
-from egress import write_object_to_path
+from egress import publish_corr_to_website, write_object_to_path
 from ingress import fetch_stocks_to_TimeSeries, fetch_weather_to_TimeSeries
 
 
@@ -100,7 +100,6 @@ def correlate_datasets(*args, **kwargs):
 @flow(task_runner=SequentialTaskRunner(), name="stock_correlation_flow")
 def stock_correlation_flow(
     corr_dict_pickle_storage_path=r"/home/kevin/coding_projects/noisy_stocks/persistent_data/corr_dicts",
-    requested_publish_date: date = datetime.now().date(),
     dataset_uid_col_name_list=[
         "longitude",
         "latitude",
@@ -272,6 +271,28 @@ def stock_correlation_flow(
     sql_alchemy_stock_engine.dispose()
 
 
+# TODO: add retries
+
+
+@flow(task_runner=SequentialTaskRunner(), name="correlate_and_publish_flow")
+def correlate_and_publish(
+    corr_dict_pickle_storage_path=r"/home/kevin/coding_projects/noisy_stocks/persistent_data/corr_dicts",
+    dataset_uid_col_name_list=[
+        "longitude",
+        "latitude",
+    ],  # one or more values that uniquely identify a datapoint
+    posts_per_day: PositiveInt = 10,
+):
+
+    stock_correlation_flow(
+        corr_dict_pickle_storage_path=corr_dict_pickle_storage_path,
+        dataset_uid_col_name_list=dataset_uid_col_name_list,
+        posts_per_day=posts_per_day,
+    )
+
+    publish_corr_to_website()
+
+
 if __name__ == "__main__":
 
-    stock_correlation_flow()
+    correlate_and_publish()

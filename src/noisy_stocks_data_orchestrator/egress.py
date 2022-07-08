@@ -9,7 +9,6 @@ import sqlalchemy as db
 from prefect.flows import flow
 from prefect.task_runners import SequentialTaskRunner
 from prefect.tasks import task
-from pydantic import validate_arguments
 from sqlalchemy.dialects.postgresql import insert
 
 from customdatastructures import folder_exists
@@ -71,7 +70,7 @@ def move_file_to_subfolder(file_to_move: Path, sub_folder_name: str):
 
 
 @flow
-def corr_dict_pickle_to_db(
+def publish_corr_to_website(
     content_db_conn_string: str = "postgresql+psycopg2://postgres:postgres@127.0.0.1:5432/content",
     cols_not_represented_in_content_db: list[str] = [
         "dataset_pd_series",
@@ -87,6 +86,8 @@ def corr_dict_pickle_to_db(
     corr_dict_pickle_file_paths = list(corr_dict_pickle_folder_path.glob("*.pickle"))
     if not corr_dict_pickle_file_paths:  # if there are no file paths
         return  # nothing to do
+
+    # create visualization
 
     # create sql_alchemy engine
     sql_alchemy_content_engine = db.create_engine(content_db_conn_string)
@@ -216,7 +217,11 @@ def publish():
 
 
 if __name__ == "__main__":
-    corr_dict_pickle_to_db()
+    publish_corr_to_website()
+
+    # create graph based on pandas series
+
+    # export
 
     coordinates = ((51.5214588, -0.1729636),)
     results = reverse_geocoder(coordinates=coordinates)
