@@ -51,7 +51,7 @@ def write_object_to_path(object_to_save, folder_path: Path):
 
 
 @flow
-def hash_file(filepath: Path, algo_name: str = "sha256"):
+def hash_file(filepath: Path, algo_name: str = "sha256") -> str:
     """input : Path to file
     output: hexadecimal hash string"""
     with filepath.open("rb") as fp:
