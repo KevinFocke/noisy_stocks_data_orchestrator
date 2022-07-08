@@ -39,6 +39,7 @@ def visualize_corr(
     latitude,
     longitude,
 ):
+    # TODO: This is encapsulation hell; I ran out of time, but it was a fun project!
     # TODO: refactor, export graph in other function
     mytuple = (float(latitude), float(longitude))  # lat lon
     coordinates = (mytuple,)
@@ -57,8 +58,18 @@ def visualize_corr(
     print(df2)
     print(df1.index)
     print(df2.index)
+
     merged_df = df1.join(df2)
     merged_df = merged_df.reset_index()
+    x_axis_len = len(merged_df["timestamp"])
+
+    # check if direction went up or down
+    if merged_df[stock_symbol].iloc[-1] > merged_df[stock_symbol].iloc[0]:
+        price_direction = "up"
+    elif merged_df[stock_symbol].iloc[-1] < merged_df[stock_symbol].iloc[0]:
+        price_direction = "down"
+    else:
+        price_direction = "NEUTRAL CHAOS"
 
     # Create figure with secondary y-axis
     fig = make_subplots(specs=[[{"secondary_y": True}]])
@@ -77,7 +88,7 @@ def visualize_corr(
         go.Scatter(
             x=merged_df["timestamp"],
             y=merged_df[dataset_uid],
-            name=stock_symbol,
+            name=f"{stock_symbol} close price",
         ),
         secondary_y=True,
     )
@@ -92,11 +103,13 @@ def visualize_corr(
 
     # Set y-axes titles
     fig.update_yaxes(title_text=f"{stock_symbol} close price", secondary_y=False)
+
     fig.update_yaxes(title_text=f"rainfall in {city}, {country_code}", secondary_y=True)
 
     fig.update_layout(
         xaxis_tickformat="%d %B (%a)<br>%Y",  # only plot available x
     )
+    fig.update_xaxes(nticks=x_axis_len)
     fig.write_image(
         r"/home/kevin/coding_projects/noisy_stocks/persistent_data/testimg/myimg.webp",
         width=1920,
@@ -105,9 +118,9 @@ def visualize_corr(
     # fig.write_image(
     #    r"/home/kevin/coding_projects/noisy_stocks/persistent_data/testimg/myimg.webp"
     # )
-    fig.show()
+    # fig.show()
     graph_json = fig.to_json(pretty=True)
-    return graph_json, city, country_code
+    return graph_json, city, country_code, price_direction
     # thumbnail, full
 
 
@@ -198,7 +211,8 @@ def corr_to_db_content(
                 )
             )
 
-            graph_json, city, country_code = visualize_corr(
+            # TODO: refactor, this function is way overloaded; had no time to write decently
+            graph_json, city, country_code, stock_direction = visualize_corr(
                 pd_series_stocks=corr_dict[stock_symbol]["stock_pd_series"],
                 pd_series_dataset=corr_dict[stock_symbol]["dataset_pd_series"],
                 highest_corr=corr_dict[stock_symbol]["highest_corr"],
@@ -212,7 +226,10 @@ def corr_to_db_content(
                 filepath=corr_dict_file_path, algo_name="sha256"
             ).result()
 
-            stock_symbol_dict = {"stock_symbol": stock_symbol}
+            extra_stock_info = {
+                "stock_symbol": stock_symbol,
+                "stock_direction": stock_direction,
+            }
             json_dict = {"graph_json": graph_json}
             geo_dict = {"city": city, "country_code": country_code}
             pickle_name_dict = {
@@ -223,7 +240,7 @@ def corr_to_db_content(
             # the only purpose it to ensure the exact same pickle is found
 
             upsertion_query_values = {
-                **stock_symbol_dict,
+                **extra_stock_info,
                 **json_dict,
                 **geo_dict,
                 **pickle_name_dict,
