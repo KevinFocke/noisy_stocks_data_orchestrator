@@ -1,6 +1,6 @@
 # Noisy Stocks
 
-Generates spurious stock correlations based on historical stock price movers & shakers.
+Generates spurious stock correlations between rainfall and stock price based on historical movers & shakers.
 
 Published online on [noisystocks.com](noisystocks.com).
 
@@ -19,7 +19,7 @@ Databases are PostgresQL specialized for time series (Timescale)
 
 Features:
 
-# TODO: add speed test result
+# Blazing fast; find correlations and publish 60+ posts in 3 minutes.
 
 * Automatically finds correlations based on time series
 
@@ -52,6 +52,12 @@ There were a couple interesting problems that needed to be solved by the program
 To maintain a good overview, functionality should be enclosed in subfunctions. For most functions, I was able to enclose them. However, the Prefect 2.0 beta orchestrator seems to face issues with passing some kinds of arguments (eg. a sqlalchemy engine, and a pickle containing deeply nested dictionaries & dataframes). It kept throwing all kinds of cryptic errors. The temporary workaround was to simply inline the functionality. Not ideal, but for now it works. 
 
 Prefect 2.0 beta also seems to make the implicit assumption that any subflow should be cloudpickled & materialized.
+
+## Publish date scheduling
+
+A difficult issue to explain. I'll try my best: The correlator finds the largest usable timerange near the target date, even if no datapoints are found ON the target date. However, this brings the problem that multiple target dates lead to the same usable timerange. The question thus becomes: How can you differentiate when a blog post should be published if they all return the same usable timerange?
+
+WORKAROUND: Assign them randomly and ensure the program runs chronologically.
 
 ## Database Representation
 Currently, a datapoint has to be uniquely identified by a (longitude, latitude) composite key. However, for maximum flexibility, the program should also be able to uniquely identify datapoints which are not geocoordinates on earth. In principle, any numeric column of a dataset could be linked to a numeric col of a stock. 
