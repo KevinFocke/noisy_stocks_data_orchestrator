@@ -19,6 +19,8 @@ Databases are PostgresQL specialized for time series (Timescale)
 
 Features:
 
+# TODO: add speed test result
+
 * Automatically finds correlations based on time series
 
 * Optimized Big Data database
