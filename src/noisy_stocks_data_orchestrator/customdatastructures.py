@@ -344,8 +344,27 @@ class StockTimeSeries(TimeSeries):
         self,
         start_date: Timestamp,
         end_date: Timestamp,
-        min_stocks_output=50,
-        max_stocks_output=100,  # TODO: add as args to main_flow
+        # TODO: add min_stocks & max_stocks args to output
+        # do it as posts per day, then divide by 6
+        min_stocks_output=60,  # note: divisible by 6 is ideal
+        # why? A lengthy explanation:
+        #  there is a tight coupling between
+        #  find_movers_and_shakers, longest_cons_days_sequence, and export.
+        # longest_cons_days_sequence will find the largest range within gaps
+        # it does this by taking a timedelta of +5 and -5 days without gaps
+        # An example: assume a 5 day week without gaps
+        # on mon, it selects the current week starting mon
+        # on tue, it selects the current week starting mon
+        # on wed, it selects the current week starting mon
+        # on thur, it selects the current week starting mon
+        # on fri, it selects the current week starting mon
+        # on sat, it selects the current week starting mon
+        # on sun, it selects the NEXT WEEK starting mon
+        # furthermore, the output from find_movers_and_shakers
+        # decides the amount of website content
+        # Thus, if you make the min_stocks_output divisible by 6
+        # your posts will roughly align with the desired output
+        max_stocks_output=60,
     ) -> tuple[tuple[str, float]]:
         """calculates the biggest absolute difference between start date and end date
 

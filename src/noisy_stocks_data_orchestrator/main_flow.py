@@ -7,6 +7,7 @@ from numba.typed import List as NumbaList
 from pandas import Series
 from prefect.flows import flow
 from prefect.task_runners import SequentialTaskRunner
+from pydantic import PositiveInt
 from pytest import approx
 from sqlalchemy import create_engine
 
@@ -104,6 +105,7 @@ def stock_correlation_flow(
         "longitude",
         "latitude",
     ],  # one or more values that uniquely identify a datapoint
+    posts_per_day: PositiveInt = 10,
 ):
 
     # TODO: refactor preferences to arguments of func
@@ -114,6 +116,9 @@ def stock_correlation_flow(
         "postgresql+psycopg2://postgres:postgres@127.0.0.1:5432/stocks"
     )
     # preferences
+    min_stocks_output = (
+        posts_per_day * 6
+    )  # why * 6? see lengthy explanation in function
     stock_select_fields = ["timestamp", "stock_symbol", "price_close"]
     stock_database_name = "stock_timedata"
     stock_interval_in_days = 5
@@ -161,6 +166,8 @@ def stock_correlation_flow(
     largest_stocks = stocks_time_series.find_movers_and_shakers(  # type: ignore
         start_date=longest_consecutive_days_sequence[0],
         end_date=longest_consecutive_days_sequence[-1],
+        min_stocks_output=min_stocks_output,
+        max_stocks_output=min_stocks_output,
     )
 
     stocks_time_series.drop_col_except([stock[0] for stock in largest_stocks])
