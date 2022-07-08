@@ -57,7 +57,7 @@ Prefect 2.0 beta also seems to make the implicit assumption that any subflow sho
 
 A difficult issue to explain. I'll try my best: The correlator finds the largest usable timerange near the target date, even if no datapoints are found ON the target date. However, this brings the problem that multiple target dates lead to the same usable timerange. The question thus becomes: How can you differentiate when a blog post should be published if they all return the same usable timerange?
 
-WORKAROUND: Assign them randomly and ensure the program runs chronologically.
+WORKAROUND: Assign publish dates randomly and ensure the program runs chronologically.
 
 ## Database Representation
 Currently, a datapoint has to be uniquely identified by a (longitude, latitude) composite key. However, for maximum flexibility, the program should also be able to uniquely identify datapoints which are not geocoordinates on earth. In principle, any numeric column of a dataset could be linked to a numeric col of a stock. 
