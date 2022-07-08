@@ -235,7 +235,6 @@ def stock_correlation_flow(
         corr_dict[stock] = {
             "begin_date": corr_begin_date,
             "end_date": corr_end_date,
-            "requested_publish_date": requested_publish_date,
             "highest_corr": highest_corr,
             "stock_database_name": stock_database_name,
             "stock_pd_series": stocks_time_series.time_series_df[stock],
