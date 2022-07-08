@@ -102,6 +102,7 @@ def corr_dict_pickle_to_db(
         # the normal prefect library sqlalchemy works alright
         for stock_symbol in corr_dict:
 
+            # TODO: allow unfolded indexes for stocks?
             unfolded_indexes = dict(
                 zip(
                     corr_dict[stock_symbol]["dataset_uid_col_name_list"],
@@ -115,11 +116,13 @@ def corr_dict_pickle_to_db(
 
             stock_symbol_dict = {"stock_symbol": stock_symbol}
             pickle_name_dict = {
-                "ingested_pickle_name": corr_dict_file_path.name,
-                "ingested_pickle_name_hash": file_hash,
+                "ingested_pickle_filename": corr_dict_file_path.name,
+                "ingested_pickle_hash": file_hash,
             }  # note: pickle is not guaranteed to run deterministically
             # however, this is not required for this particular use case
             # the only purpose it to ensure the exact same pickle is found
+
+            dates_dict = {"begin_date": "somedate", "end_date": "some_other_date"}
 
             merged_dict = {
                 **stock_symbol_dict,
