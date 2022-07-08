@@ -19,6 +19,8 @@ scipy = { version = "1.8", python = ">=3.10,<3.11" }
 DeepGraph = "^0.2.3"
 numba = "^0.55.2"
 dask = {extras = ["complete"], version = "^2022.6.1"}
+plotly = "^5.9.0"
+kaleido = "0.2.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.1.2"

@@ -101,8 +101,8 @@ def correlate_datasets(*args, **kwargs):
 def stock_correlation_flow(
     corr_dict_pickle_storage_path=r"/home/kevin/coding_projects/noisy_stocks/persistent_data/corr_dicts",
     dataset_uid_col_name_list=[
-        "longitude",
         "latitude",
+        "longitude",
     ],  # one or more values that uniquely identify a datapoint
     posts_per_day: PositiveInt = 10,
 ):
@@ -242,7 +242,7 @@ def stock_correlation_flow(
             "stock_pd_series": stocks_time_series.time_series_df[stock],
             "stock_num_col": stocks_time_series.numeric_col_name,  # contains timestamps + values
             "dataset_uid": dataset_uid,
-            "dataset_uid_col_name_list": dataset_uid_col_name_list,  # eg. (lon, lat)
+            "dataset_uid_col_name_list": dataset_uid_col_name_list,  # eg. (lat,lon)
             "dataset_pd_series": dataset_time_series.time_series_df[dataset_uid],
             "dataset_num_col": dataset_time_series.numeric_col_name,  # contains timestamps + values
         }

@@ -4,11 +4,15 @@ import pickle
 from datetime import datetime
 from pathlib import Path
 
+import pandas as pd
+import plotly.graph_objects as go
 import reverse_geocoder as rg  # Might need to be installed locally via pip
 import sqlalchemy as db
+from plotly.subplots import make_subplots
 from prefect.flows import flow
 from prefect.task_runners import SequentialTaskRunner
 from prefect.tasks import task
+from pytest import approx
 from sqlalchemy.dialects.postgresql import insert
 
 from customdatastructures import folder_exists
@@ -23,6 +27,88 @@ from ingress import load_object_from_file_path
 
 # TODO: Set pandas backend to plotly https://plotly.com/python/pandas-backend/
 # TODO: Static image export plotly https://plotly.com/python/static-image-export
+
+
+@flow
+def visualize_corr(
+    pd_series_stocks,
+    pd_series_dataset,
+    highest_corr,
+    stock_symbol,
+    dataset_uid,
+    latitude,
+    longitude,
+):
+    # TODO: refactor, export graph in other function
+    mytuple = (float(latitude), float(longitude))  # lat lon
+    coordinates = (mytuple,)
+    results = reverse_geocoder(coordinates=coordinates)
+    city = results[0]["name"]  # TODO: refactor city & country code to other func
+    country_code = results[0]["cc"]
+    pd.options.plotting.backend = "plotly"
+    # sanity check, are the corrs correct?
+    assert highest_corr == approx(pd_series_stocks.corr(pd_series_dataset))
+    df1 = pd.DataFrame(pd_series_stocks)
+    df2 = pd.DataFrame(pd_series_dataset)
+    # convert timestamp to datetime
+    df1.index = pd.to_datetime(df1.index)
+    df2.index = pd.to_datetime(df2.index)
+    print(df1)
+    print(df2)
+    print(df1.index)
+    print(df2.index)
+    merged_df = df1.join(df2)
+    merged_df = merged_df.reset_index()
+
+    # Create figure with secondary y-axis
+    fig = make_subplots(specs=[[{"secondary_y": True}]])
+
+    # Add traces
+    fig.add_trace(
+        go.Scatter(
+            x=merged_df["timestamp"],
+            y=merged_df[stock_symbol],
+            name=f"rainfall in {city}",
+        ),
+        secondary_y=False,
+    )
+
+    fig.add_trace(
+        go.Scatter(
+            x=merged_df["timestamp"],
+            y=merged_df[dataset_uid],
+            name=stock_symbol,
+        ),
+        secondary_y=True,
+    )
+
+    # Add figure title
+    fig.update_layout(
+        title_text=f"NoisyStocks.com | Spurious stock correlation ({highest_corr.round(5)}%) between {stock_symbol} price and rainfall in {city}, {country_code}"
+    )
+
+    # Set x-axis title
+    fig.update_xaxes(title_text="date")
+
+    # Set y-axes titles
+    fig.update_yaxes(title_text=f"{stock_symbol} close price", secondary_y=False)
+    fig.update_yaxes(title_text=f"rainfall in {city}, {country_code}", secondary_y=True)
+
+    fig.update_layout(
+        xaxis_tickformat="%d %B (%a)<br>%Y",  # only plot available x
+    )
+    fig.write_image(
+        r"/home/kevin/coding_projects/noisy_stocks/persistent_data/testimg/myimg.webp",
+        width=1920,
+        height=1080,
+    )
+    # fig.write_image(
+    #    r"/home/kevin/coding_projects/noisy_stocks/persistent_data/testimg/myimg.webp"
+    # )
+    fig.show()
+    graph_json = fig.to_json(pretty=True)
+    return graph_json, city, country_code
+    # thumbnail, full
 
 
 @flow
@@ -89,8 +175,6 @@ def corr_to_db_content(
 
     # create visualization json
 
-    visualize_corr()
-
     # create sql_alchemy engine
     sql_alchemy_content_engine = db.create_engine(content_db_conn_string)
     connection = sql_alchemy_content_engine.connect()
@@ -105,8 +189,8 @@ def corr_to_db_content(
         # TODO: refactor when Prefect 2.0 out of beta
         # the normal prefect library sqlalchemy works alright
         # but the dict of dicts REFUSES to be pickled!
+        stock_index = 0
         for stock_symbol in corr_dict:
-
             unfolded_indexes = dict(
                 zip(
                     corr_dict[stock_symbol]["dataset_uid_col_name_list"],
@@ -114,11 +198,23 @@ def corr_to_db_content(
                 )
             )
 
+            graph_json, city, country_code = visualize_corr(
+                pd_series_stocks=corr_dict[stock_symbol]["stock_pd_series"],
+                pd_series_dataset=corr_dict[stock_symbol]["dataset_pd_series"],
+                highest_corr=corr_dict[stock_symbol]["highest_corr"],
+                stock_symbol=stock_symbol,
+                dataset_uid=corr_dict[stock_symbol]["dataset_uid"],
+                longitude=unfolded_indexes["longitude"],
+                latitude=unfolded_indexes["latitude"],
+            ).result()
+
             file_hash = hash_file(
                 filepath=corr_dict_file_path, algo_name="sha256"
             ).result()
 
             stock_symbol_dict = {"stock_symbol": stock_symbol}
+            json_dict = {"graph_json": graph_json}
+            geo_dict = {"city": city, "country_code": country_code}
             pickle_name_dict = {
                 "ingested_pickle_filename": corr_dict_file_path.name,
                 "ingested_pickle_hash": file_hash,
@@ -128,6 +224,8 @@ def corr_to_db_content(
 
             upsertion_query_values = {
                 **stock_symbol_dict,
+                **json_dict,
+                **geo_dict,
                 **pickle_name_dict,
                 **unfolded_indexes,
                 **corr_dict[stock_symbol],
@@ -149,6 +247,7 @@ def corr_to_db_content(
 
         move_file_to_subfolder(corr_dict_file_path, "processed")
         # moves to processed folder
+        stock_index += 1
 
 
 def reverse_geocoder(coordinates):
@@ -160,23 +259,15 @@ def reverse_geocoder(coordinates):
         mode=1,  # 1 = single processor, 2 = multi-processor
         verbose=True,
         stream=io.StringIO(
-            open(r"egress_geonames_cities.csv", encoding="utf-8").read()
+            open(
+                r"/home/kevin/coding_projects/noisy_stocks/noisy_stocks_data_orchestrator/src/noisy_stocks_data_orchestrator/egress_geonames_cities.csv",
+                encoding="utf-8",
+            ).read()
         ),
     )
     results = geo.query(coordinates)
 
     return results
-
-
-@task()
-def create_visualization():
-    # TODO: Set maximum filesize limit for images (10 MB?)
-    # TODO: Compress images exported by Plotly
-    # TODO: Export chart images in 2 sizes:
-    # Thumbnail is 640 x 360 , should be saved in .webp
-    # Main image is 1600 x 900, should be saved in .webp
-
-    pass
 
 
 @task()
@@ -229,8 +320,10 @@ if __name__ == "__main__":
     # create graph based on pandas series
 
     # export
+    mytuple = (float(52.3), float(40))  # lat lon
 
-    coordinates = ((51.5214588, -0.1729636),)
+    coordinates = (mytuple,)
+    # coordinates = ((51.5214588, -0.1729636),)
     results = reverse_geocoder(coordinates=coordinates)
     # TODO: Add country code lookup based on Geocities
     print(results)
