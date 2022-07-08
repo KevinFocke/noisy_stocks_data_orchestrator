@@ -87,7 +87,7 @@ def publish_corr_to_website(
     if not corr_dict_pickle_file_paths:  # if there are no file paths
         return  # nothing to do
 
-    # create visualization
+    # create visualization json
 
     # create sql_alchemy engine
     sql_alchemy_content_engine = db.create_engine(content_db_conn_string)
@@ -102,6 +102,7 @@ def publish_corr_to_website(
 
         # TODO: refactor when Prefect 2.0 out of beta
         # the normal prefect library sqlalchemy works alright
+        # but the dict of dicts REFUSES to be pickled!
         for stock_symbol in corr_dict:
 
             unfolded_indexes = dict(
@@ -190,7 +191,7 @@ def export_markdown(markdown):
     # // +00:00 means 00:00 offset from UTC, thus UTC itself
 
     # sample post
-    # title: "Why did APPL go up? 📈"
+    # title: "Why did $STOCK go up? 📈"
     # date: 2020-09-15T11:30:03+00:00
     # categories: ["stock goes up📈"]
     # description: "Desc Text."
@@ -200,7 +201,11 @@ def export_markdown(markdown):
     # alt: "chart showing the correlation between APPL and rainfall on " # alt for image
     # caption: "test" # display caption under cover
     # ---
-    # Today, $yearcount years ago, the chart for $stock went $direction. What could have caused it? There could be a billion good reasons. We at NoisyStocks have no idea what those reasons are. Perhaps it was the weather, the phase of the moon, or the stance of the planets. We calculated our chart using a special "throw-spaghetti-at-a-wall-and-see-what-sticks" algorithm. Our tried-and-failed approach takes random variables and makes wildly spurious correlations.
+    # Today, $yearcount years ago, the chart for $stock went $direction. What could have caused it? There could be a billion good reasons. We at NoisyStocks have no idea what those reasons are. Perhaps it was the weather—there was a $correlation% correlation between the price of $stock and the $dataset_num_col_name of city.
+
+    # We have calculated this chart using a special "throw-spaghetti-at-a-wall-and-see-what-sticks" algorithm. Our marvelous approach takes random variables and makes wildly spurious correlations.
+
+    # original data, from datasets
 
 
 @flow(task_runner=SequentialTaskRunner())
