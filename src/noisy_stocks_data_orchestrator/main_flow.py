@@ -99,6 +99,7 @@ def correlate_datasets(*args, **kwargs):
 @flow(task_runner=SequentialTaskRunner(), name="stock_correlation_flow")
 def stock_correlation_flow(
     corr_dict_pickle_storage_path=r"/home/kevin/coding_projects/noisy_stocks/persistent_data/corr_dicts",
+    requested_publish_date: date = datetime.now().date(),
     dataset_uid_col_name_list=[
         "longitude",
         "latitude",
@@ -222,6 +223,7 @@ def stock_correlation_flow(
         dataset_uid = dataset_col_list[max_corr_index]
         stock = stock_col_list[stock_index]
         corr_dict[stock] = {
+            "requested_publish_date": requested_publish_date,
             "highest_corr": highest_corr,
             "stock_database_name": stock_database_name,
             "stock_pd_series": stocks_time_series.time_series_df[stock],
