@@ -135,9 +135,6 @@ def stock_correlation_flow(
         interval_in_days=stock_interval_in_days,
     )
 
-    corr_begin_date = stocks_db_query_object.output_begin_timestamp()
-    corr_end_date = stocks_db_query_object.output_end_timestamp()
-
     # get TimeSeries
     stocks_time_series = fetch_stocks_to_TimeSeries(
         sql_alchemy_engine=sql_alchemy_stock_engine,
