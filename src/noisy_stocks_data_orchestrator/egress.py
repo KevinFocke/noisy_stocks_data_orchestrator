@@ -78,6 +78,7 @@ def corr_dict_pickle_to_db(
         "stock_pd_series",
         "dataset_uid_col_name_list",
         "dataset_uid",
+        "requested_publish_date",
     ],
     corr_dict_pickle_folder_path: Path = Path(
         r"/home/kevin/coding_projects/noisy_stocks/persistent_data/corr_dicts/"
@@ -115,22 +116,22 @@ def corr_dict_pickle_to_db(
 
             stock_symbol_dict = {"stock_symbol": stock_symbol}
             pickle_name_dict = {
-                "ingested_pickle_name": corr_dict_file_path.name,
-                "ingested_pickle_name_hash": file_hash,
+                "ingested_pickle_filename": corr_dict_file_path.name,
+                "ingested_pickle_hash": file_hash,
             }  # note: pickle is not guaranteed to run deterministically
             # however, this is not required for this particular use case
             # the only purpose it to ensure the exact same pickle is found
 
-            keys_to_remove = {
+            upsertion_query_values = {
                 **stock_symbol_dict,
                 **pickle_name_dict,
                 **unfolded_indexes,
                 **corr_dict[stock_symbol],
             }
             for key_to_remove in cols_not_represented_in_content_db:
-                keys_to_remove.pop(key_to_remove)
+                upsertion_query_values.pop(key_to_remove)
 
-            insert_query = insert(website_table).values(keys_to_remove)
+            insert_query = insert(website_table).values(upsertion_query_values)
             # do nothing if duplicate value
             upsert_query = insert_query.on_conflict_do_nothing(
                 index_elements=[

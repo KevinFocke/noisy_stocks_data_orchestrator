@@ -240,11 +240,11 @@ def stock_correlation_flow(
         corr_dict[stock] = {
             "begin_date": corr_begin_date,
             "end_date": corr_end_date,
+            "dataset_database_name": dataset_database_name,
             "highest_corr": highest_corr,
             "stock_database_name": stock_database_name,
             "stock_pd_series": stocks_time_series.time_series_df[stock],
             "stock_num_col": stocks_time_series.numeric_col_name,  # contains timestamps + values
-            "dataset_database_name": dataset_database_name,
             "dataset_uid": dataset_uid,
             "dataset_uid_col_name_list": dataset_uid_col_name_list,  # eg. (lon, lat)
             "dataset_pd_series": dataset_time_series.time_series_df[dataset_uid],
