@@ -70,7 +70,7 @@ def move_file_to_subfolder(file_to_move: Path, sub_folder_name: str):
 
 
 @flow
-def publish_corr_to_website(
+def corr_to_db_content(
     content_db_conn_string: str = "postgresql+psycopg2://postgres:postgres@127.0.0.1:5432/content",
     cols_not_represented_in_content_db: list[str] = [
         "dataset_pd_series",
@@ -88,6 +88,8 @@ def publish_corr_to_website(
         return  # nothing to do
 
     # create visualization json
+
+    visualize_corr()
 
     # create sql_alchemy engine
     sql_alchemy_content_engine = db.create_engine(content_db_conn_string)
@@ -222,7 +224,7 @@ def publish():
 
 
 if __name__ == "__main__":
-    publish_corr_to_website()
+    corr_to_db_content()
 
     # create graph based on pandas series
 

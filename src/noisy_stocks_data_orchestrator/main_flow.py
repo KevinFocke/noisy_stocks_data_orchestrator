@@ -12,7 +12,7 @@ from pytest import approx
 from sqlalchemy import create_engine
 
 from customdatastructures import CorrDatabaseQuery
-from egress import publish_corr_to_website, write_object_to_path
+from egress import corr_to_db_content, publish, write_object_to_path
 from ingress import fetch_stocks_to_TimeSeries, fetch_weather_to_TimeSeries
 
 
@@ -290,7 +290,9 @@ def correlate_and_publish(
         posts_per_day=posts_per_day,
     )
 
-    publish_corr_to_website()
+    corr_to_db_content()
+
+    publish()
 
 
 if __name__ == "__main__":
