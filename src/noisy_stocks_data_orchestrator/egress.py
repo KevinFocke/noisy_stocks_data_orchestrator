@@ -129,7 +129,7 @@ def corr_dict_pickle_to_db(
                 **corr_dict[stock_symbol],
             }
             for key_to_remove in cols_not_represented_in_content_db:
-                upsertion_query_values.pop(key_to_remove)
+                upsertion_query_values.pop(key_to_remove, None)
 
             insert_query = insert(website_table).values(upsertion_query_values)
             # do nothing if duplicate value

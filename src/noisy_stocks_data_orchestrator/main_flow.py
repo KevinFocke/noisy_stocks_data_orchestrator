@@ -238,8 +238,8 @@ def stock_correlation_flow(
         dataset_uid = dataset_col_list[max_corr_index]
         stock = stock_col_list[stock_index]
         corr_dict[stock] = {
-            "begin_date": corr_begin_date,
-            "end_date": corr_end_date,
+            "begin_date": longest_consecutive_days_sequence[0],
+            "end_date": longest_consecutive_days_sequence[-1],
             "dataset_database_name": dataset_database_name,
             "highest_corr": highest_corr,
             "stock_database_name": stock_database_name,

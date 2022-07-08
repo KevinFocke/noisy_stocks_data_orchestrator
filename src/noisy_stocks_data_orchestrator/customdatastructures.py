@@ -285,7 +285,7 @@ class TimeSeries(BaseModel):
 
         # reset index
         grouped_dates_df.reset_index(inplace=True)  # maintains sorting
-        # timestamp is renamed to index !
+        # timestamp was renamed to index! bring it back
         grouped_dates_df = grouped_dates_df.rename(
             columns={"index": self.timestamp_index_name}
         )
