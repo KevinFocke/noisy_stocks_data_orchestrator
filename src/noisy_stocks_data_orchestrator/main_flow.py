@@ -136,6 +136,9 @@ def stock_correlation_flow(
         interval_in_days=stock_interval_in_days,
     )
 
+    corr_begin_date = stocks_db_query_object.output_begin_timestamp()
+    corr_end_date = stocks_db_query_object.output_end_timestamp()
+
     # get TimeSeries
     stocks_time_series = fetch_stocks_to_TimeSeries(
         sql_alchemy_engine=sql_alchemy_stock_engine,
@@ -230,6 +233,8 @@ def stock_correlation_flow(
         dataset_uid = dataset_col_list[max_corr_index]
         stock = stock_col_list[stock_index]
         corr_dict[stock] = {
+            "begin_date": corr_begin_date,
+            "end_date": corr_end_date,
             "requested_publish_date": requested_publish_date,
             "highest_corr": highest_corr,
             "stock_database_name": stock_database_name,
@@ -255,6 +260,7 @@ def stock_correlation_flow(
         # add begindate and enddate, stock_data, geo_points_data
         stock_index += 1
 
+    print(corr_dict)
     write_object_to_path(corr_dict, folder_path=Path(corr_dict_pickle_storage_path))
     # print(corr_dict)
 
