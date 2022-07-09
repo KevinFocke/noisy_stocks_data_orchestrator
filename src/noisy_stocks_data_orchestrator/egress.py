@@ -109,8 +109,8 @@ def visualize_corr(
     fig.update_xaxes(nticks=x_axis_len)
     fig.write_image(
         r"/home/kevin/coding_projects/noisy_stocks/persistent_data/testimg/myimg.webp",
-        width=1920,
-        height=1080,
+        width=1600,
+        height=900,
     )
     graph_json = fig.to_json(pretty=True)
     return graph_json, city, country_code, price_direction
