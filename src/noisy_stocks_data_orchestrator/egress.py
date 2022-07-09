@@ -338,15 +338,15 @@ def create_markdown(stock_dict, image_file_path: Path):
 
     header_cover_dict[
         "alt"
-    ] = f"chart showing the spurious stock correlation between {stock_symbol} and rainfall in {city}"
+    ] = f"chart showing the spurious stock correlation between stock {stock_symbol} and rainfall in {city}"
 
     header_cover_dict[
         "caption"
     ] = r"Credits: [Rainfall GPM IMERG dataset by NASA downloaded via Copernicus](https://cds.climate.copernicus.eu/cdsapp#!/dataset/insitu-gridded-observations-global-and-regional?tab=overview), [Historical stock price dataset by Boris Marjanovic](https://www.kaggle.com/datasets/borismarjanovic/price-volume-data-for-all-us-stocks-etfs), [cities dataset from GeoNames](https://download.geonames.org/export/dump/)"
     # note there should be 4 spaces before image, alt & caption
     body = (
-        f"Today, roughly 20 years ago, the chart for {stock_symbol} made a big move. What could have caused it? There could be a billion good reasons. We at NoisyStocks have no idea what those reasons are. Instead of careful & nuanced analysis, we have calculated this chart using a special throw-spaghetti-at-a-wall-and-see-what-sticks algorithm. Our marvelous approach takes random variables and makes wildly spurious correlations."
-        + " \n "
+        f"Today, roughly 20 years ago, the chart for stock {stock_symbol} made a big move. What could have caused it? There could be a billion good reasons. We at NoisyStocks have no idea what those reasons are. Instead of a careful & nuanced analysis, we have calculated this chart using a special throw-spaghetti-at-a-wall-and-see-what-sticks algorithm. Our marvelous approach takes random variables and makes wildly spurious correlations."
+        + linesep
     )
 
     shortcode_begin = r"{{< "
