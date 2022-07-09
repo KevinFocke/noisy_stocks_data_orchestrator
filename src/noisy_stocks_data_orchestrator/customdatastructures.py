@@ -346,6 +346,7 @@ class StockTimeSeries(TimeSeries):
         end_date: Timestamp,
         # TODO: add min_stocks & max_stocks args to output
         # do it as posts per day, then divide by 6
+        # HACK: The math is off, but it's roughly right
         min_stocks_output=60,  # note: divisible by 6 is ideal
         # why? A lengthy explanation:
         #  there is a tight coupling between

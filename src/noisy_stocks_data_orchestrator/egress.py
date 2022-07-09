@@ -1,7 +1,7 @@
 import hashlib
 import io
 import pickle
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 
 import pandas as pd
@@ -121,7 +121,6 @@ def visualize_corr(
     # fig.show()
     graph_json = fig.to_json(pretty=True)
     return graph_json, city, country_code, price_direction
-    # thumbnail, full
 
 
 @flow
@@ -319,7 +318,7 @@ def export_markdown(markdown):
 
 
 @flow(task_runner=SequentialTaskRunner())
-def get_publish_content(content_db_conn_string):
+def get_publish_content(content_db_conn_string, select_where_null):
     """input: content_db_conn_string
     output: randomized nested dict {"random_row_index":{**rows_in_db}}"""
     # create sql_alchemy engine & query
@@ -329,9 +328,8 @@ def get_publish_content(content_db_conn_string):
     website_table = db.Table(
         "website", metadata, autoload=True, autoload_with=sql_alchemy_content_engine
     )
-    select_query = db.select([website_table]).where(
-        website_table.columns.publish_timestamp.is_(None)
-    )
+    select_query = db.select([website_table])
+    select_query = select_query.where(website_table.columns.publish_timestamp.is_(None))
     print(str(select_query))
 
     # store results as a list per row
@@ -357,18 +355,37 @@ def get_publish_content(content_db_conn_string):
 
 
 @flow(task_runner=SequentialTaskRunner())
-def publish(content_db_conn_string, post_schedule_start_date, posts_per_day):
+def calc_schedule_content(
+    query_rows_dict, post_schedule_start_date: datetime, posts_per_day
+):
+    minutes_in_a_day = 24 * 60
+    minutes_between_posts = minutes_in_a_day / posts_per_day
+    timedelta_between_posts = timedelta(minutes=minutes_between_posts)
+
+    publish_time_stamp = post_schedule_start_date
+    for stock_dict in query_rows_dict:
+        query_rows_dict[stock_dict]["publish_timestamp"] = publish_time_stamp
+        publish_time_stamp += timedelta_between_posts
+    return query_rows_dict
+
+
+@flow(task_runner=SequentialTaskRunner())
+def publish(content_db_conn_string, post_schedule_start_date: datetime, posts_per_day):
 
     query_rows_dict = get_publish_content(
-        content_db_conn_string=content_db_conn_string
+        content_db_conn_string=content_db_conn_string, select_where_null=True
     ).result()
 
     print(query_rows_dict[0])
 
+    query_rows_dict = calc_schedule_content(
+        query_rows_dict=query_rows_dict,
+        post_schedule_start_date=post_schedule_start_date,
+        posts_per_day=posts_per_day,
+    ).result()
+
     # start scheduling posts
 
-    hours_between = 24 / posts_per_day
-    #
     # some_date = "2020-11-20"
     # folder_exists(website_folder_path)
     # file_path = website_folder_path / (somedate.strftime(r"%Y_%m_%d") + r".pickle")
@@ -388,7 +405,7 @@ def publish(content_db_conn_string, post_schedule_start_date, posts_per_day):
 if __name__ == "__main__":
     publish(
         content_db_conn_string="postgresql+psycopg2://postgres:postgres@127.0.0.1:5432/content",
-        post_schedule_start_date="2022-20-1",
+        post_schedule_start_date=datetime.strptime("2022-07-01", r"%Y-%m-%d"),
         posts_per_day=10,
     )
     # corr_to_db_content()
