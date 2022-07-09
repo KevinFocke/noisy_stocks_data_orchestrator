@@ -2,6 +2,7 @@ import hashlib
 import io
 import pickle
 from datetime import datetime, timedelta
+from os import linesep
 from pathlib import Path
 
 import pandas as pd
@@ -46,6 +47,8 @@ def visualize_corr(
     coordinates = (mytuple,)
     results = reverse_geocoder(coordinates=coordinates)
     city = results[0]["name"]  # TODO: refactor city & country code to other func
+    city_longitude = results[0]["lon"]
+    city_latitude = results[0]["lat"]
     country_code = results[0]["cc"]
     pd.options.plotting.backend = "plotly"
     # sanity check, are the corrs correct?
@@ -108,7 +111,14 @@ def visualize_corr(
     )
     fig.update_xaxes(nticks=x_axis_len)
     graph_json = fig.to_json(pretty=True)
-    return graph_json, city, country_code, price_direction
+    return (
+        graph_json,
+        city,
+        country_code,
+        price_direction,
+        city_longitude,
+        city_latitude,
+    )
 
 
 @flow
@@ -200,7 +210,14 @@ def corr_to_db_content(
             )
 
             # TODO: refactor, this function is way overloaded; had no time to write decently
-            graph_json, city, country_code, stock_direction = visualize_corr(
+            (
+                graph_json,
+                city,
+                country_code,
+                stock_direction,
+                city_longitude,
+                city_latitude,
+            ) = visualize_corr(
                 pd_series_stocks=corr_dict[stock_symbol]["stock_pd_series"],
                 pd_series_dataset=corr_dict[stock_symbol]["dataset_pd_series"],
                 highest_corr=corr_dict[stock_symbol]["highest_corr"],
@@ -219,7 +236,12 @@ def corr_to_db_content(
                 "stock_direction": stock_direction,
             }
             json_dict = {"graph_json": graph_json}
-            geo_dict = {"city": city, "country_code": country_code}
+            geo_dict = {
+                "city": city,
+                "country_code": country_code,
+                "city_longitude": city_longitude,
+                "city_latitude": city_latitude,
+            }
             pickle_name_dict = {
                 "ingested_pickle_filename": corr_dict_file_path.name,
                 "ingested_pickle_hash": file_hash,
@@ -276,41 +298,115 @@ def reverse_geocoder(coordinates):
 
 
 @flow()
-def create_markdown(corr_dict):
+def create_markdown(stock_dict, image_file_path: Path):
+
+    header_dict = {}
+
+    # create folder page_bundle_path
+    # year-month-day-{stock_symbol}
+
+    stock_symbol = stock_dict["stock_symbol"]
+    city = stock_dict["city"]
+    country_code = stock_dict["country_code"]
+    stock_direction = stock_dict["stock_direction"]
+    publish_timestamp = stock_dict["publish_timestamp"]
+    longitude = stock_dict["longitude"]
+    latitude = stock_dict["latitude"]
+    city_longitude = stock_dict["city_longitude"]
+    city_latitude = stock_dict["city_latitude"]
+    header_dict["title"] = f" Why did {stock_symbol} go {stock_direction}?"
+    header_dict["date"] = publish_timestamp.strftime(r"%Y-%m-%d %H:%M:%S")
+
+    if stock_direction == "up":
+        header_dict["categories"] = r"stock goes up 📈"
+    elif stock_direction == "down":
+        header_dict["categories"] = r"stock goes down 📉"
+    else:
+        header_dict["categories"] = r"NEUTRAL CHAOS ZONE"
+
+    header_dict[
+        "description"
+    ] = f"The spurious correlation between {stock_symbol} and rainfall in {city}"
+
+    header_cover_dict = {}
+
+    header_cover_dict["image"] = image_file_path.name
+
+    header_cover_dict[
+        "alt"
+    ] = f"chart showing the spurious stock correlation between {stock_symbol} and rainfall in {city}"
+
+    header_cover_dict[
+        "caption"
+    ] = r"Credits: [Rainfall GPM IMERG dataset by NASA downloaded via Copernicus](https://cds.climate.copernicus.eu/cdsapp#!/dataset/insitu-gridded-observations-global-and-regional?tab=overview), [Historical stock price dataset by Boris Marjanovic](https://www.kaggle.com/datasets/borismarjanovic/price-volume-data-for-all-us-stocks-etfs), [cities dataset from GeoNames](https://download.geonames.org/export/dump/)"
+    # note there should be 4 spaces before image, alt & caption
+    body = (
+        f"Today, roughly 20 years ago, the chart for {stock_symbol} went {stock_direction}. What could have caused it? There could be a billion good reasons. We at NoisyStocks have no idea what those reasons are. Instead of careful & nuanced analysis, we have calculated this chart using a special throw-spaghetti-at-a-wall-and-see-what-sticks algorithm. Our marvelous approach takes random variables and makes wildly spurious correlations."
+        + " \n "
+    )
+
+    shortcode_begin = r"{{< "
+    shortcode_end = r" >}} "
+    body_map_snippet = (
+        f"# Where is {city}, {country_code}?"
+        + linesep
+        + shortcode_begin
+        + 'leaflet-map mapHeight="500px" mapWidth="100%"'
+        + f'mapLat="{latitude}" mapLon="{longitude}"'
+        + shortcode_end
+        + linesep
+        + "    "
+        + shortcode_begin
+        + f'leaflet-marker marketLat="{city_latitude}" markerLon="{city_longitude}" markerContent="The city of {city}"'
+        + shortcode_end
+        + linesep
+        + shortcode_begin
+        + r"/leaflet-map"
+        + shortcode_end
+        + linesep
+        + r"* The algorithm always chooses the nearest city with >1000 people. If the points happens to fall in the middle of the ocean, it will not be accurate. The real coordinates are shown on the map."
+    )
+
+    # add header to markdown
+    markdown = ""
+    markdown += "---" + linesep
+    for key, item in header_dict.items():
+        markdown += f"{key}: " + f'"{item}"' + linesep
+
+    # add img to markdown
+    markdown += r"cover:" + linesep
+    for key, item in header_cover_dict.items():
+        markdown += r"    " + f"{key}: " + f'"{item}"' + linesep
+
+    # end of header
+    markdown += "---" + linesep
+
+    markdown += body
+
+    markdown += body_map_snippet
 
     # Credit: Cities database from Geocities
     # Precipitation data from ...
     # Stock data from ...
 
-    # date format: year-month-dayThour:min:sec+tz_offset
-    # eg. 2021-09-15T11:30:03+00:00
-    # // +00:00 means 00:00 offset from UTC, thus UTC itself
-
-    # sample post
-    # title: "Why did $STOCK go up? 📈"
-    # date: 2020-09-15T11:30:03+00:00
-    # categories: ["stock goes up📈"]
-    # description: "Desc Text."
-    # canonicalURL: "https://noisystocks.com/$pretty-date/$page-title"
-    # cover:
-    # image: "graph-APPL-rainfall-2002-05-30.jpg"
-    # alt: "chart showing the correlation between APPL and rainfall on " # alt for image
-    # caption: "test" # display caption under cover
-    # ---
-    # Today, $yearcount years ago, the chart for $stock went $direction. What could have caused it? There could be a billion good reasons. We at NoisyStocks have no idea what those reasons are. Perhaps it was the weather—there was a $correlation% correlation between the price of $stock and the $dataset_num_col_name of city.
-
-    # We have calculated this chart using a special "throw-spaghetti-at-a-wall-and-see-what-sticks" algorithm. Our marvelous approach takes random variables and makes wildly spurious correlations.
-
-    # original data, from datasets
-    pass
+    return markdown
 
 
 @flow()
 def export_plotly_graph(plotly_json, file_path: Path):
-    # silly workaround;
+
     fig = plotly.io.from_json(plotly_json)
 
     fig.write_image(file_path, width=1080, height=720)
+
+
+@flow()
+def export_markdown(markdown, page_bundle_path: Path):
+
+    index_path = page_bundle_path / "index.md"
+    with open(index_path, "w") as fp:
+        fp.write(markdown)
+        fp.close()
 
 
 @flow(task_runner=SequentialTaskRunner())
@@ -334,7 +430,7 @@ def get_publish_content(content_db_conn_string, select_where_publish_ts_null: bo
             website_table.columns.publish_timestamp.is_not(None)
         )
 
-    print(str(select_query))
+    # print(str(select_query))
 
     # store results as a list per row
     query_result = connection.execute(select_query).all()
@@ -344,7 +440,7 @@ def get_publish_content(content_db_conn_string, select_where_publish_ts_null: bo
     row_index = 0
     for row in query_result:
         row_as_dict = dict(row)
-        print(row_as_dict["stock_symbol"])
+        # print(row_as_dict["stock_symbol"])
         rows_dict[row_index] = row_as_dict
         row_index += 1
 
@@ -433,6 +529,12 @@ def create_website_content_files(query_rows_dict, website_content_folder_path: P
         # export graph image
         export_plotly_graph(plotly_json=cur_stock["graph_json"], file_path=image_path)
 
+        markdown = create_markdown(
+            stock_dict=cur_stock, image_file_path=image_path
+        ).result()
+
+        export_markdown(markdown=markdown, page_bundle_path=page_bundle_path)
+
 
 @flow(task_runner=SequentialTaskRunner())
 def publish(
@@ -508,10 +610,10 @@ if __name__ == "__main__":
     # create graph based on pandas series
 
     # export
-    mytuple = (float(52.3), float(40))  # lat lon
+    # mytuple = (float(52.3), float(40))  # lat lon
 
-    coordinates = (mytuple,)
+    # coordinates = (mytuple,)
     # coordinates = ((51.5214588, -0.1729636),)
-    results = reverse_geocoder(coordinates=coordinates)
+    # results = reverse_geocoder(coordinates=coordinates)
     # TODO: Add country code lookup based on Geocities
-    print(results)
+    # print(results)

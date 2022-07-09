@@ -1,3 +1,4 @@
+from datetime import datetime
 from pathlib import Path
 
 import numpy as np
@@ -294,7 +295,14 @@ def correlate_and_publish(
 
     corr_to_db_content(content_db_conn_string=content_db_conn_string)
 
-    # publish()
+    publish(
+        content_db_conn_string=content_db_conn_string,
+        post_schedule_start_date=datetime.strptime("2022-07-01", r"%Y-%m-%d"),
+        posts_per_day=posts_per_day,
+        website_content_folder_path=Path(
+            r"/home/kevin/coding_projects/noisy_stocks/persistent_data/temp_website_content_test"
+        ),
+    )
 
 
 if __name__ == "__main__":
