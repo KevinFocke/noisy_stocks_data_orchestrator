@@ -65,6 +65,7 @@ def visualize_corr(
 
     merged_df = merged_df.sort_index()
     # check if direction went up or down
+    # FIXME: broken code, not sure why
     if merged_df[stock_symbol].iloc[-1] > merged_df[stock_symbol].iloc[0]:
         price_direction = "up"
     elif merged_df[stock_symbol].iloc[-1] < merged_df[stock_symbol].iloc[0]:
@@ -605,7 +606,7 @@ if __name__ == "__main__":
         post_schedule_start_date=datetime.strptime("2022-07-01", r"%Y-%m-%d"),
         posts_per_day=10,
         website_content_folder_path=Path(
-            r"/home/kevin/coding_projects/noisy_stocks/persistent_data/temp_website_content_test"
+            r"/home/kevin/coding_projects/noisy_stocks/noisy_stocks_website/content/posts"
         ),
     )
     # corr_to_db_content()
