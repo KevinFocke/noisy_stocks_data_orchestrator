@@ -1,13 +1,12 @@
 # Noisy Stocks
 
-Generates spurious stock correlations between rainfall and stock price based on historical movers & shakers.
+Generates spurious stock correlations between stock price and rainfall based on historical movers & shakers.
 
 Published online on [noisystocks.com](noisystocks.com).
 
 ## General information
 
 My main goal was to create a Cloud Native architecture (Container-Based + Dynamically-Scalable + Microservice-Oriented). Containers run on Docker. Agents dynamically pick up available work. The services are:
-
 
 * Analysis service (Custom Python 3 using Pandas DataFrames)
 * Publishing service (Custom Python 3)
@@ -19,7 +18,7 @@ Databases are PostgresQL specialized for time series (Timescale)
 
 Features:
 
-# Blazing fast; find correlations and publish 60+ posts in 3 minutes.
+* Blazing fast; #TODO: add speed benchmarks
 
 * Automatically finds correlations based on time series
 
@@ -85,6 +84,7 @@ In the future I do intend to explore Kubernetes more.
 
 # Reflection
 
+* Towards the deadline the code took a steep drop in quality. The tech debt needs to be cleaned up.
 * It is challenging to decide on the _right_ size of a microservice.
 
 # Troubleshoot

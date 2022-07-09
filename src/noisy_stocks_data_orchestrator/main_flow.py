@@ -104,15 +104,18 @@ def stock_correlation_flow(
         "longitude",
     ],  # one or more values that uniquely identify a datapoint
     posts_per_day: PositiveInt = 10,
+    stocks_db_conn_string=(
+        "postgresql+psycopg2://postgres:postgres@127.0.0.1:5432/stocks"
+    ),
+    datasets_db_conn_string=(
+        "postgresql+psycopg2://postgres:postgres@127.0.0.1:5432/datasets"
+    ),
 ):
 
     # TODO: refactor preferences to arguments of func
     # best practice for creating sqlalchemy engine
     # one connection per database
     # https://docs.sqlalchemy.org/en/14/core/connections.html#basic-usage
-    stocks_db_conn_string = (
-        "postgresql+psycopg2://postgres:postgres@127.0.0.1:5432/stocks"
-    )
     # preferences
     min_stocks_output = (
         posts_per_day * 6
@@ -177,10 +180,6 @@ def stock_correlation_flow(
             longest_consecutive_days_sequence[0],  # first el
             longest_consecutive_days_sequence[-1],  # last el
         ),
-    )
-
-    datasets_db_conn_string = (
-        "postgresql+psycopg2://postgres:postgres@127.0.0.1:5432/datasets"
     )
 
     sql_alchemy_datasets_engine = create_engine(datasets_db_conn_string)
@@ -278,15 +277,24 @@ def correlate_and_publish(
         "latitude",
     ],  # one or more values that uniquely identify a datapoint
     posts_per_day: PositiveInt = 10,
+    stocks_db_conn_string: str = (
+        "postgresql+psycopg2://postgres:postgres@127.0.0.1:5432/stocks"
+    ),
+    datasets_db_conn_string: str = (
+        "postgresql+psycopg2://postgres:postgres@127.0.0.1:5432/datasets"
+    ),
+    content_db_conn_string: str = "postgresql+psycopg2://postgres:postgres@127.0.0.1:5432/content",
 ):
 
     stock_correlation_flow(
         corr_dict_pickle_storage_path=corr_dict_pickle_storage_path,
         dataset_uid_col_name_list=dataset_uid_col_name_list,
         posts_per_day=posts_per_day,
+        stocks_db_conn_string=stocks_db_conn_string,
+        datasets_db_conn_string=datasets_db_conn_string,
     )
 
-    corr_to_db_content()
+    corr_to_db_content(content_db_conn_string=content_db_conn_string)
 
     publish()
 
