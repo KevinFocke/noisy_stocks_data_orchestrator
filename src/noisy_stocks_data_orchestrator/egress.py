@@ -355,7 +355,7 @@ def create_markdown(stock_dict, image_file_path: Path):
         f"# Where is {city}, {country_code}?"
         + linesep
         + shortcode_begin
-        + 'leaflet-map mapHeight="500px" mapWidth="100%"'
+        + 'leaflet-map zoom="7" mapHeight="500px" mapWidth="100%"'
         + f'mapLat="{latitude}" mapLon="{longitude}"'
         + shortcode_end
         + linesep
