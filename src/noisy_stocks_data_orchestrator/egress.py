@@ -318,7 +318,7 @@ def export_markdown(markdown):
 
 
 @flow(task_runner=SequentialTaskRunner())
-def get_publish_content(content_db_conn_string, select_where_null):
+def get_publish_content(content_db_conn_string, select_where_null: bool):
     """input: content_db_conn_string
     output: randomized nested dict {"random_row_index":{**rows_in_db}}"""
     # create sql_alchemy engine & query
@@ -329,7 +329,10 @@ def get_publish_content(content_db_conn_string, select_where_null):
         "website", metadata, autoload=True, autoload_with=sql_alchemy_content_engine
     )
     select_query = db.select([website_table])
-    select_query = select_query.where(website_table.columns.publish_timestamp.is_(None))
+    if select_where_null:
+        select_query = select_query.where(
+            website_table.columns.publish_timestamp.is_(None)
+        )
     print(str(select_query))
 
     # store results as a list per row
