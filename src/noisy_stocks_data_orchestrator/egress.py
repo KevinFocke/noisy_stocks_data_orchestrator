@@ -330,7 +330,7 @@ def create_markdown(stock_dict, image_file_path: Path):
 
     header_dict[
         "description"
-    ] = f"The spurious correlation between {stock_symbol} and rainfall in {city}"
+    ] = f"The spurious correlation between stock {stock_symbol} and rainfall in {city}"
 
     header_cover_dict = {}
 
@@ -342,7 +342,7 @@ def create_markdown(stock_dict, image_file_path: Path):
 
     header_cover_dict[
         "caption"
-    ] = r"Credits: [Rainfall GPM IMERG dataset by NASA downloaded via Copernicus](https://cds.climate.copernicus.eu/cdsapp#!/dataset/insitu-gridded-observations-global-and-regional?tab=overview), [Historical stock price dataset by Boris Marjanovic](https://www.kaggle.com/datasets/borismarjanovic/price-volume-data-for-all-us-stocks-etfs), [cities dataset from GeoNames](https://download.geonames.org/export/dump/)"
+    ] = r"Credits: [Rainfall GPM IMERG dataset by NASA downloaded via Copernicus](https://cds.climate.copernicus.eu/cdsapp#!/dataset/insitu-gridded-observations-global-and-regional?tab=overview), [Historical stock price dataset by Boris Marjanovic downloaded via Kaggle](https://www.kaggle.com/datasets/borismarjanovic/price-volume-data-for-all-us-stocks-etfs), [Cities dataset from GeoNames](https://download.geonames.org/export/dump/)"
     # note there should be 4 spaces before image, alt & caption
     body = (
         f"Today, roughly 20 years ago, the chart for stock {stock_symbol} made a big move. What could have caused it? There could be a billion good reasons. We at NoisyStocks have no idea what those reasons are. Instead of a careful & nuanced analysis, we have calculated this chart using a special throw-spaghetti-at-a-wall-and-see-what-sticks algorithm. Our marvelous approach takes random variables and makes wildly spurious correlations."
@@ -372,7 +372,7 @@ def create_markdown(stock_dict, image_file_path: Path):
         + r"/leaflet-map"
         + shortcode_end
         + linesep
-        + r"* The algorithm always chooses the nearest city with >1000 people. If the points happens to fall in the middle of the ocean, it will not be accurate. The real coordinates are shown on the map."
+        + r"Note: The algorithm always chooses the nearest city with >1000 people. If the points happen to fall in the middle of the ocean, it will not be accurate. The actual rainfall coordinates are also shown on the map."
     )
 
     # add header to markdown
