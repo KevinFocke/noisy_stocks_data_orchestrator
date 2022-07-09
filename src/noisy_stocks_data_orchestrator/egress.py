@@ -312,10 +312,10 @@ def create_markdown(stock_dict, image_file_path: Path):
     country_code = stock_dict["country_code"]
     stock_direction = stock_dict["stock_direction"]
     publish_timestamp = stock_dict["publish_timestamp"]
-    longitude = round(stock_dict["longitude"], 2)
-    latitude = round(stock_dict["latitude"], 2)
-    city_longitude = round(stock_dict["city_longitude"], 2)
-    city_latitude = round(stock_dict["city_latitude"], 2)
+    longitude = round(stock_dict["longitude"], 1)
+    latitude = round(stock_dict["latitude"], 1)
+    city_longitude = round(stock_dict["city_longitude"], 1)
+    city_latitude = round(stock_dict["city_latitude"], 1)
     header_dict["title"] = f"{stock_symbol} and rainfall in {city}"
     header_dict["date"] = publish_timestamp.strftime(r"%Y-%m-%d %H:%M:%S")
 
@@ -365,7 +365,7 @@ def create_markdown(stock_dict, image_file_path: Path):
         + shortcode_end
         + linesep
         + shortcode_begin
-        + f'leaflet-marker marketLat="{latitude}" markerLon="{longitude}" markerContent="rainfall coordinates (longitude:{longitude}, latitude{latitude})"'
+        + f'leaflet-marker marketLat="{latitude}" markerLon="{longitude}" markerContent="rainfall coordinates (longitude:{longitude}, latitude: {latitude})"'
         + shortcode_end
         + linesep
         + shortcode_begin
