@@ -18,7 +18,7 @@ Databases are PostgresQL specialized for time series (Timescale)
 
 Features:
 
-* Blazing fast. Can publish 60+ stocks in less than 5 minutes
+* Blazing fast. Can process 60+ stocks to a fully published state in less than 5 minutes.
 
 * Automatically finds correlations based on time series
 
