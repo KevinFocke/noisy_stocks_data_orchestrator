@@ -319,8 +319,62 @@ def export_markdown(markdown):
 
 
 @flow(task_runner=SequentialTaskRunner())
-def publish():
-    pass
+def get_publish_content(content_db_conn_string):
+    """input: content_db_conn_string
+    output: randomized nested dict {"random_row_index":{**rows_in_db}}"""
+    # create sql_alchemy engine & query
+    sql_alchemy_content_engine = db.create_engine(content_db_conn_string)
+    connection = sql_alchemy_content_engine.connect()
+    metadata = db.MetaData()
+    website_table = db.Table(
+        "website", metadata, autoload=True, autoload_with=sql_alchemy_content_engine
+    )
+    select_query = db.select([website_table]).where(
+        website_table.columns.publish_timestamp.is_(None)
+    )
+    print(str(select_query))
+
+    # store results as a list per row
+    query_result = connection.execute(select_query).all()
+
+    # create nested dict, {"row_index":{**rows_in_db}}
+    rows_dict = {}
+    row_index = 0
+    for row in query_result:
+        row_as_dict = dict(row)
+        print(row_as_dict["stock_symbol"])
+        rows_dict[row_index] = row_as_dict
+        row_index += 1
+
+    #    query_df = pd.DataFrame(query_result)
+    #    query_df.columns = query_result[0].keys()
+    #
+    #    # shuffle the rows & reassign index numbers
+    #    # shuffling could return a series; for safety make a df
+    #    query_df = pd.DataFrame(query_df.sample(frac=1).reset_index(drop=True))
+    #
+    return rows_dict
+
+
+@flow(task_runner=SequentialTaskRunner())
+def publish(content_db_conn_string, post_schedule_start_date, posts_per_day):
+
+    query_rows_dict = get_publish_content(
+        content_db_conn_string=content_db_conn_string
+    ).result()
+
+    print(query_rows_dict[0])
+
+    # start scheduling posts
+
+    hours_between = 24 / posts_per_day
+    #
+    # some_date = "2020-11-20"
+    # folder_exists(website_folder_path)
+    # file_path = website_folder_path / (somedate.strftime(r"%Y_%m_%d") + r".pickle")
+    # with file_path.open("w") as fp:  # write image to folder
+    #    pass  # TODO:
+
     # load correlation from database
 
     # load defaults from website
@@ -332,7 +386,12 @@ def publish():
 
 
 if __name__ == "__main__":
-    corr_to_db_content()
+    publish(
+        content_db_conn_string="postgresql+psycopg2://postgres:postgres@127.0.0.1:5432/content",
+        post_schedule_start_date="2022-20-1",
+        posts_per_day=10,
+    )
+    # corr_to_db_content()
 
     # create graph based on pandas series
 

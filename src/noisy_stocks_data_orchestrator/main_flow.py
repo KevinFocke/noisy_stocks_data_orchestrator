@@ -296,7 +296,7 @@ def correlate_and_publish(
 
     corr_to_db_content(content_db_conn_string=content_db_conn_string)
 
-    publish()
+    # publish()
 
 
 if __name__ == "__main__":
