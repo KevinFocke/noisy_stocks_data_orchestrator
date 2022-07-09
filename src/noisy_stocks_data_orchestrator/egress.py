@@ -54,10 +54,6 @@ def visualize_corr(
     # convert timestamp to datetime
     df1.index = pd.to_datetime(df1.index)
     df2.index = pd.to_datetime(df2.index)
-    print(df1)
-    print(df2)
-    print(df1.index)
-    print(df2.index)
 
     merged_df = df1.join(df2)
     merged_df = merged_df.reset_index()
@@ -138,7 +134,7 @@ def create_folder(folder_url: Path):
 
 
 @flow(task_runner=SequentialTaskRunner())
-def write_object_to_path(object_to_save, folder_path: Path):
+def pickle_object_to_path(object_to_save, folder_path: Path):
     """input: object, folderPath, the filename will be the current datetime"""
     today = datetime.now()
     folder_exists(folder_path)
@@ -188,6 +184,7 @@ def corr_to_db_content(
     # create visualization json
 
     # create sql_alchemy engine
+    # TODO: refactor
     sql_alchemy_content_engine = db.create_engine(content_db_conn_string)
     connection = sql_alchemy_content_engine.connect()
     metadata = db.MetaData()
@@ -251,15 +248,15 @@ def corr_to_db_content(
 
             insert_query = insert(website_table).values(upsertion_query_values)
             # do nothing if duplicate value
-            upsert_query = insert_query.on_conflict_do_nothing(
+            insert_query = insert_query.on_conflict_do_nothing(
                 index_elements=[
                     "stock_symbol",
                     "begin_date",
                     "end_date",
                     "dataset_database_name",
                 ]
-            )  # upserts, inserts a date if there is no entry for the (composite) key
-            connection.execute(upsert_query)
+            )  # inserts the entry if there is no entry for the (composite) key
+            connection.execute(insert_query)
 
         move_file_to_subfolder(corr_dict_file_path, "processed")
         # moves to processed folder
@@ -294,6 +291,10 @@ def create_markdown_files(visualization):
 @task()
 def export_markdown(markdown):
     pass
+
+    # Credit: Cities database from Geocities
+    # Precipitation data from ...
+    # Stock data from ...
 
     # date format: year-month-dayThour:min:sec+tz_offset
     # eg. 2021-09-15T11:30:03+00:00
@@ -373,13 +374,42 @@ def calc_schedule_content(
 
 
 @flow(task_runner=SequentialTaskRunner())
+def upsert_website_content(content_db_conn_string, query_rows_dict):
+    sql_alchemy_content_engine = db.create_engine(content_db_conn_string)
+    connection = sql_alchemy_content_engine.connect()
+    metadata = db.MetaData()
+    website_table = db.Table(
+        "website", metadata, autoload=True, autoload_with=sql_alchemy_content_engine
+    )
+
+    for stock_index in query_rows_dict:
+        stock_row = query_rows_dict[stock_index]
+        upsert_query = insert(website_table).values(stock_row)
+        # do nothing if duplicate value
+        upsert_query = upsert_query.on_conflict_do_update(
+            index_elements=[
+                "stock_symbol",
+                "begin_date",
+                "end_date",
+                "dataset_database_name",
+            ],
+            set_=stock_row,
+        )  # upserts, inserts a date if there is no entry for the (composite) key
+        connection.execute(upsert_query)
+
+
+@flow(task_runner=SequentialTaskRunner())
 def publish(content_db_conn_string, post_schedule_start_date: datetime, posts_per_day):
 
     query_rows_dict = get_publish_content(
         content_db_conn_string=content_db_conn_string, select_where_null=True
     ).result()
 
-    print(query_rows_dict[0])
+    # skip processing if no nulls
+    if len(query_rows_dict) == 0:
+        return
+
+    # create_website_content_files(query_rows_dict)
 
     query_rows_dict = calc_schedule_content(
         query_rows_dict=query_rows_dict,
@@ -387,25 +417,37 @@ def publish(content_db_conn_string, post_schedule_start_date: datetime, posts_pe
         posts_per_day=posts_per_day,
     ).result()
 
-    # start scheduling posts
+    # create website_content_files
+    # check if folder (year-month-day-symbol) exists
+    # export plotly image
+    # create markdown
+    # export the markdown
 
-    # some_date = "2020-11-20"
-    # folder_exists(website_folder_path)
-    # file_path = website_folder_path / (somedate.strftime(r"%Y_%m_%d") + r".pickle")
-    # with file_path.open("w") as fp:  # write image to folder
-    #    pass  # TODO:
+    # update row with up-to-date content
+    upsert_website_content(
+        content_db_conn_string=content_db_conn_string, query_rows_dict=query_rows_dict
+    )
 
-    # load correlation from database
 
-    # load defaults from website
-    # Create visualization
+# upsert the database w publish_timestamp entry
 
-    # Credit: Cities database from Geocities
-    # Precipitation data from ...
-    # Stock data from ...
+# some_date = "2020-11-20"
+# folder_exists(website_folder_path)
+# file_path = website_folder_path / (somedate.strftime(r"%Y_%m_%d") + r".pickle")
+# with file_path.open("w") as fp:  # write image to folder
+#    pass  # TODO:
+
+# load correlation from database
+
+# load defaults from website
+# Create visualization
 
 
 if __name__ == "__main__":
+    corr_to_db_content(
+        content_db_conn_string="postgresql+psycopg2://postgres:postgres@127.0.0.1:5432/content"
+    )
+
     publish(
         content_db_conn_string="postgresql+psycopg2://postgres:postgres@127.0.0.1:5432/content",
         post_schedule_start_date=datetime.strptime("2022-07-01", r"%Y-%m-%d"),

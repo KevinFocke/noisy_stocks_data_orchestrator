@@ -11,7 +11,7 @@ from pytest import approx
 from sqlalchemy import create_engine
 
 from customdatastructures import CorrDatabaseQuery
-from egress import corr_to_db_content, publish, write_object_to_path
+from egress import corr_to_db_content, pickle_object_to_path, publish
 from ingress import fetch_stocks_to_TimeSeries, fetch_weather_to_TimeSeries
 
 
@@ -223,6 +223,7 @@ def stock_correlation_flow(
     # BUG: Ingesting new stocks to the stock database might publish more posts than requested; the upsert of export assumes the exact same stocks will be upserted each time
     # WORKAROUND: if the stock dataset ever changes, wait until all remaining posts are published.
     # deleting those posts is not a workaround because you woulnd't be able to determinstically build up the same database from the existing pickles
+
     for stock_corr in correlations:
         # sanity check
         assert len(stock_corr) == len(dataset_col_list)
@@ -259,14 +260,11 @@ def stock_correlation_flow(
         stock_index += 1
 
     print(corr_dict)
-    write_object_to_path(corr_dict, folder_path=Path(corr_dict_pickle_storage_path))
+    pickle_object_to_path(corr_dict, folder_path=Path(corr_dict_pickle_storage_path))
     # print(corr_dict)
 
     # TODO: once Orion is out of beta, create a dependency flow https://github.com/PrefectHQ/prefect/blob/b9503001f5de642d48d7d5248436d1e8861cffed/docs/core/idioms/flow-to-flow.md
     sql_alchemy_stock_engine.dispose()
-
-
-# TODO: add retries
 
 
 @flow(task_runner=SequentialTaskRunner(), name="correlate_and_publish_flow")
