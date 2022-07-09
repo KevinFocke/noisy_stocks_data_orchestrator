@@ -300,7 +300,7 @@ def correlate_and_publish(
         post_schedule_start_date=datetime.today(),
         posts_per_day=posts_per_day,
         website_content_folder_path=Path(
-            r"/home/kevin/coding_projects/noisy_stocks/persistent_data/temp_website_content_test"
+            r"/home/kevin/coding_projects/noisy_stocks/noisy_stocks_website/content/posts"
         ),
     )
 

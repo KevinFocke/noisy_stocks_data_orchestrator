@@ -321,12 +321,12 @@ def create_markdown(stock_dict, image_file_path: Path):
 
     header_dict["categories"] = "spurious stock correlations"
     # FIXME: stock direction is broken, not sure why
-    #if stock_direction == "up":
-        #header_dict["categories"] = r"stock goes up 📈"
-    #elif stock_direction == "down":
-        #header_dict["categories"] = r"stock goes down 📉"
-    #else:
-        #header_dict["categories"] = r"NEUTRAL CHAOS ZONE"
+    # if stock_direction == "up":
+    # header_dict["categories"] = r"stock goes up 📈"
+    # elif stock_direction == "down":
+    # header_dict["categories"] = r"stock goes down 📉"
+    # else:
+    # header_dict["categories"] = r"NEUTRAL CHAOS ZONE"
 
     header_dict[
         "description"
@@ -572,52 +572,3 @@ def publish(
         query_rows_dict=rows_dict_where_pub_ts_not_null,
         website_content_folder_path=website_content_folder_path,
     )
-
-    # create website_content_files
-    # check if folder (year-month-day-symbol) exists
-    # export plotly image
-    # create markdown
-    # export the markdown
-
-    # update row with up-to-date content
-
-
-# upsert the database w publish_timestamp entry
-
-# some_date = "2020-11-20"
-# folder_exists(website_folder_path)
-# file_path = website_folder_path / (somedate.strftime(r"%Y_%m_%d") + r".pickle")
-# with file_path.open("w") as fp:  # write image to folder
-#    pass  # TODO:
-
-# load correlation from database
-
-# load defaults from website
-# Create visualization
-
-
-if __name__ == "__main__":
-    corr_to_db_content(
-        content_db_conn_string="postgresql+psycopg2://postgres:postgres@127.0.0.1:5432/content"
-    )
-
-    publish(
-        content_db_conn_string="postgresql+psycopg2://postgres:postgres@127.0.0.1:5432/content",
-        post_schedule_start_date=datetime.strptime("2022-07-01", r"%Y-%m-%d"),
-        posts_per_day=10,
-        website_content_folder_path=Path(
-            r"/home/kevin/coding_projects/noisy_stocks/noisy_stocks_website/content/posts"
-        ),
-    )
-    # corr_to_db_content()
-
-    # create graph based on pandas series
-
-    # export
-    # mytuple = (float(52.3), float(40))  # lat lon
-
-    # coordinates = (mytuple,)
-    # coordinates = ((51.5214588, -0.1729636),)
-    # results = reverse_geocoder(coordinates=coordinates)
-    # TODO: Add country code lookup based on Geocities
-    # print(results)
