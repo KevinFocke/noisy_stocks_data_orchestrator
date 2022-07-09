@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 import pandas as pd
+import plotly
 import plotly.graph_objects as go
 import reverse_geocoder as rg  # Might need to be installed locally via pip
 import sqlalchemy as db
@@ -111,10 +112,6 @@ def visualize_corr(
         width=1920,
         height=1080,
     )
-    # fig.write_image(
-    #    r"/home/kevin/coding_projects/noisy_stocks/persistent_data/testimg/myimg.webp"
-    # )
-    # fig.show()
     graph_json = fig.to_json(pretty=True)
     return graph_json, city, country_code, price_direction
 
@@ -283,14 +280,8 @@ def reverse_geocoder(coordinates):
     return results
 
 
-@task()
-def create_markdown_files(visualization):
-    pass
-
-
-@task()
-def export_markdown(markdown):
-    pass
+@flow()
+def create_markdown(corr_dict):
 
     # Credit: Cities database from Geocities
     # Precipitation data from ...
@@ -316,10 +307,19 @@ def export_markdown(markdown):
     # We have calculated this chart using a special "throw-spaghetti-at-a-wall-and-see-what-sticks" algorithm. Our marvelous approach takes random variables and makes wildly spurious correlations.
 
     # original data, from datasets
+    pass
+
+
+@flow()
+def export_plotly_graph(plotly_json, file_path: Path):
+    # silly workaround;
+    fig = plotly.io.from_json(plotly_json)
+
+    fig.write_image(file_path, width=1920, height=1080)
 
 
 @flow(task_runner=SequentialTaskRunner())
-def get_publish_content(content_db_conn_string, select_where_null: bool):
+def get_publish_content(content_db_conn_string, select_where_publish_ts_null: bool):
     """input: content_db_conn_string
     output: randomized nested dict {"random_row_index":{**rows_in_db}}"""
     # create sql_alchemy engine & query
@@ -330,10 +330,15 @@ def get_publish_content(content_db_conn_string, select_where_null: bool):
         "website", metadata, autoload=True, autoload_with=sql_alchemy_content_engine
     )
     select_query = db.select([website_table])
-    if select_where_null:
+    if select_where_publish_ts_null:
         select_query = select_query.where(
             website_table.columns.publish_timestamp.is_(None)
         )
+    else:
+        select_query = select_query.where(
+            website_table.columns.publish_timestamp.is_not(None)
+        )
+
     print(str(select_query))
 
     # store results as a list per row
@@ -399,23 +404,73 @@ def upsert_website_content(content_db_conn_string, query_rows_dict):
 
 
 @flow(task_runner=SequentialTaskRunner())
-def publish(content_db_conn_string, post_schedule_start_date: datetime, posts_per_day):
+def create_website_content_files(query_rows_dict, website_content_folder_path: Path):
 
-    query_rows_dict = get_publish_content(
-        content_db_conn_string=content_db_conn_string, select_where_null=True
+    # for every stock in the query_rows_dict
+
+    for stock in query_rows_dict:
+        # create folder page_bundle_path
+        # year-month-day-{stock_symbol}
+        cur_stock = query_rows_dict[stock]
+
+        stock_symbol = cur_stock["stock_symbol"]
+        city = cur_stock["city"]
+        country_code = cur_stock["country_code"]
+
+        page_bundle_path = website_content_folder_path / (
+            cur_stock["publish_timestamp"].strftime(r"%Y-%m-%d") + f"-{stock_symbol}"
+        )
+
+        # if already exists, skip
+        if folder_exists(page_bundle_path).result():
+            continue
+
+        create_folder(page_bundle_path)
+
+        # create markdown
+        # markdown = create_markdown_files().result()
+
+        image_path = (
+            page_bundle_path
+            / f"{stock_symbol}-corr-with-rainfall-in-{city}-{country_code}.webp"
+        )
+
+        # export graph image
+        export_plotly_graph(plotly_json=cur_stock["graph_json"], file_path=image_path)
+
+
+@flow(task_runner=SequentialTaskRunner())
+def publish(
+    content_db_conn_string,
+    post_schedule_start_date: datetime,
+    posts_per_day,
+    website_content_folder_path: Path,
+):
+
+    rows_dict_where_pub_ts_null = get_publish_content(
+        content_db_conn_string=content_db_conn_string, select_where_publish_ts_null=True
     ).result()
 
-    # skip processing if no nulls
-    if len(query_rows_dict) == 0:
-        return
-
-    # create_website_content_files(query_rows_dict)
-
-    query_rows_dict = calc_schedule_content(
-        query_rows_dict=query_rows_dict,
+    updated_rows_dict = calc_schedule_content(
+        query_rows_dict=rows_dict_where_pub_ts_null,
         post_schedule_start_date=post_schedule_start_date,
         posts_per_day=posts_per_day,
     ).result()
+
+    upsert_website_content(
+        content_db_conn_string=content_db_conn_string,
+        query_rows_dict=updated_rows_dict,
+    )
+
+    rows_dict_where_pub_ts_not_null = get_publish_content(
+        content_db_conn_string=content_db_conn_string,
+        select_where_publish_ts_null=False,
+    ).result()
+
+    create_website_content_files(
+        query_rows_dict=rows_dict_where_pub_ts_not_null,
+        website_content_folder_path=website_content_folder_path,
+    )
 
     # create website_content_files
     # check if folder (year-month-day-symbol) exists
@@ -424,9 +479,6 @@ def publish(content_db_conn_string, post_schedule_start_date: datetime, posts_pe
     # export the markdown
 
     # update row with up-to-date content
-    upsert_website_content(
-        content_db_conn_string=content_db_conn_string, query_rows_dict=query_rows_dict
-    )
 
 
 # upsert the database w publish_timestamp entry
@@ -452,6 +504,9 @@ if __name__ == "__main__":
         content_db_conn_string="postgresql+psycopg2://postgres:postgres@127.0.0.1:5432/content",
         post_schedule_start_date=datetime.strptime("2022-07-01", r"%Y-%m-%d"),
         posts_per_day=10,
+        website_content_folder_path=Path(
+            r"/home/kevin/coding_projects/noisy_stocks/persistent_data/temp_website_content_test"
+        ),
     )
     # corr_to_db_content()
 
