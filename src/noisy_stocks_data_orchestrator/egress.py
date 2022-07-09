@@ -92,7 +92,7 @@ def visualize_corr(
 
     # Add figure title
     fig.update_layout(
-        title_text=f"NoisyStocks.com | Spurious stock correlation ({highest_corr.round(5)}%) between {stock_symbol} price and rainfall in {city}, {country_code}"
+        title_text=f"NoisyStocks.com | Spurious stock correlation ({highest_corr.round(5)}%)"
     )
 
     # Set x-axis title
