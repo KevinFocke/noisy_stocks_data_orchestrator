@@ -310,7 +310,7 @@ def export_plotly_graph(plotly_json, file_path: Path):
     # silly workaround;
     fig = plotly.io.from_json(plotly_json)
 
-    fig.write_image(file_path, width=1920, height=1080)
+    fig.write_image(file_path, width=1080, height=720)
 
 
 @flow(task_runner=SequentialTaskRunner())
