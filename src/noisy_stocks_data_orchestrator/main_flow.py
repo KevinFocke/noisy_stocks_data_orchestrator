@@ -268,7 +268,7 @@ def stock_correlation_flow(
     sql_alchemy_stock_engine.dispose()
 
 
-@flow(task_runner=SequentialTaskRunner(), name="correlate_and_publish_flow")
+@flow(task_runner=SequentialTaskRunner(), name="correlate_and_publish")
 def correlate_and_publish(
     corr_dict_pickle_storage_path=r"/home/kevin/coding_projects/noisy_stocks/persistent_data/corr_dicts",
     dataset_uid_col_name_list=[
@@ -297,8 +297,10 @@ def correlate_and_publish(
 
     publish(
         content_db_conn_string=content_db_conn_string,
-        post_schedule_start_date=datetime.strptime("2022-07-09", r"%Y-%m-%d"),
+        post_schedule_start_date=datetime.today(),
         posts_per_day=posts_per_day,
+        website_content_folder_path=Path(
+            r"/home/kevin/coding_projects/noisy_stocks/persistent_data/temp_website_content_test"
         ),
     )
 
