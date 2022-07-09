@@ -107,11 +107,6 @@ def visualize_corr(
         xaxis_tickformat="%d %B (%a)<br>%Y",  # only plot available x
     )
     fig.update_xaxes(nticks=x_axis_len)
-    fig.write_image(
-        r"/home/kevin/coding_projects/noisy_stocks/persistent_data/testimg/myimg.webp",
-        width=1600,
-        height=900,
-    )
     graph_json = fig.to_json(pretty=True)
     return graph_json, city, country_code, price_direction
 
