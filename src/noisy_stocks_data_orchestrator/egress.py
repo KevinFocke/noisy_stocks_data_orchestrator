@@ -63,6 +63,7 @@ def visualize_corr(
     merged_df = merged_df.reset_index()
     x_axis_len = len(merged_df["timestamp"])
 
+    merged_df = merged_df.sort_index()
     # check if direction went up or down
     if merged_df[stock_symbol].iloc[-1] > merged_df[stock_symbol].iloc[0]:
         price_direction = "up"
@@ -314,15 +315,17 @@ def create_markdown(stock_dict, image_file_path: Path):
     latitude = stock_dict["latitude"]
     city_longitude = stock_dict["city_longitude"]
     city_latitude = stock_dict["city_latitude"]
-    header_dict["title"] = f" Why did {stock_symbol} go {stock_direction}?"
+    header_dict["title"] = f"{stock_symbol} and rainfall in {city}"
     header_dict["date"] = publish_timestamp.strftime(r"%Y-%m-%d %H:%M:%S")
 
-    if stock_direction == "up":
-        header_dict["categories"] = r"stock goes up 📈"
-    elif stock_direction == "down":
-        header_dict["categories"] = r"stock goes down 📉"
-    else:
-        header_dict["categories"] = r"NEUTRAL CHAOS ZONE"
+    header_dict["categories"] = "spurious stock correlations"
+    # FIXME: stock direction is broken, not sure why
+    #if stock_direction == "up":
+        #header_dict["categories"] = r"stock goes up 📈"
+    #elif stock_direction == "down":
+        #header_dict["categories"] = r"stock goes down 📉"
+    #else:
+        #header_dict["categories"] = r"NEUTRAL CHAOS ZONE"
 
     header_dict[
         "description"
