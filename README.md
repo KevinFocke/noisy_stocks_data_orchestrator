@@ -30,6 +30,8 @@ Features:
 
 * Strongly typed Python using Pydantic & Pandera to increase reliability
 
+* Idempotent. No matter how many times you run the program, the result will be as if it only ran once. A very useful property in case your computer loses power suddenly.
+
 * DevOps best practices: 
 	* Continuous Integration
 	* Continuous Deployment
