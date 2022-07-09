@@ -470,7 +470,9 @@ def calc_schedule_content(
     minutes_between_posts = minutes_in_a_day / posts_per_day
     timedelta_between_posts = timedelta(minutes=minutes_between_posts)
 
-    publish_time_stamp = post_schedule_start_date.date()  # always start at 0:00
+    publish_time_stamp = post_schedule_start_date.replace(
+        hour=0, minute=0
+    )  # always start at 0:00
     for stock_dict in query_rows_dict:
         query_rows_dict[stock_dict]["publish_timestamp"] = publish_time_stamp
         publish_time_stamp += timedelta_between_posts
