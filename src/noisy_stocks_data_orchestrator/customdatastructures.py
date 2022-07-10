@@ -19,14 +19,14 @@ from pydantic.types import PositiveInt
 
 
 @validate_arguments
-@task
+@task(retries=3, retry_delay_seconds=5)
 def file_exists(path: Path):
     """check if provided Path is a file"""
     return path.is_file()
 
 
 @validate_arguments
-@task
+@task(retries=3, retry_delay_seconds=5)
 def folder_exists(path: Path):
     """check if provided Path is a folder"""
     return path.is_dir()

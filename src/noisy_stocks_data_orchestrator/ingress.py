@@ -65,7 +65,7 @@ def query_database(sql_alchemy_engine: engine.base.Engine, query: str) -> DataFr
 
 
 @validate_arguments(config=Config_Arbitrary_Types_Allowed)
-@task
+@task(retries=3, retry_delay_seconds=5)
 def normalize_timestamp(df: DataFrame) -> DataFrame:
     """Normalize to UTC; Pandera needs Timezone Unaware"""
     # Set timestamp as index // required by tz_localize
