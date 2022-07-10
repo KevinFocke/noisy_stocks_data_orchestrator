@@ -87,7 +87,7 @@ In the future I do intend to explore Kubernetes more.
 # Reflection
 
 * Towards the deadline the code took a steep drop in quality. The tech debt needs to be cleaned up.
-* Prefect Orion is interesting for observability into programs & running them on a schedule. However, it is still clearly in beta. During development I had disk storage issues, timeouts, & cryptic errors. The Prefect team is aware of these issues and are friendly in helping to solve them on the Slack channel. Several workarounds included inlining code & removing files from the Prefect tmp-dir. When it's out of beta, it'
+* Prefect Orion is useful for observability into programs & running them on a schedule. However, it is still clearly in beta. During development I had disk storage issues, timeouts, pickling issues & cryptic errors. The Prefect team is aware of these issues and questions asked on the Slack are promptly answered. When it's out of beta, it could be a great data orchestration platform.
 * It is challenging to decide on the _right_ size of a microservice.
 
 # Troubleshoot
