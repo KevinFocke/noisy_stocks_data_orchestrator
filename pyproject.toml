@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "noisy_stocks_data_orchestrator"
-version = "0.1.0"
+version = "1.0.0"
 description = ""
 authors = ["Kevin Focke <19843342+KevinFocke@users.noreply.github.com>"]
 
