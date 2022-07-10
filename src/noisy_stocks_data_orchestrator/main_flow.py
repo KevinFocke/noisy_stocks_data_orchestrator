@@ -319,11 +319,6 @@ def correlate_and_publish(
 @flow(task_runner=SequentialTaskRunner())
 def precompute_content(start_date: datetime, calc_next_days):
     """calculate content as if run on start_date"""
-    start_date = datetime.strptime(
-        "2022-07-18",
-        "%Y-%m-%d",
-    )
-
     future_date = start_date  # start future date at today
     target_days_ago = (20 * 365) + 5  # roughly 20 years ago
     target_date = future_date - timedelta(days=target_days_ago)
@@ -350,7 +345,7 @@ if __name__ == "__main__":
 
     precompute_content(
         start_date=datetime.strptime(
-            "2022-07-18",
+            "2022-07-24",
             "%Y-%m-%d",
         ),
         calc_next_days=50,
