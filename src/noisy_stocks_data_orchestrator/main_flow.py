@@ -348,7 +348,6 @@ def precompute_content(start_date: datetime, calc_next_days):
 
 if __name__ == "__main__":
 
-    # TODO: refactor into separate flow
     precompute_content(
         start_date=datetime.strptime(
             "2022-07-18",
