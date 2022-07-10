@@ -1,5 +1,6 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
+from time import sleep
 
 import numpy as np
 from numba import jit
@@ -14,6 +15,7 @@ from sqlalchemy import create_engine
 from customdatastructures import CorrDatabaseQuery
 from egress import corr_to_db_content, pickle_object_to_path, publish
 from ingress import fetch_stocks_to_TimeSeries, fetch_weather_to_TimeSeries
+from prefect_timeout_workaround import keepalive
 
 
 def sanity_check():
@@ -111,6 +113,8 @@ def stock_correlation_flow(
     datasets_db_conn_string=(
         "postgresql+psycopg2://postgres:postgres@127.0.0.1:5432/datasets"
     ),
+    days_ago=None,
+    target_date=None,
 ):
 
     # TODO: refactor preferences to arguments of func
@@ -136,6 +140,8 @@ def stock_correlation_flow(
         select_fields=stock_select_fields,
         from_database=stock_database_name,
         interval_in_days=stock_interval_in_days,
+        days_ago=days_ago,
+        target_date=target_date,
     )
 
     # get TimeSeries
@@ -283,6 +289,9 @@ def correlate_and_publish(
         "postgresql+psycopg2://postgres:postgres@127.0.0.1:5432/datasets"
     ),
     content_db_conn_string: str = "postgresql+psycopg2://postgres:postgres@127.0.0.1:5432/content",
+    post_schedule_start_date=datetime.today(),
+    days_ago=None,
+    target_date=None,
 ):
 
     stock_correlation_flow(
@@ -291,13 +300,15 @@ def correlate_and_publish(
         posts_per_day=posts_per_day,
         stocks_db_conn_string=stocks_db_conn_string,
         datasets_db_conn_string=datasets_db_conn_string,
+        days_ago=days_ago,
+        target_date=target_date,
     )
 
     corr_to_db_content(content_db_conn_string=content_db_conn_string)
 
     publish(
         content_db_conn_string=content_db_conn_string,
-        post_schedule_start_date=datetime.today(),
+        post_schedule_start_date=post_schedule_start_date,
         posts_per_day=posts_per_day,
         website_content_folder_path=Path(
             r"/home/kevin/coding_projects/noisy_stocks/noisy_stocks_website/content/posts"
@@ -305,6 +316,43 @@ def correlate_and_publish(
     )
 
 
+@flow(task_runner=SequentialTaskRunner())
+def precompute_content(start_date: datetime, calc_next_days):
+    """calculate content as if run on start_date"""
+    start_date = datetime.strptime(
+        "2022-07-18",
+        "%Y-%m-%d",
+    )
+
+    future_date = start_date  # start future date at today
+    target_days_ago = (20 * 365) + 5  # roughly 20 years ago
+    target_date = future_date - timedelta(days=target_days_ago)
+    keepalive()  # workaround for Prefect bug, connection timeout
+
+    for days_from_start_date in range(calc_next_days):
+        print("\n Starting new calculation... \n")
+        print(f"\n days from start_date: {days_from_start_date} \n")
+        print(f"\n calculating correlation & publishing on: {future_date} \n")
+        sleep(5)  # pause to get an overview
+        correlate_and_publish(
+            post_schedule_start_date=future_date, target_date=target_date
+        )
+        print(f"\n calculated correlation & publishing on: {future_date} \n")
+        print(
+            f"\n start date was: {start_date}, fast-forwarded {days_from_start_date}days \n"
+        )
+
+        future_date += timedelta(days=1)
+        target_date += timedelta(days=1)
+
+
 if __name__ == "__main__":
 
-    correlate_and_publish()
+    # TODO: refactor into separate flow
+    precompute_content(
+        start_date=datetime.strptime(
+            "2022-07-18",
+            "%Y-%m-%d",
+        ),
+        calc_next_days=50,
+    )

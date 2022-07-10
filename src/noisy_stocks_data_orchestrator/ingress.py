@@ -56,7 +56,7 @@ def fetch_weather_to_TimeSeries(*args, **kwargs):
 
 
 @validate_arguments(config=Config_Arbitrary_Types_Allowed)
-@task(retries=3, retry_delay_seconds=3)
+@task(retries=5, retry_delay_seconds=3)
 def query_database(sql_alchemy_engine: engine.base.Engine, query: str) -> DataFrame:
     connection = sql_alchemy_engine.connect()  # Connect to the database
     return pd.read_sql(query, connection)  # Run query and convert into pd DataFrame
@@ -65,7 +65,7 @@ def query_database(sql_alchemy_engine: engine.base.Engine, query: str) -> DataFr
 
 
 @validate_arguments(config=Config_Arbitrary_Types_Allowed)
-@task(retries=3, retry_delay_seconds=5)
+@task(retries=5, retry_delay_seconds=5)
 def normalize_timestamp(df: DataFrame) -> DataFrame:
     """Normalize to UTC; Pandera needs Timezone Unaware"""
     # Set timestamp as index // required by tz_localize
@@ -85,7 +85,7 @@ def query_database_to_TimeSeries(
     query,
     numeric_col_name,
     timestamp_index_name="timestamp",
-    timeout=10,
+    timeout=120,
     is_stock: bool = False,  # is it a stock?
 ):
 
