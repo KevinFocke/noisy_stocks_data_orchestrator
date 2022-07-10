@@ -2,7 +2,7 @@
 
 Generates spurious stock correlations between stock price and rainfall based on historical movers & shakers.
 
-Published online on [noisystocks.com](noisystocks.com).
+Published online on [noisystocks.com](https://www.noisystocks.com/).
 
 ## General information
 
