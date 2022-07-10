@@ -328,6 +328,7 @@ def precompute_content(start_date: datetime, calc_next_days):
         # TODO: log messages to persistent file instead of printing
         print("\n Starting new calculation... \n")
         print(f"\n days from start_date: {days_from_start_date} \n")
+        print(f"\n target date {target_date} \n ")
         print(f"\n calculating correlation & publishing on: {future_date} \n")
         sleep(5)  # pause to get an overview
         correlate_and_publish(
@@ -346,7 +347,7 @@ if __name__ == "__main__":
 
     precompute_content(
         start_date=datetime.strptime(
-            "2022-07-23",
+            "2022-07-4",
             "%Y-%m-%d",
         ),
         calc_next_days=50,

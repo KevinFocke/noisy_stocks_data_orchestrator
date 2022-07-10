@@ -104,9 +104,12 @@ def visualize_corr(
     fig.update_xaxes(title_text="date")
 
     # Set y-axes titles
-    fig.update_yaxes(title_text=f"{stock_symbol} close price", secondary_y=False)
+    fig.update_yaxes(title_text=f"{stock_symbol} close price ($)", secondary_y=False)
 
-    fig.update_yaxes(title_text=f"rainfall in {city}, {country_code}", secondary_y=True)
+    fig.update_yaxes(
+        title_text=f"rainfall in {city}, {country_code} (mean mm per day)",
+        secondary_y=True,
+    )
 
     fig.update_layout(
         xaxis_tickformat="%d %B (%a)<br>%Y",  # only plot available x
@@ -346,6 +349,10 @@ def create_markdown(stock_dict, image_file_path: Path):
     # note there should be 4 spaces before image, alt & caption
     body = (
         f"Today, roughly 20 years ago, the chart for stock {stock_symbol} made a big move. What could have caused it? There could be a billion good reasons. We at NoisyStocks have no idea what those reasons are. Instead of a careful & nuanced analysis, we have calculated this chart using a special throw-spaghetti-at-a-wall-and-see-what-sticks algorithm. Our marvelous approach takes random variables and makes wildly spurious correlations."
+        + linesep
+        + r"What is the unit of rainfall?"
+        + linesep
+        + r'Rainfall is defined as: "Time mean flux of rain, snow and hail measured as the height of the equivalent liquid water in a square meter per time interval."'
         + linesep
     )
 
