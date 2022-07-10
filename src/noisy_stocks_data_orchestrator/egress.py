@@ -97,7 +97,7 @@ def visualize_corr(
 
     # Add figure title
     fig.update_layout(
-        title_text=f"NoisyStocks.com | Spurious stock correlation ({highest_corr.round(5)}%)"
+        title_text=f"NoisyStocks.com | Spurious stock correlation ({highest_corr.round(5)})"
     )
 
     # Set x-axis title
@@ -350,10 +350,6 @@ def create_markdown(stock_dict, image_file_path: Path):
     body = (
         f"Today, roughly 20 years ago, the chart for stock {stock_symbol} made a big move. What could have caused it? There could be a billion good reasons. We at NoisyStocks have no idea what those reasons are. Instead of a careful & nuanced analysis, we have calculated this chart using a special throw-spaghetti-at-a-wall-and-see-what-sticks algorithm. Our marvelous approach takes random variables and makes wildly spurious correlations."
         + linesep
-        + r"What is the unit of rainfall?"
-        + linesep
-        + r'Rainfall is defined as: "Time mean flux of rain, snow and hail measured as the height of the equivalent liquid water in a square meter per time interval."'
-        + linesep
     )
 
     shortcode_begin = r"{{< "
@@ -379,7 +375,9 @@ def create_markdown(stock_dict, image_file_path: Path):
         + r"/leaflet-map"
         + shortcode_end
         + linesep
-        + r"Note: The algorithm always chooses the nearest city with >1000 people. If the points happen to fall in the middle of the ocean, it will not be accurate. The actual rainfall coordinates are also shown on the map."
+        + r"Note 1: The algorithm always chooses the nearest city with >1000 people. If the points happen to fall in the middle of the ocean, it will not be accurate. The actual rainfall coordinates are also shown on the map."
+        + linesep
+        + r'Note 2: Rainfall is defined as: "Time mean flux of rain, snow and hail measured as the height of the equivalent liquid water in a square meter per time interval."'
     )
 
     # add header to markdown
