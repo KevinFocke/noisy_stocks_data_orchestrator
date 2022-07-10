@@ -509,6 +509,7 @@ def create_website_content_files(query_rows_dict, website_content_folder_path: P
 
     # for every stock in the query_rows_dict
 
+    page_bundle_paths = [x for x in website_content_folder_path.iterdir() if x.is_dir()]
     for stock in query_rows_dict:
         # create folder page_bundle_path
         # year-month-day-{stock_symbol}
@@ -523,13 +524,16 @@ def create_website_content_files(query_rows_dict, website_content_folder_path: P
         )
 
         # if already exists, skip
-        if folder_exists(page_bundle_path).result():
+
+        if page_bundle_path in page_bundle_paths:
             continue
 
         create_folder(page_bundle_path)
 
         # create markdown
         # markdown = create_markdown_files().result()
+
+        # FIXME: If the program croshes after folder creation, it will NOT output the content. Is there any way to make these combined actions atomic?
 
         image_path = (
             page_bundle_path
