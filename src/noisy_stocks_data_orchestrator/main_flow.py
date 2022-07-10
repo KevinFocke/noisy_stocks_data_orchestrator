@@ -325,6 +325,7 @@ def precompute_content(start_date: datetime, calc_next_days):
     keepalive()  # workaround for Prefect bug, connection timeout
 
     for days_from_start_date in range(calc_next_days):
+        # TODO: log messages to persistent file instead of printing
         print("\n Starting new calculation... \n")
         print(f"\n days from start_date: {days_from_start_date} \n")
         print(f"\n calculating correlation & publishing on: {future_date} \n")
