@@ -6,13 +6,12 @@ Published online on [noisystocks.com](https://www.noisystocks.com/).
 
 ## General information
 
-My main goal was to create a Cloud Native architecture (Container-Based + Dynamically-Scalable + Microservice-Oriented). Containers run on Docker. Agents dynamically pick up available work. The services are:
+My original intention was to create a Cloud Native architecture (Container-Based + Dynamically-Scalable + Microservice-Oriented). Instead the project turned out into a local architecture with decoupled services & materialized outputs. It made more sense that way for this particular project. The services are:
 
-* Analysis service (Custom Python 3 using Pandas DataFrames)
-* Publishing service (Custom Python 3)
+* Analysis service (Custom Python 3 using Pandas DataFrames & Prefect 2.0)
+* Correlation ingestion service (Imports correlations + metadata into custom website database)
+* Publishing service (Export website database content to markdown)
 * Static Site Generation service (Hugo)
-* Data Pipeline Orchestrator (Prefect 2.0)
-* Worker agents
 
 Databases are PostgresQL specialized for time series (Timescale)
 
@@ -89,6 +88,7 @@ In the future I do intend to explore Kubernetes more.
 * Towards the deadline the code took a steep drop in quality. The tech debt needs to be cleaned up.
 * Prefect Orion is useful for observability into programs & running them on a schedule. However, it is still clearly in beta. During development I had disk storage issues, timeouts, pickling issues & cryptic errors. The Prefect team is aware of these issues and questions asked on the Slack are promptly answered. When it's out of beta, it could be a great data orchestration platform.
 * It is challenging to decide on the _right_ size of a microservice.
+* Intentions to run code in the cloud don't always turn into a reality. It's important to consider the benefits from running in the cloud. In this particular case; running in the cloud doesn't improve the rainfall calculations. Ha! But seriously, there's an elegance to eliminating unneeded complexity.
 
 # Troubleshoot
 

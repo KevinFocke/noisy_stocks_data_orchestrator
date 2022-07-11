@@ -347,8 +347,8 @@ if __name__ == "__main__":
 
     precompute_content(
         start_date=datetime.strptime(
-            "2022-07-9",
+            "2022-08-03",
             "%Y-%m-%d",
         ),
-        calc_next_days=50,
+        calc_next_days=30,
     )
