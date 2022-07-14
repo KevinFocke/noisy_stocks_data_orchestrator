@@ -6,10 +6,10 @@ Published online on [noisystocks.com](https://www.noisystocks.com/).
 
 ## General information
 
-My original intention was to create a Cloud Native architecture (Container-Based + Dynamically-Scalable + Microservice-Oriented). Instead the project turned out into a local architecture with decoupled services & materialized outputs. It made more sense that way for this particular project. The services are:
+My original intention was to create a Cloud Native architecture (Container-Based + Dynamically-Scalable + Microservice-Oriented). Upon closer reflection, running in the cloud would not improve the rainfall calculations and instead add unneeded complexity. The project thus uses a local architecture with decoupled services & materialized outputs. The services are:
 
-* Analysis service (Custom Python 3 using Pandas DataFrames & Prefect 2.0)
-* Correlation ingestion service (Imports correlations + metadata into custom website database)
+* Analysis service (Custom Python 3 using Pandas DataFrames & Prefect 2.0, export to pickle)
+* Correlation ingestion service (Imports correlations + metadata from pickle, exports into custom website database)
 * Publishing service (Export website database content to markdown)
 * Static Site Generation service (Hugo)
 
@@ -78,6 +78,8 @@ eg. (longitude, latitude) composite key, or (planet_name, longitude, latitude)
 	* uid (eg. composite key made of longitude + latitude)
 	* float value to correlate
 
+* The program is only intended to run locally. To run it in the cloud, it will require several changes eg. using environment variables for passwords, error handling logic in case of network unavailability, etc.
+ 
 * During development I became fascinated with the potential of Kubernetes. However, high availability architectures, such as provided by Kubernetes, add complexity & resource overhead. In my case, high availability is not a critical requirement for the back-end services. Why? Because the uptime of the website is NOT impacted by downtime of the back-end services. If the back-end services are down it will only affect the freshness of the content.
 
 In the future I do intend to explore Kubernetes more.
@@ -85,10 +87,11 @@ In the future I do intend to explore Kubernetes more.
 
 # Reflection
 
-* Towards the deadline the code took a steep drop in quality. The tech debt needs to be cleaned up.
+* In general I am satisfied with the program. It runs fast and the code is reasonably elegant. However, it is made for a very specific purpose & expanding it beyond this original purpose could be difficult. At the start I tried to maximize flexibility & reliability, but as the deadline approached the code took a drop in quality. The later portions are less tested and more tightly coupled. eg:
+	* The TimeSeries class method pivot_to_table changes the representation of TimeSeries which will break other methods. Furthermore, throughout the program, attributes are often accessed directly instead of abstracted behind a more error-proof interface. In my opinion, too tight coupling is the biggest flaw of the program.
 * Prefect Orion is useful for observability into programs & running them on a schedule. However, it is still clearly in beta. During development I had disk storage issues, timeouts, pickling issues & cryptic errors. The Prefect team is aware of these issues and questions asked on the Slack are promptly answered. When it's out of beta, it could be a great data orchestration platform.
 * It is challenging to decide on the _right_ size of a microservice.
-* Intentions to run code in the cloud don't always turn into a reality. It's important to consider the benefits from running in the cloud. In this particular case; running in the cloud doesn't improve the rainfall calculations. Ha! A joke. But seriously, there's an elegance to eliminating unneeded complexity.
+* Intentions to run code in the cloud don't always turn into a reality. It's important to consider the benefits from running in the cloud.
 
 # Troubleshoot
 
