@@ -1,7 +1,7 @@
 name: Trigger Netlify Build
 on:
   schedule:
-    - cron: '*/360 * * * *' # every 360 mins for 10 posts a day
+    - cron: '0 7 * * *' # every day at 7:00 UTC
   workflow_dispatch: 
 
 jobs:
