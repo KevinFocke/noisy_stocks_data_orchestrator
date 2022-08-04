@@ -14,7 +14,6 @@ from sqlalchemy import create_engine
 from customdatastructures import CorrDatabaseQuery
 from egress import corr_to_db_content, pickle_object_to_path, publish
 from ingress import fetch_stocks_to_TimeSeries, fetch_weather_to_TimeSeries
-from prefect_timeout_workaround import keepalive
 
 # TODO: Use Prefect 2.0 blocks
 
@@ -355,7 +354,7 @@ if __name__ == "__main__":
 
     precompute_content(
         start_date=datetime.strptime(
-            "2022-08-23",
+            "2022-09-12",
             "%Y-%m-%d",
         ),
         calc_next_days=30,
