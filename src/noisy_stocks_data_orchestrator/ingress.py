@@ -39,7 +39,7 @@ def fetch_stocks_to_TimeSeries(*args, **kwargs):
     2. to differentiate the flows"""
     # query stocks
     # TODO: use args with *args and **kwargs instead
-    time_series = query_database_to_TimeSeries(is_stock=True, *args, **kwargs).result()
+    time_series = query_database_to_TimeSeries(is_stock=True, *args, **kwargs)
 
     return time_series
 
@@ -50,7 +50,7 @@ def fetch_weather_to_TimeSeries(*args, **kwargs):
     1. to apply weather specific settings
     2. to differentiate the flows"""
     # query weather
-    time_series = query_database_to_TimeSeries(*args, **kwargs).result()
+    time_series = query_database_to_TimeSeries(*args, **kwargs)
 
     return time_series
 
@@ -90,14 +90,14 @@ def query_database_to_TimeSeries(
 ):
 
     # get Prefect Future
-    prefect_future = query_database(sql_alchemy_engine=sql_alchemy_engine, query=query)
+    database_query = query_database(sql_alchemy_engine=sql_alchemy_engine, query=query)
 
     # calculate result
 
-    prefect_result_df = prefect_future.result(timeout=timeout)
+    prefect_result_df = database_query
 
     # normalize date
-    df = normalize_timestamp(df=prefect_result_df).result()
+    df = normalize_timestamp(df=prefect_result_df)
 
     if is_stock:
         return StockTimeSeries(

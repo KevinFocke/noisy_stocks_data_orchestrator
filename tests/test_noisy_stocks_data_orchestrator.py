@@ -21,11 +21,6 @@ from tests.conftest import stock_with_negative_closing_price, stock_with_unequal
 # For typechecking use isinstance()
 # Start every test with test_
 
-# Prefect testing:
-# Testing state:
-# state.is_succesful()
-# state.result()   # With parenthesis to correclty resolve via function call
-
 # Common troubleshoot:
 # If you:
 #  getdataset_list: list[str] = [
@@ -91,7 +86,7 @@ def test_stock_df_wrong_close_price():
 @flow
 def test_folder_existence(tmp_path):
     assert isinstance(tmp_path, Path)
-    assert folder_exists(tmp_path).result()
+    assert folder_exists(tmp_path)
 
 
 @flow
@@ -100,18 +95,18 @@ def test_folder_creation(tmp_path):
     non_existant_path = tmp_path / "hfdahdasfaeg"
     assert isinstance(non_existant_path, Path)
     # Does not yet exist
-    assert not folder_exists(non_existant_path).result()
+    assert not folder_exists(non_existant_path)
     # Create and check
-    assert create_folder(non_existant_path).result()
-    assert folder_exists(non_existant_path).result()
+    assert create_folder(non_existant_path)
+    assert folder_exists(non_existant_path)
 
 
 @flow
 def test_folder_non_existent(tmp_path):
     assert isinstance(tmp_path, Path)
-    non_existant_path = tmp_path / "hfdahdasfaeg"
+    non_existant_path = tmp_path / "hfdahdasfaegsss"
     assert isinstance(non_existant_path, Path)
-    assert folder_exists(tmp_path).result() is False
+    assert not folder_exists(tmp_path)
 
 
 def test_fixture_csv(temp_ingress_file_csv):

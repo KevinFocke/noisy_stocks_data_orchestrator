@@ -1,6 +1,5 @@
 from datetime import datetime, timedelta
 from pathlib import Path
-from time import sleep
 
 import numpy as np
 from numba import jit
@@ -149,7 +148,7 @@ def stock_correlation_flow(
         sql_alchemy_engine=sql_alchemy_stock_engine,
         query=stocks_db_query_object.to_sql(),
         numeric_col_name=stocks_numeric_col_name,
-    ).result()
+    )
 
     longest_consecutive_days_sequence = (
         stocks_time_series.calc_longest_consecutive_days_sequence()
@@ -196,7 +195,7 @@ def stock_correlation_flow(
         query=dataset_db_query_object.to_sql(),
         numeric_col_name=dataset_numeric_col_name,
         timeout=120,
-    ).result()
+    )
 
     # should be seperate function; works too
     dataset_time_series.pivot_rows_to_cols(
@@ -214,7 +213,7 @@ def stock_correlation_flow(
         stocks_stdevs=np_stdev_per_row(stocks_time_series.time_series_df.to_numpy()),
         dataset_stdevs=np_stdev_per_row(dataset_time_series.time_series_df.to_numpy()),
         dataset_np_array=dataset_time_series.time_series_df.to_numpy(),
-    ).result()
+    )
 
     # print(correlations)
 
@@ -330,7 +329,6 @@ def precompute_content(start_date: datetime, calc_next_days):
         print(f"\n days from start_date: {days_from_start_date} \n")
         print(f"\n target date {target_date} \n ")
         print(f"\n calculating correlation & publishing on: {future_date} \n")
-        sleep(5)  # pause to get an overview
         correlate_and_publish(
             post_schedule_start_date=future_date, target_date=target_date
         )

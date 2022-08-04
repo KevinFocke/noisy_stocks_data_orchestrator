@@ -128,10 +128,10 @@ def visualize_corr(
 
 @flow
 def create_folder(folder_url: Path):
-    if not folder_exists(folder_url).result():
+    if not folder_exists(folder_url):
         # print(f"Folder {folder_url} does not exist, creating it.")
         Path.mkdir(folder_url, parents=True)
-        if folder_exists(folder_url).result():
+        if folder_exists(folder_url):
             return True  # Folder created
         else:
             raise ValueError("Folder should have been created, but was not.")
@@ -200,7 +200,7 @@ def corr_to_db_content(
     )
 
     for corr_dict_file_path in corr_dict_pickle_file_paths:
-        corr_dict = load_object_from_file_path(corr_dict_file_path).result()
+        corr_dict = load_object_from_file_path(corr_dict_file_path)
 
         # TODO: refactor when Prefect 2.0 out of beta
         # the normal prefect library sqlalchemy works alright
@@ -230,11 +230,9 @@ def corr_to_db_content(
                 dataset_uid=corr_dict[stock_symbol]["dataset_uid"],
                 longitude=unfolded_indexes["longitude"],
                 latitude=unfolded_indexes["latitude"],
-            ).result()
+            )
 
-            file_hash = hash_file(
-                filepath=corr_dict_file_path, algo_name="sha256"
-            ).result()
+            file_hash = hash_file(filepath=corr_dict_file_path, algo_name="sha256")
 
             extra_stock_info = {
                 "stock_symbol": stock_symbol,
@@ -535,9 +533,6 @@ def create_website_content_files(query_rows_dict, website_content_folder_path: P
 
         create_folder(page_bundle_path)
 
-        # create markdown
-        # markdown = create_markdown_files().result()
-
         # FIXME: If the program croshes after folder creation, it will NOT output the content. Is there any way to make these combined actions atomic?
 
         image_path = (
@@ -548,9 +543,7 @@ def create_website_content_files(query_rows_dict, website_content_folder_path: P
         # export graph image
         export_plotly_graph(plotly_json=cur_stock["graph_json"], file_path=image_path)
 
-        markdown = create_markdown(
-            stock_dict=cur_stock, image_file_path=image_path
-        ).result()
+        markdown = create_markdown(stock_dict=cur_stock, image_file_path=image_path)
 
         export_markdown(markdown=markdown, page_bundle_path=page_bundle_path)
 
@@ -565,13 +558,13 @@ def publish(
 
     rows_dict_where_pub_ts_null = get_publish_content(
         content_db_conn_string=content_db_conn_string, select_where_publish_ts_null=True
-    ).result()
+    )
 
     updated_rows_dict = calc_schedule_content(
         query_rows_dict=rows_dict_where_pub_ts_null,
         post_schedule_start_date=post_schedule_start_date,
         posts_per_day=posts_per_day,
-    ).result()
+    )
 
     upsert_website_content(
         content_db_conn_string=content_db_conn_string,
@@ -581,7 +574,7 @@ def publish(
     rows_dict_where_pub_ts_not_null = get_publish_content(
         content_db_conn_string=content_db_conn_string,
         select_where_publish_ts_null=False,
-    ).result()
+    )
 
     create_website_content_files(
         query_rows_dict=rows_dict_where_pub_ts_not_null,
