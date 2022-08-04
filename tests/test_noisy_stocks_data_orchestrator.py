@@ -106,7 +106,7 @@ def test_folder_non_existent(tmp_path):
     assert isinstance(tmp_path, Path)
     non_existant_path = tmp_path / "hfdahdasfaegsss"
     assert isinstance(non_existant_path, Path)
-    assert not folder_exists(tmp_path)
+    assert not folder_exists(non_existant_path)
 
 
 def test_fixture_csv(temp_ingress_file_csv):
