@@ -16,6 +16,8 @@ from egress import corr_to_db_content, pickle_object_to_path, publish
 from ingress import fetch_stocks_to_TimeSeries, fetch_weather_to_TimeSeries
 from prefect_timeout_workaround import keepalive
 
+# TODO: Use Prefect 2.0 blocks
+
 
 def sanity_check():
     """Can pytest find the module?
@@ -273,7 +275,12 @@ def stock_correlation_flow(
     sql_alchemy_stock_engine.dispose()
 
 
-@flow(task_runner=SequentialTaskRunner(), name="correlate_and_publish")
+@flow(
+    task_runner=SequentialTaskRunner(),
+    name="correlate_and_publish",
+    retries=5,
+    retry_delay_seconds=15,
+)
 def correlate_and_publish(
     corr_dict_pickle_storage_path=r"/home/kevin/coding_projects/noisy_stocks/persistent_data/corr_dicts",
     dataset_uid_col_name_list=[
@@ -292,6 +299,9 @@ def correlate_and_publish(
     days_ago=None,
     target_date=None,
 ):
+
+    # SPEED, MAJOR: Published files are generated for several days. Avoid recomputing.
+    # When? If expected # posts per day is already in content database.
 
     stock_correlation_flow(
         corr_dict_pickle_storage_path=corr_dict_pickle_storage_path,
@@ -315,13 +325,13 @@ def correlate_and_publish(
     )
 
 
-@flow(task_runner=SequentialTaskRunner())
+# BUG: If this is a flow, it times out after running ~10 minutes.
 def precompute_content(start_date: datetime, calc_next_days):
     """calculate content as if run on start_date"""
     future_date = start_date  # start future date at today
     target_days_ago = (20 * 365) + 5  # roughly 20 years ago
     target_date = future_date - timedelta(days=target_days_ago)
-    keepalive()  # workaround for Prefect bug, connection timeout
+    # keepalive()  # workaround for Prefect bug, connection timeout
 
     for days_from_start_date in range(calc_next_days):
         # TODO: log messages to persistent file instead of printing
@@ -345,7 +355,7 @@ if __name__ == "__main__":
 
     precompute_content(
         start_date=datetime.strptime(
-            "2022-08-03",
+            "2022-08-23",
             "%Y-%m-%d",
         ),
         calc_next_days=30,
