@@ -37,7 +37,7 @@ def np_stdev_per_row(np_array):
     # numba requires specific type list https://numba.readthedocs.io/en/stable/reference/deprecation.html#deprecation-of-reflection-for-list-and-set-types
 
 
-# BUG: Cannot assign @task to it, or will receive error
+# BUG: Cannot assign @task to it, or will receive error; Prefect wants to pickle everything.
 # TypeError: cannot pickle '_nrt_python._MemInfo' object
 @jit(nopython=True)
 def pearson_corr(
@@ -46,7 +46,7 @@ def pearson_corr(
     stocks_np_array=np.array([[]]),
     dataset_np_array=np.array([[]]),
 ):
-    # TODO: can I cleanup types?
+    # TODO: Can the types be cleaned up? Interaction between Jit & Prefect is messy.
 
     if stocks_np_array.shape[0] != dataset_np_array.shape[0]:
         raise ValueError("rows must be equal size!!")
@@ -117,14 +117,10 @@ def stock_correlation_flow(
     target_date=None,
 ):
 
-    # TODO: refactor preferences to arguments of func
-    # best practice for creating sqlalchemy engine
-    # one connection per database
-    # https://docs.sqlalchemy.org/en/14/core/connections.html#basic-usage
     # preferences
     min_stocks_output = (
         posts_per_day * 6
-    )  # why * 6? see lengthy explanation in function
+    )  # why * 6? see lengthy explanation within find_movers_and_shakers function
     stock_select_fields = ["timestamp", "stock_symbol", "price_close"]
     stock_database_name = "stock_timedata"
     stock_interval_in_days = 5
@@ -157,12 +153,9 @@ def stock_correlation_flow(
 
     stocks_time_series.drop_row_except(longest_consecutive_days_sequence)
 
-    # TODO: drop except should raise an error if dataframe is empty
+    # FIXME: drop except should raise an error if dataframe is empty
     # if df.empty: Raise ValueError
     # #really it's just df.empty #very nice!
-
-    # consideration: pivot_rows_to_cols works destructively on existing df,
-    # but it is space efficient
 
     stocks_time_series.pivot_rows_to_cols(
         index="timestamp", columns="stock_symbol", values="price_close"
@@ -225,8 +218,7 @@ def stock_correlation_flow(
     corr_dict = {}
     # get highest correlations
     # TODO: refactor into own function
-    # TODO: limit posts per day. Might be a thorny problem because
-    # longest_consecutive_days_sequence will cause overlapping periods
+    # TODO: limit posts per day. Might be a thorny problem because longest_consecutive_days_sequence will cause overlapping periods
     # BUG: Ingesting new stocks to the stock database might publish more posts than requested; the upsert of export assumes the exact same stocks will be upserted each time
     # WORKAROUND: if the stock dataset ever changes, wait until all remaining posts are published.
     # deleting those posts is not a workaround because you woulnd't be able to determinstically build up the same database from the existing pickles
@@ -270,7 +262,7 @@ def stock_correlation_flow(
     pickle_object_to_path(corr_dict, folder_path=Path(corr_dict_pickle_storage_path))
     # print(corr_dict)
 
-    # TODO: once Orion is out of beta, create a dependency flow https://github.com/PrefectHQ/prefect/blob/b9503001f5de642d48d7d5248436d1e8861cffed/docs/core/idioms/flow-to-flow.md
+    # TODO: once Prefect Orion is out of beta, create a dependency flow https://github.com/PrefectHQ/prefect/blob/b9503001f5de642d48d7d5248436d1e8861cffed/docs/core/idioms/flow-to-flow.md
     sql_alchemy_stock_engine.dispose()
 
 
@@ -324,7 +316,7 @@ def correlate_and_publish(
     )
 
 
-# BUG: If this is a flow, it times out after running ~10 minutes.
+# BUG: If this is a Prefect flow, it times out after running ~10 minutes.
 def precompute_content(start_date: datetime, calc_next_days):
     """calculate content as if run on start_date"""
     future_date = start_date  # start future date at today
@@ -354,7 +346,7 @@ if __name__ == "__main__":
 
     precompute_content(
         start_date=datetime.strptime(
-            "2022-09-12",
+            "2022-10-04",
             "%Y-%m-%d",
         ),
         calc_next_days=30,

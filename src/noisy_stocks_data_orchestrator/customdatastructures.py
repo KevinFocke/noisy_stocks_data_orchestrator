@@ -11,9 +11,6 @@ from pandas import DataFrame
 from pandera import Index
 from pandera.dtypes import Timestamp
 from prefect.tasks import task
-
-# Classes should be PascalCase
-# Check type using pydantic, check DataFrame using pandera
 from pydantic import BaseModel, PrivateAttr, validate_arguments
 from pydantic.types import PositiveInt
 
@@ -32,7 +29,6 @@ def folder_exists(path: Path):
     return path.is_dir()
 
 
-# TODO: refactor to make more versatile?
 class CorrDatabaseQuery(BaseModel):
     """values and variables related to analysis ingestion stage.
 
@@ -49,7 +45,7 @@ class CorrDatabaseQuery(BaseModel):
     _begin_timestamp: datetime = PrivateAttr()
     _end_timestamp: datetime = PrivateAttr()
     target_date: Optional[datetime] = None
-    days_ago: Optional[PositiveInt] = None  # eg 5 means 5 days ago
+    days_ago: Optional[PositiveInt] = None
 
     def to_sql(self):
         """output sql query"""
@@ -74,7 +70,6 @@ class CorrDatabaseQuery(BaseModel):
         return stocks_query
 
     def calculate_target_date(self):
-        # calculate target_date if not provided
         if self.target_date is None:
             if self.days_ago is None:
                 years_ago = 20
@@ -161,7 +156,7 @@ class CorrDatabaseQuery(BaseModel):
 
 class TimeSeries(BaseModel):
 
-    # df assumption: dates are aligned on day at 0:00 UTC
+    # assumption: dates are aligned on day at 0:00 UTC
     timestamp_index_name: str  # What is the name of the timestamp column?
     numeric_col_name: str  # What is the name of the numeric column? eg. price_close
     time_series_df: pd.DataFrame  # DataFrame with timestamp as index, sorted DESC
@@ -204,7 +199,9 @@ class TimeSeries(BaseModel):
 
     def pivot_rows_to_cols(self, index, columns, values):
         """converts a long df into a wide df"""
-        # pivot here based on date
+        # CONTAINS SIDE EFFECTS! This method changes the representation.
+        # Assumption: Methods are always used in the same sequence.
+
         self.time_series_df = pd.pivot_table(
             data=self.time_series_df,
             index=index,
@@ -212,7 +209,6 @@ class TimeSeries(BaseModel):
             values=values,
         )
 
-        # drop cols with a null value
         self.time_series_df.dropna(axis=1, inplace=True)  # axis 1 means cols
 
     def calc_longest_consecutive_days_sequence(
@@ -226,7 +222,6 @@ class TimeSeries(BaseModel):
         Note: for stocks the treshold should be 1 because
         there is only one value per date"""
 
-        # TODO: Refactor
         # group by day & count of group
         if provided_time_series_df is None:  # df not provided
             grouped_dates_df = self.time_series_df
@@ -285,15 +280,10 @@ class TimeSeries(BaseModel):
 
         # reset index
         grouped_dates_df.reset_index(inplace=True)  # maintains sorting
-        # timestamp was renamed to index! bring it back
+        # CLUDGE: Timestamp was renamed to index! Bring it back.
         grouped_dates_df = grouped_dates_df.rename(
             columns={"index": self.timestamp_index_name}
         )
-
-        # grouped_dates_df now looks like (timestamp DESC)
-        #   timestamp  size  consecutive_days_sequence
-        # 0 2002-07-05   357                        1.0
-        # 1 2002-07-04     0                        0.0
 
         max_seq_start_date_index = grouped_dates_df[seq_count_col_name].idxmax()
         max_seq_value = int(
@@ -306,7 +296,6 @@ class TimeSeries(BaseModel):
             ]
             for offset_from_max_seq_start_date_index in range(max_seq_value)
         ]
-        # range upper bound not incl
 
         return tuple(longest_timestamp_range)  # type:ignore
 
@@ -331,7 +320,7 @@ class TimeSeries(BaseModel):
         super().__init__(*args, **kwargs)
         if self.time_series_df.empty:
             raise ValueError("Expected non-empty DataFrame")
-        # drop row containing 0
+        # drop row containing 0; correlating 0 with 0 is not interesting.
         self.time_series_df = self.time_series_df[
             self.time_series_df[self.numeric_col_name] != 0
         ]

@@ -38,7 +38,6 @@ def fetch_stocks_to_TimeSeries(*args, **kwargs):
     1. to apply stock_specific settings
     2. to differentiate the flows"""
     # query stocks
-    # TODO: use args with *args and **kwargs instead
     time_series = query_database_to_TimeSeries(is_stock=True, *args, **kwargs)
 
     return time_series
@@ -61,7 +60,6 @@ def query_database(sql_alchemy_engine: engine.base.Engine, query: str) -> DataFr
     connection = sql_alchemy_engine.connect()  # Connect to the database
     return pd.read_sql(query, connection)  # Run query and convert into pd DataFrame
     # SPEED, major: parallelize read into sql
-    # TODO: Change into dask read_sql (but it doesn't want to connect :/)
 
 
 @validate_arguments(config=Config_Arbitrary_Types_Allowed)

@@ -27,10 +27,6 @@ from ingress import load_object_from_file_path
 # If timestamp is already in database for the stock, do not add.
 # https://docs.timescale.com/timescaledb/latest/how-to-guides/write-data/upsert/
 
-# TODO: Set pandas backend to plotly https://plotly.com/python/pandas-backend/
-# TODO: Static image export plotly https://plotly.com/python/static-image-export
-
-
 @flow
 def visualize_corr(
     pd_series_stocks,
@@ -65,7 +61,7 @@ def visualize_corr(
 
     merged_df = merged_df.sort_index()
     # check if direction went up or down
-    # FIXME: broken code, not sure why
+    # FIXME: broken code, stock direction does not get calculated correctly.
     if merged_df[stock_symbol].iloc[-1] > merged_df[stock_symbol].iloc[0]:
         price_direction = "up"
     elif merged_df[stock_symbol].iloc[-1] < merged_df[stock_symbol].iloc[0]:
@@ -533,7 +529,8 @@ def create_website_content_files(query_rows_dict, website_content_folder_path: P
 
         create_folder(page_bundle_path)
 
-        # FIXME: If the program croshes after folder creation, it will NOT output the content. Is there any way to make these combined actions atomic?
+        # FIXME: If the program crashes after folder creation, it will NOT output the content. 
+        # TODO: Is there any way to make these combined actions atomic?
 
         image_path = (
             page_bundle_path
