@@ -101,3 +101,7 @@ Is the Python dev tools binary installed for your specific python version? Debia
 
 	
 	sudo apt-get install python3.10-dev
+
+There seems to be a bug in Poetry Package manager which prevents the installation of reverge_geocoder. If it's not automatically installed, install it via pip.
+
+	pip install reverse_geocoder

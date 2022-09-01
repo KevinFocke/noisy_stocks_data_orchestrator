@@ -8,7 +8,7 @@ from pathlib import Path
 import pandas as pd
 import plotly
 import plotly.graph_objects as go
-import reverse_geocoder as rg  # Might need to be installed locally via pip
+import reverse_geocoder as rg
 import sqlalchemy as db
 from plotly.subplots import make_subplots
 from prefect.flows import flow
@@ -27,6 +27,7 @@ from ingress import load_object_from_file_path
 # If timestamp is already in database for the stock, do not add.
 # https://docs.timescale.com/timescaledb/latest/how-to-guides/write-data/upsert/
 
+
 @flow
 def visualize_corr(
     pd_series_stocks,
@@ -37,7 +38,7 @@ def visualize_corr(
     latitude,
     longitude,
 ):
-    # TODO: This is encapsulation hell; I ran out of time, but it was a fun project!
+    # TODO: This is encapsulation hell; I ran out of time.
     # TODO: refactor, export graph in other function
     mytuple = (float(latitude), float(longitude))  # lat lon
     coordinates = (mytuple,)
@@ -69,10 +70,9 @@ def visualize_corr(
     else:
         price_direction = "NEUTRAL CHAOS"
 
-    # Create figure with secondary y-axis
     fig = make_subplots(specs=[[{"secondary_y": True}]])
 
-    # Add traces
+    # Add dots on the graph
     fig.add_trace(
         go.Scatter(
             x=merged_df["timestamp"],
@@ -91,15 +91,12 @@ def visualize_corr(
         secondary_y=True,
     )
 
-    # Add figure title
     fig.update_layout(
         title_text=f"NoisyStocks.com | Spurious stock correlation ({highest_corr.round(5)})"
     )
 
-    # Set x-axis title
     fig.update_xaxes(title_text="date")
 
-    # Set y-axes titles
     fig.update_yaxes(title_text=f"{stock_symbol} close price ($)", secondary_y=False)
 
     fig.update_yaxes(
@@ -125,7 +122,6 @@ def visualize_corr(
 @flow
 def create_folder(folder_url: Path):
     if not folder_exists(folder_url):
-        # print(f"Folder {folder_url} does not exist, creating it.")
         Path.mkdir(folder_url, parents=True)
         if folder_exists(folder_url):
             return True  # Folder created
@@ -184,8 +180,6 @@ def corr_to_db_content(
     if not corr_dict_pickle_file_paths:  # if there are no file paths
         return  # nothing to do
 
-    # create visualization json
-
     # create sql_alchemy engine
     # TODO: refactor
     sql_alchemy_content_engine = db.create_engine(content_db_conn_string)
@@ -210,7 +204,6 @@ def corr_to_db_content(
                 )
             )
 
-            # TODO: refactor, this function is way overloaded; had no time to write decently
             (
                 graph_json,
                 city,
@@ -260,7 +253,6 @@ def corr_to_db_content(
                 upsertion_query_values.pop(key_to_remove, None)
 
             insert_query = insert(website_table).values(upsertion_query_values)
-            # do nothing if duplicate value
             insert_query = insert_query.on_conflict_do_nothing(
                 index_elements=[
                     "stock_symbol",
@@ -272,7 +264,6 @@ def corr_to_db_content(
             connection.execute(insert_query)
 
         move_file_to_subfolder(corr_dict_file_path, "processed")
-        # moves to processed folder
         stock_index += 1
 
 
@@ -299,11 +290,8 @@ def reverse_geocoder(coordinates):
 @flow()
 def create_markdown(stock_dict, image_file_path: Path):
 
+    # TODO: Rework; can a more elegant be found to this overloaded function?
     header_dict = {}
-
-    # create folder page_bundle_path
-    # year-month-day-{stock_symbol}
-
     stock_symbol = stock_dict["stock_symbol"]
     city = stock_dict["city"]
     country_code = stock_dict["country_code"]
@@ -313,9 +301,9 @@ def create_markdown(stock_dict, image_file_path: Path):
     latitude = round(stock_dict["latitude"], 1)
     city_longitude = round(stock_dict["city_longitude"], 1)
     city_latitude = round(stock_dict["city_latitude"], 1)
+
     header_dict["title"] = f"{stock_symbol} and rainfall in {city}"
     header_dict["date"] = publish_timestamp.strftime(r"%Y-%m-%d %H:%M:%S")
-
     header_dict["categories"] = "spurious stock correlations"
     # FIXME: stock direction is broken, not sure why
     # if stock_direction == "up":
@@ -401,15 +389,12 @@ def create_markdown(stock_dict, image_file_path: Path):
 
 @flow()
 def export_plotly_graph(plotly_json, file_path: Path):
-
     fig = plotly.io.from_json(plotly_json)
-
     fig.write_image(file_path, width=1080, height=720)
 
 
 @flow()
 def export_markdown(markdown, page_bundle_path: Path):
-
     index_path = page_bundle_path / "index.md"
     with open(index_path, "w") as fp:
         fp.write(markdown)
@@ -420,7 +405,6 @@ def export_markdown(markdown, page_bundle_path: Path):
 def get_publish_content(content_db_conn_string, select_where_publish_ts_null: bool):
     """input: content_db_conn_string
     output: randomized nested dict {"random_row_index":{**rows_in_db}}"""
-    # create sql_alchemy engine & query
     sql_alchemy_content_engine = db.create_engine(content_db_conn_string)
     connection = sql_alchemy_content_engine.connect()
     metadata = db.MetaData()
@@ -437,8 +421,6 @@ def get_publish_content(content_db_conn_string, select_where_publish_ts_null: bo
             website_table.columns.publish_timestamp.is_not(None)
         )
 
-    # print(str(select_query))
-
     # store results as a list per row
     query_result = connection.execute(select_query).all()
 
@@ -447,17 +429,9 @@ def get_publish_content(content_db_conn_string, select_where_publish_ts_null: bo
     row_index = 0
     for row in query_result:
         row_as_dict = dict(row)
-        # print(row_as_dict["stock_symbol"])
         rows_dict[row_index] = row_as_dict
         row_index += 1
 
-    #    query_df = pd.DataFrame(query_result)
-    #    query_df.columns = query_result[0].keys()
-    #
-    #    # shuffle the rows & reassign index numbers
-    #    # shuffling could return a series; for safety make a df
-    #    query_df = pd.DataFrame(query_df.sample(frac=1).reset_index(drop=True))
-    #
     return rows_dict
 
 
@@ -475,6 +449,7 @@ def calc_schedule_content(
     for stock_dict in query_rows_dict:
         query_rows_dict[stock_dict]["publish_timestamp"] = publish_time_stamp
         publish_time_stamp += timedelta_between_posts
+
     return query_rows_dict
 
 
@@ -490,7 +465,6 @@ def upsert_website_content(content_db_conn_string, query_rows_dict):
     for stock_index in query_rows_dict:
         stock_row = query_rows_dict[stock_index]
         upsert_query = insert(website_table).values(stock_row)
-        # do nothing if duplicate value
         upsert_query = upsert_query.on_conflict_do_update(
             index_elements=[
                 "stock_symbol",
@@ -506,8 +480,6 @@ def upsert_website_content(content_db_conn_string, query_rows_dict):
 @flow(task_runner=SequentialTaskRunner())
 def create_website_content_files(query_rows_dict, website_content_folder_path: Path):
 
-    # for every stock in the query_rows_dict
-
     page_bundle_paths = [x for x in website_content_folder_path.iterdir() if x.is_dir()]
     for stock in query_rows_dict:
         # create folder page_bundle_path
@@ -522,14 +494,12 @@ def create_website_content_files(query_rows_dict, website_content_folder_path: P
             cur_stock["publish_timestamp"].strftime(r"%Y-%m-%d") + f"-{stock_symbol}"
         )
 
-        # if already exists, skip
-
-        if page_bundle_path in page_bundle_paths:
+        if page_bundle_path in page_bundle_paths:  # if already exists, skip
             continue
 
         create_folder(page_bundle_path)
 
-        # FIXME: If the program crashes after folder creation, it will NOT output the content. 
+        # FIXME: If the program crashes after folder creation, it will NOT output the content.
         # TODO: Is there any way to make these combined actions atomic?
 
         image_path = (
@@ -537,11 +507,8 @@ def create_website_content_files(query_rows_dict, website_content_folder_path: P
             / f"{stock_symbol}-corr-with-rainfall-in-{city}-{country_code}.webp"
         )
 
-        # export graph image
         export_plotly_graph(plotly_json=cur_stock["graph_json"], file_path=image_path)
-
         markdown = create_markdown(stock_dict=cur_stock, image_file_path=image_path)
-
         export_markdown(markdown=markdown, page_bundle_path=page_bundle_path)
 
 

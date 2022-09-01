@@ -15,7 +15,7 @@ from customdatastructures import StockTimeSeries, TimeSeries, file_exists
 """
 
 
-# ETL data into database using Talend + Pandas Exploratory research
+# Initial ETL data into database using Talend Open Studio + Pandas Exploratory research
 
 
 class Config_Arbitrary_Types_Allowed:
@@ -48,7 +48,6 @@ def fetch_weather_to_TimeSeries(*args, **kwargs):
     """thin wrapper for query_database_to_TimeSeries for two reasons:
     1. to apply weather specific settings
     2. to differentiate the flows"""
-    # query weather
     time_series = query_database_to_TimeSeries(*args, **kwargs)
 
     return time_series
@@ -58,6 +57,7 @@ def fetch_weather_to_TimeSeries(*args, **kwargs):
 @task(retries=5, retry_delay_seconds=3)
 def query_database(sql_alchemy_engine: engine.base.Engine, query: str) -> DataFrame:
     connection = sql_alchemy_engine.connect()  # Connect to the database
+
     return pd.read_sql(query, connection)  # Run query and convert into pd DataFrame
     # SPEED, major: parallelize read into sql
 
@@ -66,10 +66,9 @@ def query_database(sql_alchemy_engine: engine.base.Engine, query: str) -> DataFr
 @task(retries=5, retry_delay_seconds=5)
 def normalize_timestamp(df: DataFrame) -> DataFrame:
     """Normalize to UTC; Pandera needs Timezone Unaware"""
-    # Set timestamp as index // required by tz_localize
-    df.set_index("timestamp", inplace=True)
+    df.set_index("timestamp", inplace=True) # COUPLED: Set timestamp as index // required by tz_localize
 
-    # normalize timezone to UTC, then make timezone unaware for pandera validation
+    # COUPLED: normalize timezone to UTC, then make timezone unaware for pandera validation
     df = df.tz_convert("UTC").tz_localize(None)
 
     return df
@@ -86,15 +85,8 @@ def query_database_to_TimeSeries(
     timeout=120,
     is_stock: bool = False,  # is it a stock?
 ):
-
-    # get Prefect Future
     database_query = query_database(sql_alchemy_engine=sql_alchemy_engine, query=query)
-
-    # calculate result
-
     prefect_result_df = database_query
-
-    # normalize date
     df = normalize_timestamp(df=prefect_result_df)
 
     if is_stock:

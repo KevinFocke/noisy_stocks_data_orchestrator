@@ -73,7 +73,6 @@ class CorrDatabaseQuery(BaseModel):
         if self.target_date is None:
             if self.days_ago is None:
                 years_ago = 20
-                # TODO: Calculate leap years between now and date
                 self.days_ago = (years_ago * 365) + 5
             today = datetime.now()
             return today - timedelta(days=self.days_ago)
@@ -180,11 +179,8 @@ class TimeSeries(BaseModel):
     def __data_clean_df(self):
         """Clean the dataframe"""
 
-        # Remove missing rows
         self.time_series_df = self.time_series_df.dropna()
-        # Sort index
         self.time_series_df = self.time_series_df.sort_index(ascending=False)
-        # Validate time series & set
         self.__validate_ts_and_set_df()
 
     def drop_row_except(self, keep_list: tuple[Timestamp]):
@@ -237,20 +233,17 @@ class TimeSeries(BaseModel):
         # filter based on threshold
         grouped_dates_df = grouped_dates_df[grouped_dates_df["size"] >= treshold]
 
-        # sort dates in asc order
         grouped_dates_df = grouped_dates_df.sort_index(ascending=True)
+
         print(grouped_dates_df)
-        # get start & end date of df
+
         start_date = grouped_dates_df.index[0]
         end_date = grouped_dates_df.index[-1]
-
-        # create date range to include missing dates
 
         date_range_including_missing = pd.date_range(
             start=start_date, end=end_date, freq="D"
         )
 
-        # add missing dates
         grouped_dates_df = grouped_dates_df.reindex(date_range_including_missing, fill_value=0)  # type: ignore
 
         # algo
@@ -333,8 +326,6 @@ class StockTimeSeries(TimeSeries):
         self,
         start_date: Timestamp,
         end_date: Timestamp,
-        # TODO: add min_stocks & max_stocks args to output
-        # do it as posts per day, then divide by 6
         # HACK: The math is off, but it's roughly right & good enough for this particular use case
         min_stocks_output=60,  # note: divisible by 6 is ideal
         # why? A lengthy explanation:
@@ -373,7 +364,6 @@ class StockTimeSeries(TimeSeries):
         """
 
         # check min amount of stocks
-        # expects pivot table with DateTimeIndex
         if min_stocks_output > max_stocks_output:
             raise ValueError(
                 "arg min_stocks_output cannot be bigger than max_stocks_output"
@@ -400,18 +390,17 @@ class StockTimeSeries(TimeSeries):
 
         abs_delta = abs_delta.sort_values(ascending=False)
 
-        # -> list[tuple[str, PositiveInt]]
         abs_delta_df = abs_delta.to_frame()
 
         if abs_delta_df.shape[0] < max_stocks_output:
             pass  # no need for slicing
         else:
             abs_delta_df = abs_delta_df[:max_stocks_output]  # slice first 20 rows
+
         # get highest corr
 
         tuples_stock_and_rel_change = tuple(
             abs_delta_df.itertuples(index=True, name=None)
         )
-        # tuple_list = tuple(abs_delta_df.reset_index().values.tolist())
 
         return tuples_stock_and_rel_change
