@@ -33,7 +33,8 @@ def np_mean_per_col(np_array):
 
 
 def np_stdev_per_row(np_array):
-    return NumbaList(np_array.std(axis=0).tolist())  # axis 0 is over rows
+    return NumbaList(np_array.std(axis=0).tolist())
+    # axis 0 is over rows
     # numba requires specific type list https://numba.readthedocs.io/en/stable/reference/deprecation.html#deprecation-of-reflection-for-list-and-set-types
 
 
@@ -64,22 +65,32 @@ def pearson_corr(
     # iterate over stocks
     correlations = NumbaList()
     for stock_col_index in range(stocks_array_col_count):
-        # many iterations here
+        # many iterations here thus use njit
         corr_to_stock = np.empty(dataset_array_col_count)
         # one wide series
-        cur_stock_array = stocks_np_array[0:, stock_col_index]
+        # cur_stock_mean = stocks_means[stock_col_index]
+        cur_stock_array = stocks_np_array[
+            0:, stock_col_index
+        ]  # all rows, first col; in other words: current stock
         cur_stock_stdev = stocks_stdevs[stock_col_index]
         for datapoint_col_index in range(dataset_array_col_count):
             cur_datapoint_array = dataset_np_array[
                 0:, datapoint_col_index
             ]  # array is empty?
+            # cur_datapoint_mean = dataset_means[datapoint_col_index]
             cur_datapoint_stdev = dataset_stdevs[datapoint_col_index]
             numerator = np.cov(cur_datapoint_array, cur_stock_array, bias=True)[0][
                 1
-            ]  # bias True means normalize by N
+            ]  # bias True measn normalize by N
+            # result is a long array
             denominator = cur_stock_stdev * cur_datapoint_stdev
             corr_to_stock[datapoint_col_index] = numerator / denominator
+
+        # print(corr_to_stock)
+        # print(corr_to_stock.shape)
+        correlations.append(corr_to_stock)
     return correlations  # list containing correlations per stock
+    # calc correlation
 
 
 @flow(task_runner=SequentialTaskRunner())
@@ -95,7 +106,7 @@ def stock_correlation_flow(
     dataset_uid_col_name_list=[
         "latitude",
         "longitude",
-    ],
+    ],  # one or more values that uniquely identify a datapoint
     posts_per_day: PositiveInt = 10,
     stocks_db_conn_string=environ["NOISYSTOCKS_STOCKS_DB_CONNECTION_URL"],
     datasets_db_conn_string=environ["NOISYSTOCKS_DATASETS_DB_CONNECTION_URL"],
@@ -126,6 +137,7 @@ def stock_correlation_flow(
         target_date=target_date,
     )
 
+    # get TimeSeries
     stocks_time_series = fetch_stocks_to_TimeSeries(
         sql_alchemy_engine=sql_alchemy_stock_engine,
         query=stocks_db_query_object.to_sql(),
@@ -176,14 +188,16 @@ def stock_correlation_flow(
         timeout=120,
     )
 
-    # WORKAROUND: Prefect beta threw errors; inlined as workaround
-    # TODO: Refactor content into separate functions
+    # should be seperate function; works too
     dataset_time_series.pivot_rows_to_cols(
         index="timestamp", columns=dataset_uid_col_name_list, values="precipitation"
     )
+    #   print(stocks_time_series.time_series_df)
 
     stock_col_list = list(stocks_time_series.time_series_df.columns)
     dataset_col_list = list(dataset_time_series.time_series_df.columns)
+
+    # get stock correlations; list containing numpy arrays per stock, one numpy array
 
     correlations = correlate_datasets(
         stocks_np_array=stocks_time_series.time_series_df.to_numpy(),
@@ -192,7 +206,10 @@ def stock_correlation_flow(
         dataset_np_array=dataset_time_series.time_series_df.to_numpy(),
     )
 
-    assert len(correlations) == len(stock_col_list)  # sanity check
+    # print(correlations)
+
+    # sanity check
+    assert len(correlations) == len(stock_col_list)
 
     stock_index = 0
     corr_dict = {}
@@ -204,7 +221,9 @@ def stock_correlation_flow(
     # deleting those posts is not a workaround because you woulnd't be able to determinstically build up the same database from the existing pickles
 
     for stock_corr in correlations:
-        assert len(stock_corr) == len(dataset_col_list)  # sanity check
+        # sanity check
+        assert len(stock_corr) == len(dataset_col_list)
+        # grab index of highest abs correlation
         max_corr_index = np.argmax(np.abs(stock_corr))
         highest_corr = stock_corr[max_corr_index]
         dataset_uid = dataset_col_list[max_corr_index]
@@ -238,6 +257,7 @@ def stock_correlation_flow(
 
     print(corr_dict)
     pickle_object_to_path(corr_dict, folder_path=Path(corr_dict_pickle_storage_path))
+    # print(corr_dict)
 
     # TODO: once Prefect Orion is out of beta, create a dependency flow https://github.com/PrefectHQ/prefect/blob/b9503001f5de642d48d7d5248436d1e8861cffed/docs/core/idioms/flow-to-flow.md
     sql_alchemy_stock_engine.dispose()
@@ -294,6 +314,7 @@ def precompute_content(start_date: datetime, calc_next_days):
     future_date = start_date  # start future date at today
     target_days_ago = (20 * 365) + 5  # roughly 20 years ago
     target_date = future_date - timedelta(days=target_days_ago)
+    # keepalive()  # workaround for Prefect bug, connection timeout
 
     for days_from_start_date in range(calc_next_days):
         # TODO: log messages to persistent file instead of printing
