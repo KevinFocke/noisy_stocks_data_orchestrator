@@ -8,6 +8,12 @@ on:
 
   workflow_dispatch: #allows to run workflow from Github Actions dashboard
 
+env:
+  # database placeholders; replace for live system
+  NOISYSTOCKS_STOCKS_DB_CONNECTION_URL: "your_db_conn_string"
+  NOISYSTOCKS_DATASETS_DB_CONNECTION_URL: "your_db_conn_string"
+  NOISYSTOCKS_CONTENT_DB_CONNECTION_URL: "your_db_conn_string"
+
 jobs:
   test-OS:
     strategy:
