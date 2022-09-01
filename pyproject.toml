@@ -16,7 +16,6 @@ psycopg2-binary = "^2.9.3"
 reverse_geocoder = "1.5.1"
 freezegun = "1.2.1"
 scipy = { version = "1.8", python = ">=3.10,<3.11" }
-DeepGraph = "^0.2.3"
 numba = "^0.55.2"
 dask = {extras = ["complete"], version = "^2022.6.1"}
 plotly = "^5.9.0"
