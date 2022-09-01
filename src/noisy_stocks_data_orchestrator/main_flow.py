@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from os import environ
 from pathlib import Path
 
 import numpy as np
@@ -96,12 +97,8 @@ def stock_correlation_flow(
         "longitude",
     ],
     posts_per_day: PositiveInt = 10,
-    stocks_db_conn_string=(
-        "postgresql+psycopg2://postgres:postgres@127.0.0.1:5432/stocks"
-    ),
-    datasets_db_conn_string=(
-        "postgresql+psycopg2://postgres:postgres@127.0.0.1:5432/datasets"
-    ),
+    stocks_db_conn_string=environ["NOISYSTOCKS_STOCKS_DB_CONNECTION_URL"],
+    datasets_db_conn_string=environ["NOISYSTOCKS_DATASETS_DB_CONNECTION_URL"],
     days_ago=None,
     target_date=None,
 ):
@@ -259,18 +256,13 @@ def correlate_and_publish(
         "latitude",
     ],  # one or more values that uniquely identify a datapoint
     posts_per_day: PositiveInt = 10,
-    stocks_db_conn_string: str = (
-        "postgresql+psycopg2://postgres:postgres@127.0.0.1:5432/stocks"
-    ),
-    datasets_db_conn_string: str = (
-        "postgresql+psycopg2://postgres:postgres@127.0.0.1:5432/datasets"
-    ),
-    content_db_conn_string: str = "postgresql+psycopg2://postgres:postgres@127.0.0.1:5432/content",
+    stocks_db_conn_string: str = environ["NOISYSTOCKS_STOCKS_DB_CONNECTION_URL"],
+    datasets_db_conn_string: str = environ["NOISYSTOCKS_DATASETS_DB_CONNECTION_URL"],
+    content_db_conn_string: str = environ["NOISYSTOCKS_CONTENT_DB_CONNECTION_URL"],
     post_schedule_start_date=datetime.today(),
     days_ago=None,
     target_date=None,
 ):
-
     # SPEED, MAJOR: Published files are generated for several days. Avoid recomputing.
     # When? If expected # posts per day is already in content database.
 

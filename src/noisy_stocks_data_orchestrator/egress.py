@@ -2,7 +2,7 @@ import hashlib
 import io
 import pickle
 from datetime import datetime, timedelta
-from os import linesep
+from os import environ, linesep
 from pathlib import Path
 
 import pandas as pd
@@ -164,7 +164,7 @@ def move_file_to_subfolder(file_to_move: Path, sub_folder_name: str):
 
 @flow
 def corr_to_db_content(
-    content_db_conn_string: str = "postgresql+psycopg2://postgres:postgres@127.0.0.1:5432/content",
+    content_db_conn_string: str = environ["NOISYSTOCKS_CONTENT_DB_CONNECTION_URL"],
     cols_not_represented_in_content_db: list[str] = [
         "dataset_pd_series",
         "stock_pd_series",
