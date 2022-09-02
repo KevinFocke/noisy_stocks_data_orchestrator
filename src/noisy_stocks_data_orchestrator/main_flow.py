@@ -3,6 +3,7 @@ from os import environ
 from pathlib import Path
 
 import numpy as np
+import sqlalchemy as db
 from numba import jit
 from numba.typed import List as NumbaList
 from pandas import Series
@@ -127,6 +128,7 @@ def stock_correlation_flow(
     dataset_numeric_col_name = "precipitation"
 
     # SQLAlchemy will not turn itself into a pickle from another process. DO NOT PICKLE!
+    # TODO: Refactor to db.create_engine
     sql_alchemy_stock_engine = create_engine(stocks_db_conn_string)
 
     stocks_db_query_object = CorrDatabaseQuery(
@@ -263,6 +265,38 @@ def stock_correlation_flow(
     sql_alchemy_stock_engine.dispose()
 
 
+@flow(task_runner=SequentialTaskRunner(), name="count_published_posts")
+def count_published_posts(
+    begin_date: datetime, end_date: datetime, conn_string: str, table_name: str
+) -> int:
+    """
+    Calculate how many posts are published between date range.
+    Notably: end_date bound is INCLUSIVE
+    """
+    sql_alchemy_engine = db.create_engine(conn_string)
+    connection = sql_alchemy_engine.connect()
+    metadata = db.MetaData()
+    table = db.Table(
+        table_name, metadata, autoload=True, autoload_with=sql_alchemy_engine
+    )
+
+    count_query = db.select([db.func.count(table.c.publish_timestamp)]).where(
+        table.c.publish_timestamp.between(begin_date, end_date)
+    )
+    # TODO: Refactor, can the column name be parametrized instead of hardcoded?
+    result_proxy = connection.execute(count_query)
+    results = result_proxy.fetchall()
+
+    published_count = results[0][0]
+
+    if isinstance(published_count, int):
+        return published_count
+    else:
+        raise Exception("Query failed to get sensible results.")
+    # excecute
+    # TODO: add check if input is correct
+
+
 @flow(
     task_runner=SequentialTaskRunner(),
     name="correlate_and_publish",
@@ -279,12 +313,25 @@ def correlate_and_publish(
     stocks_db_conn_string: str = environ["NOISYSTOCKS_STOCKS_DB_CONNECTION_URL"],
     datasets_db_conn_string: str = environ["NOISYSTOCKS_DATASETS_DB_CONNECTION_URL"],
     content_db_conn_string: str = environ["NOISYSTOCKS_CONTENT_DB_CONNECTION_URL"],
-    post_schedule_start_date=datetime.today(),
+    post_schedule_start_date=datetime.today(),  # date to publish posts
     days_ago=None,
-    target_date=None,
+    target_date=None,  # date to analyze correlations
 ):
     # SPEED, MAJOR: Published files are generated for several days. Avoid recomputing.
     # When? If expected # posts per day is already in content database.
+
+    published_posts_count = count_published_posts(
+        begin_date=post_schedule_start_date,
+        end_date=(post_schedule_start_date + timedelta(days=1)),
+        conn_string=environ["NOISYSTOCKS_CONTENT_DB_CONNECTION_URL"],
+        table_name="website",
+    )
+
+    if published_posts_count >= int(posts_per_day):
+        print(f"Wanted {posts_per_day} posts on {post_schedule_start_date}.\n")
+        print(f"Found {published_posts_count} posts. \n")
+        print("Enough posts already published thus skipping date.")
+        return
 
     stock_correlation_flow(
         corr_dict_pickle_storage_path=corr_dict_pickle_storage_path,
@@ -338,7 +385,7 @@ if __name__ == "__main__":
 
     precompute_content(
         start_date=datetime.strptime(
-            "2022-10-04",
+            "2022-09-01",
             "%Y-%m-%d",
         ),
         calc_next_days=30,
