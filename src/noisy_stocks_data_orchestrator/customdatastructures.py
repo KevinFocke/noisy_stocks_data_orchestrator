@@ -49,7 +49,7 @@ class CorrDatabaseQuery(BaseModel):
 
     def to_sql(self):
         """output sql query"""
-        # TODO: Rework to sqlalchemy query
+        # TODO: Refactor to sqlalchemy query
         stocks_query = (
             r"SELECT "
             + self._unfold_select_fields()
@@ -81,7 +81,7 @@ class CorrDatabaseQuery(BaseModel):
 
     def _unfold_select_fields(self):
         """splat list into comma-seperated string; eg. ["Hello", "There"]
-        becomes "Hello, there]"""
+        becomes "Hello, there"""
         unfolded_select_fields = ""
         for field in self.select_fields:
             unfolded_select_fields += field + r","
