@@ -317,8 +317,6 @@ def correlate_and_publish(
     days_ago=None,
     target_date=None,  # date to analyze correlations
 ):
-    # SPEED, MAJOR: Published files are generated for several days. Avoid recomputing.
-    # When? If expected # posts per day is already in content database.
 
     published_posts_count = count_published_posts(
         begin_date=post_schedule_start_date,
@@ -385,7 +383,7 @@ if __name__ == "__main__":
 
     precompute_content(
         start_date=datetime.strptime(
-            "2022-09-01",
+            "2022-10-04",
             "%Y-%m-%d",
         ),
         calc_next_days=30,
