@@ -45,6 +45,12 @@ There were a couple interesting problems that needed to be solved by the program
 - When you correlate two time series datasets, how do you ensure the time series data is aligned? How do you handle missing datapoints?
 - Financial markets can be closed due to the weekend or holidays. If you go back an arbitrary amount of days, how can you get the most usable time series range selection?
 
+# Performance Chart
+I precomputed the correlations for three months. You can see the chart of the whole process here:
+
+![Chart of main flow performance](performance_correlate_and_publish.jpg)
+
+
 
 # Limitations:
 
