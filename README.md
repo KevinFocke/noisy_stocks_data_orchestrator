@@ -8,7 +8,7 @@ For practice (& a decent amount of fun), I set up a complete Big Data pipeline:
 - Data loading.
 - Website publishing.
 
-I also set up a database that could handle 880+ million data points (Timebase).
+I also set up a database that could handle 880+ million data points (Timescale).
 
 You can read more on my CV: 
 https://kevinfocke.com/Kevin-Focke-CV.pdf
