@@ -1,10 +1,31 @@
+# This Was A Challenging Learning Project
+
+For practice (& a decent amount of fun), I set up a complete Big Data pipeline:
+
+- Data discovery.
+- Data extraction.
+- Data transformation.
+- Data loading.
+- Website publishing.
+
+I also set up a database that could handle 880+ million data points (Timebase).
+
+You can read more on my CV: 
+https://kevinfocke.com/Kevin-Focke-CV.pdf
+
+Typical graphs:
+
+![image](https://github.com/user-attachments/assets/1fb292bc-5e04-4140-ab1b-6b5d8e97e1c0)
+
+![image](https://github.com/user-attachments/assets/1adf081d-219d-4672-9cff-dc8746b7d2dd)
+
+
+
+--- Old README below.
+
 # Noisy Stocks
 
 Generates spurious stock correlations between stock price and rainfall based on historical movers & shakers.
-
-Published online: [https://noisystocks.kevinfocke.com/](https://noisystocks.kevinfocke.com/)
-
-Website content: [https://github.com/KevinFocke/noisy_stocks_website/tree/main](https://github.com/KevinFocke/noisy_stocks_website/tree/main)
 
 ## General information
 
